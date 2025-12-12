@@ -5,14 +5,13 @@
 SESSION_NAME="pkb-dev"
 PROJECT_DIR="/mnt/LinuxHDD/PersonalKnowledgeBase"
 
-# カラー出力
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
 echo -e "${BLUE}=== Personal Knowledge Base - Development Environment ===${NC}"
 
-# 既存セッションがあれば確認
+# 既存セッションがあればアタッチ
 if tmux has-session -t $SESSION_NAME 2>/dev/null; then
     echo -e "${GREEN}Existing session found. Attaching...${NC}"
     tmux attach-session -t $SESSION_NAME
@@ -21,60 +20,53 @@ fi
 
 echo -e "${GREEN}Creating new tmux session with 8 panes...${NC}"
 
-# 新規セッション作成
+# セッション作成
 tmux new-session -d -s $SESSION_NAME -c $PROJECT_DIR
-
-# ウィンドウ名設定
 tmux rename-window -t $SESSION_NAME "dev"
 
-# ウィンドウ分割（4x2グリッド = 8ペイン）
-# 最初の水平分割
+# Step 1: 横に3回分割して4ペインを作成
 tmux split-window -h -t $SESSION_NAME -c $PROJECT_DIR
-tmux split-window -h -t $SESSION_NAME:0.0 -c $PROJECT_DIR
-tmux split-window -h -t $SESSION_NAME:0.2 -c $PROJECT_DIR
+tmux split-window -h -t $SESSION_NAME -c $PROJECT_DIR
+tmux split-window -h -t $SESSION_NAME -c $PROJECT_DIR
 
-# 各ペインを垂直分割
-tmux split-window -v -t $SESSION_NAME:0.0 -c $PROJECT_DIR
-tmux split-window -v -t $SESSION_NAME:0.1 -c $PROJECT_DIR
-tmux split-window -v -t $SESSION_NAME:0.2 -c $PROJECT_DIR
-tmux split-window -v -t $SESSION_NAME:0.3 -c $PROJECT_DIR
-
-# ペインのレイアウト調整
+# Step 2: tiledレイアウトで2x2に配置
 tmux select-layout -t $SESSION_NAME tiled
 
-# 各ペインにタイトルを設定（識別用）
-tmux select-pane -t $SESSION_NAME:0.0 -T "Main Agent"
-tmux select-pane -t $SESSION_NAME:0.1 -T "Frontend Core"
-tmux select-pane -t $SESSION_NAME:0.2 -T "Frontend Components"
-tmux select-pane -t $SESSION_NAME:0.3 -T "Backend API"
-tmux select-pane -t $SESSION_NAME:0.4 -T "Backend Storage"
-tmux select-pane -t $SESSION_NAME:0.5 -T "Search/Index"
-tmux select-pane -t $SESSION_NAME:0.6 -T "Testing"
-tmux select-pane -t $SESSION_NAME:0.7 -T "Docs/Review"
+# Step 3: 各ペインを縦分割して8ペインに
+# 注: tiledレイアウト後、ペインは0,1,2,3となる
+tmux split-window -v -t $SESSION_NAME:0.0 -c $PROJECT_DIR
+tmux split-window -v -t $SESSION_NAME:0.2 -c $PROJECT_DIR
+tmux split-window -v -t $SESSION_NAME:0.4 -c $PROJECT_DIR
+tmux split-window -v -t $SESSION_NAME:0.6 -c $PROJECT_DIR
 
-# 最初のペイン（Main Agent）を選択
+# Step 4: 最終レイアウト調整
+tmux select-layout -t $SESSION_NAME tiled
+
+# 各ペインにラベル表示
+ROLES=("Main Agent" "Frontend Core" "Frontend Comp" "Backend API" "Backend Store" "Search/Index" "Testing" "Docs/Review")
+for i in {0..7}; do
+    tmux send-keys -t $SESSION_NAME:0.$i "clear && echo '=== Pane $i: ${ROLES[$i]} ==='" Enter 2>/dev/null
+done
+
+# ペイン0を選択
 tmux select-pane -t $SESSION_NAME:0.0
 
-# 情報表示
-echo -e "${GREEN}Session created successfully!${NC}"
+echo -e "${GREEN}8 panes created successfully!${NC}"
 echo ""
 echo "Pane Layout:"
-echo "  0: Main Agent (Orchestrator)"
-echo "  1: Frontend Core"
-echo "  2: Frontend Components"
-echo "  3: Backend API"
-echo "  4: Backend Storage"
-echo "  5: Search/Index"
-echo "  6: Testing"
-echo "  7: Docs/Review"
+echo "┌───┬───┬───┬───┐"
+echo "│ 0 │ 2 │ 4 │ 6 │"
+echo "├───┼───┼───┼───┤"
+echo "│ 1 │ 3 │ 5 │ 7 │"
+echo "└───┴───┴───┴───┘"
 echo ""
-echo "Useful tmux commands:"
-echo "  Ctrl+b q     - Show pane numbers"
-echo "  Ctrl+b o     - Next pane"
-echo "  Ctrl+b ;     - Previous pane"
-echo "  Alt+Arrow    - Move between panes"
-echo "  Ctrl+b d     - Detach session"
+echo "Roles:"
+echo "  0: Main Agent      2: Frontend Comp"
+echo "  1: Frontend Core   3: Backend API"
+echo "  4: Backend Store   5: Search/Index"
+echo "  6: Testing         7: Docs/Review"
+echo ""
+echo "Commands: Ctrl+b q (numbers), Ctrl+b o (next), Ctrl+b d (detach)"
 echo ""
 
-# セッションにアタッチ
 tmux attach-session -t $SESSION_NAME
