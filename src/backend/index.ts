@@ -15,7 +15,7 @@ app.use(cors())
 app.use(express.json())
 
 // ヘルスチェック
-app.get('/api/health', async (req, res) => {
+app.get('/api/health', async (_req, res) => {
   try {
     await prisma.$queryRaw`SELECT 1`
     res.json({
@@ -33,7 +33,7 @@ app.get('/api/health', async (req, res) => {
 })
 
 // ノート一覧取得
-app.get('/api/notes', async (req, res) => {
+app.get('/api/notes', async (_req, res) => {
   try {
     const notes = await prisma.note.findMany({
       orderBy: { updatedAt: 'desc' },
