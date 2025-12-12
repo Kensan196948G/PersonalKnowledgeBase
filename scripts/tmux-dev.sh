@@ -24,42 +24,30 @@ echo -e "${GREEN}Creating new tmux session with 8 panes...${NC}"
 tmux new-session -d -s $SESSION_NAME -c $PROJECT_DIR
 tmux rename-window -t $SESSION_NAME "dev"
 
-# Step 1: 横に3回分割して4ペインを作成
-tmux split-window -h -t $SESSION_NAME -c $PROJECT_DIR
-tmux split-window -h -t $SESSION_NAME -c $PROJECT_DIR
-tmux split-window -h -t $SESSION_NAME -c $PROJECT_DIR
+# 7回分割して8ペインを作成（分割ごとにtiledを適用して均等配置）
+for i in {1..7}; do
+    tmux split-window -t $SESSION_NAME -c $PROJECT_DIR
+    tmux select-layout -t $SESSION_NAME tiled
+done
 
-# Step 2: tiledレイアウトで2x2に配置
-tmux select-layout -t $SESSION_NAME tiled
-
-# Step 3: 各ペインを縦分割して8ペインに
-# 注: tiledレイアウト後、ペインは0,1,2,3となる
-tmux split-window -v -t $SESSION_NAME:0.0 -c $PROJECT_DIR
-tmux split-window -v -t $SESSION_NAME:0.2 -c $PROJECT_DIR
-tmux split-window -v -t $SESSION_NAME:0.4 -c $PROJECT_DIR
-tmux split-window -v -t $SESSION_NAME:0.6 -c $PROJECT_DIR
-
-# Step 4: 最終レイアウト調整
-tmux select-layout -t $SESSION_NAME tiled
-
-# Step 5: ペインボーダーにタイトル表示
-tmux set-option -t $SESSION_NAME pane-border-status top
-tmux set-option -t $SESSION_NAME pane-border-format " #{pane_index}: #{pane_title} "
+# ペインボーダーにタイトル表示（bottom=フッター、top=ヘッダー）
+tmux set-option -t $SESSION_NAME pane-border-status bottom
+tmux set-option -t $SESSION_NAME pane-border-format " [#{pane_index}] #{pane_title} "
 tmux set-option -t $SESSION_NAME pane-border-style "fg=white"
 tmux set-option -t $SESSION_NAME pane-active-border-style "fg=green,bold"
 
-# 各ペインにタイトル設定
-tmux select-pane -t $SESSION_NAME:0.0 -T "Main Agent"
-tmux select-pane -t $SESSION_NAME:0.1 -T "Frontend Core"
-tmux select-pane -t $SESSION_NAME:0.2 -T "Frontend Comp"
-tmux select-pane -t $SESSION_NAME:0.3 -T "Backend API"
-tmux select-pane -t $SESSION_NAME:0.4 -T "Backend Store"
-tmux select-pane -t $SESSION_NAME:0.5 -T "Search/Index"
-tmux select-pane -t $SESSION_NAME:0.6 -T "Testing"
-tmux select-pane -t $SESSION_NAME:0.7 -T "Docs/Review"
+# 各ペインにタイトル設定（日本語）
+tmux select-pane -t $SESSION_NAME:0.0 -T "メインエージェント"
+tmux select-pane -t $SESSION_NAME:0.1 -T "フロントエンド基盤"
+tmux select-pane -t $SESSION_NAME:0.2 -T "フロントエンド部品"
+tmux select-pane -t $SESSION_NAME:0.3 -T "バックエンドAPI"
+tmux select-pane -t $SESSION_NAME:0.4 -T "データ永続化"
+tmux select-pane -t $SESSION_NAME:0.5 -T "検索/インデックス"
+tmux select-pane -t $SESSION_NAME:0.6 -T "テスト"
+tmux select-pane -t $SESSION_NAME:0.7 -T "ドキュメント/レビュー"
 
 # 各ペインにラベル表示
-ROLES=("Main Agent" "Frontend Core" "Frontend Comp" "Backend API" "Backend Store" "Search/Index" "Testing" "Docs/Review")
+ROLES=("メインエージェント" "フロントエンド基盤" "フロントエンド部品" "バックエンドAPI" "データ永続化" "検索/インデックス" "テスト" "ドキュメント/レビュー")
 for i in {0..7}; do
     tmux send-keys -t $SESSION_NAME:0.$i "clear && echo '=== Pane $i: ${ROLES[$i]} ==='" Enter 2>/dev/null
 done
@@ -67,22 +55,22 @@ done
 # ペイン0を選択
 tmux select-pane -t $SESSION_NAME:0.0
 
-echo -e "${GREEN}8 panes created successfully!${NC}"
+echo -e "${GREEN}8ペイン作成完了！${NC}"
 echo ""
-echo "Pane Layout:"
+echo "ペイン配置:"
 echo "┌───┬───┬───┬───┐"
-echo "│ 0 │ 2 │ 4 │ 6 │"
+echo "│ 0 │ 1 │ 2 │ 3 │"
 echo "├───┼───┼───┼───┤"
-echo "│ 1 │ 3 │ 5 │ 7 │"
+echo "│ 4 │ 5 │ 6 │ 7 │"
 echo "└───┴───┴───┴───┘"
 echo ""
-echo "Roles:"
-echo "  0: Main Agent      2: Frontend Comp"
-echo "  1: Frontend Core   3: Backend API"
-echo "  4: Backend Store   5: Search/Index"
-echo "  6: Testing         7: Docs/Review"
+echo "役割:"
+echo "  0: メインエージェント    1: フロントエンド基盤"
+echo "  2: フロントエンド部品    3: バックエンドAPI"
+echo "  4: データ永続化          5: 検索/インデックス"
+echo "  6: テスト                7: ドキュメント/レビュー"
 echo ""
-echo "Commands: Ctrl+b q (numbers), Ctrl+b o (next), Ctrl+b d (detach)"
+echo "操作: Ctrl+b q (番号表示), Ctrl+b o (次へ), Ctrl+b d (離脱)"
 echo ""
 
 tmux attach-session -t $SESSION_NAME
