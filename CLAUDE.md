@@ -44,6 +44,34 @@
 2. 共有ファイル（型定義、設定）は Main Agent が調整
 3. コミット前に他 Agent の作業完了を確認
 
+### メインエージェントから他ペインへの指示送信
+
+tmuxの`send-keys`を使用して他ペインにコマンドを送信する。**必ず最後に`Enter`を含める。**
+
+```bash
+# 方法1: 直接送信（最後にEnterを忘れずに）
+tmux send-keys -t pkb-dev:0.1 "claude --dangerously-skip-permissions '以降、日本語で対応願います。指示内容'" Enter
+
+# 方法2: ヘルパースクリプト使用（Enter自動付与）
+./scripts/send-to-pane.sh 1 "claude --dangerously-skip-permissions '指示内容'"
+
+# 方法3: タスク配信スクリプト
+./scripts/dispatch-task.sh 1 "指示内容"
+```
+
+#### ペイン番号対応表
+
+| ペイン | 役割 | 送信先 |
+|--------|------|--------|
+| 0 | メインエージェント | (自分) |
+| 1 | フロントエンド基盤 | `pkb-dev:0.1` |
+| 2 | フロントエンド部品 | `pkb-dev:0.2` |
+| 3 | バックエンドAPI | `pkb-dev:0.3` |
+| 4 | データ永続化 | `pkb-dev:0.4` |
+| 5 | 検索/インデックス | `pkb-dev:0.5` |
+| 6 | テスト | `pkb-dev:0.6` |
+| 7 | ドキュメント/レビュー | `pkb-dev:0.7` |
+
 ## ディレクトリ構造
 
 ```
