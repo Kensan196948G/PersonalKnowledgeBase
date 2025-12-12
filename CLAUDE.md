@@ -44,43 +44,82 @@
 2. 共有ファイル（型定義、設定）は Main Agent が調整
 3. コミット前に他 Agent の作業完了を確認
 
-### 並列開発の起動手順
+### 並列開発の方式
 
-```bash
-# 1. tmux 8ペインセッション作成
-./scripts/tmux-dev.sh
-# Ctrl+b d でデタッチ
+Claude Codeの並列開発には2つの方式があります：
 
-# 2. 全ペインでClaude起動
-./scripts/start-all-agents.sh
+#### 方式A: 内蔵Taskツール（推奨）
 
-# 3. tmuxに接続して作業開始
-tmux attach -t pkb-dev
+**単一のClaude Codeセッション**から内蔵のTaskツールでSubAgentを起動：
+
+```
+あなた: "メモ機能を実装してください。フロントエンドとバックエンドを並列で開発してください。"
+
+Claude Code: Taskツールを使用して複数のSubAgentを並列起動
+  - SubAgent 1: Frontend実装
+  - SubAgent 2: Backend API実装
+  - SubAgent 3: テスト作成
 ```
 
-### メインエージェントから他ペインへの指示送信
+この方式では：
+- Claude Codeが自動的にタスクを分割・調整
+- ファイル競合を内部で管理
+- 結果を統合して報告
 
-全ペインでClaudeが起動済みの状態で、メインエージェント（ペイン0）から指示を送信：
+#### 方式B: tmux監視環境 + Claude Code連携
 
-```bash
-# 既に起動中のClaudeに指示を送信（推奨）
-./scripts/send-task.sh 1 "NoteEditor.tsxを作成してください"
-./scripts/send-task.sh 3 "APIエンドポイントを確認してください"
-./scripts/send-task.sh 6 "テストを実行して結果を報告してください"
+**ターミナル2つを使用**する構成：
+
+```
+ターミナル1 (Claude Code)        ターミナル2 (tmux監視環境)
+┌─────────────────────┐         ┌─────────────────────────┐
+│ $ claude            │         │ $ ./scripts/dev-monitor │
+│                     │ ──────> │ ┌───┬───┬───┬───┐      │
+│ ユーザー指示        │ tmux    │ │ 0 │ 1 │ 2 │ 3 │      │
+│ → Claude実行        │ send-   │ ├───┼───┼───┼───┤      │
+│                     │ keys    │ │ 4 │ 5 │ 6 │ 7 │      │
+└─────────────────────┘         └─────────────────────────┘
 ```
 
-#### ペイン番号対応表
+**セットアップ手順:**
 
-| ペイン | 役割 | 送信先 |
+```bash
+# ターミナル2: 先にtmux監視環境を起動
+./scripts/dev-monitor.sh
+# Ctrl+b d でデタッチ（バックグラウンド実行）
+
+# ターミナル1: Claude Codeを起動
+claude
+```
+
+**Claude Codeから監視環境を操作:**
+
+```bash
+# バックエンドサーバーを起動
+./scripts/tmux-cmd.sh 2 "npm run dev:backend"
+
+# フロントエンドサーバーを起動
+./scripts/tmux-cmd.sh 1 "npm run dev:frontend"
+
+# テストを実行
+./scripts/tmux-cmd.sh 3 "npm test"
+
+# 全ペインの状態を確認
+./scripts/tmux-status.sh
+```
+
+#### ペイン番号対応表（監視用）
+
+| ペイン | 用途 | コマンド例 |
 |--------|------|--------|
-| 0 | メインエージェント | (自分) |
-| 1 | フロントエンド基盤 | `pkb-dev:0.1` |
-| 2 | フロントエンド部品 | `pkb-dev:0.2` |
-| 3 | バックエンドAPI | `pkb-dev:0.3` |
-| 4 | データ永続化 | `pkb-dev:0.4` |
-| 5 | 検索/インデックス | `pkb-dev:0.5` |
-| 6 | テスト | `pkb-dev:0.6` |
-| 7 | ドキュメント/レビュー | `pkb-dev:0.7` |
+| 0 | Claude Code | `claude` |
+| 1 | フロントエンド | `npm run dev:frontend` |
+| 2 | バックエンド | `npm run dev:backend` |
+| 3 | テスト | `npm run test:watch` |
+| 4 | 型チェック | `npm run typecheck` |
+| 5 | DB | `npx prisma studio` |
+| 6 | ログ | `tail -f logs/*.log` |
+| 7 | Git | `git status` |
 
 ## ディレクトリ構造
 
