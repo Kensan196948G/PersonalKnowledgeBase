@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm:*)",
+      "Bash(pnpm:*)",
+      "Bash(git:*)",
+      "Bash(tmux:*)",
+      "Bash(node:*)",
+      "Bash(npx:*)",
+      "Bash(docker:*)",
+      "Bash(docker-compose:*)",
+      "Read",
+      "Write",
+      "Edit"
+    ],
+    "deny": [
+      "Bash(rm -rf /)",
+      "Bash(sudo rm:*)"
+    ]
+  },
+  "hooks": {
+    "preToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "command": ".claude/hooks/pre-tool-use.sh"
+      }
+    ],
+    "postToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "command": ".claude/hooks/post-tool-use.sh"
+      }
+    ]
+  }
+}

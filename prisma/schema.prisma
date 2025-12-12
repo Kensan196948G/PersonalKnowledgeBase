@@ -1,0 +1,104 @@
+// Personal Knowledge Base - Prisma Schema
+// データベース: PostgreSQL 16
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ノート（メモ）
+model Note {
+  id        String   @id @default(uuid())
+  title     String
+  content   String   @db.Text
+  isPinned  Boolean  @default(false)
+  isFavorite Boolean @default(false)
+  isArchived Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // リレーション
+  tags      NoteTag[]
+  folder    Folder?   @relation(fields: [folderId], references: [id])
+  folderId  String?
+  attachments Attachment[]
+
+  // インデックス
+  @@index([title])
+  @@index([createdAt])
+  @@index([updatedAt])
+  @@index([folderId])
+}
+
+// タグ
+model Tag {
+  id        String    @id @default(uuid())
+  name      String    @unique
+  color     String?   // HEX color code
+  createdAt DateTime  @default(now())
+
+  notes     NoteTag[]
+
+  @@index([name])
+}
+
+// ノートとタグの中間テーブル
+model NoteTag {
+  note      Note     @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  noteId    String
+  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  tagId     String
+  createdAt DateTime @default(now())
+
+  @@id([noteId, tagId])
+}
+
+// フォルダ（階層構造）
+model Folder {
+  id        String   @id @default(uuid())
+  name      String
+  parentId  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 自己参照リレーション
+  parent    Folder?  @relation("FolderHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children  Folder[] @relation("FolderHierarchy")
+
+  notes     Note[]
+
+  @@index([parentId])
+  @@index([name])
+}
+
+// 添付ファイル
+model Attachment {
+  id          String   @id @default(uuid())
+  fileName    String
+  filePath    String
+  mimeType    String
+  fileSize    Int
+  createdAt   DateTime @default(now())
+
+  note        Note     @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  noteId      String
+
+  @@index([noteId])
+}
+
+// テンプレート
+model Template {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  content   String   @db.Text
+  category  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([name])
+  @@index([category])
+}
