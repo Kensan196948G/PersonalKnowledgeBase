@@ -1,34 +1,39 @@
 #!/bin/bash
-# ツール実行前のフック - 並列開発時のファイルロック確認
+# ===========================================
+# Pre-Tool-Use Hook
+# ツール実行前の自動チェック
+# ===========================================
 
 TOOL_NAME="$1"
 TOOL_INPUT="$2"
 
-LOCK_DIR="/tmp/claude-edit-locks"
+PROJECT_DIR="/mnt/LinuxHDD/PersonalKnowledgeBase"
+LOCK_DIR="/tmp/claude-pkb-locks"
 
-# ロックディレクトリがなければ作成
+# ロックディレクトリ作成
 mkdir -p "$LOCK_DIR"
 
-# ファイル編集時のロック確認
+# --------------------------------------------------
+# Edit/Write: ファイルロック確認（SubAgent競合防止）
+# --------------------------------------------------
 if [[ "$TOOL_NAME" == "Edit" || "$TOOL_NAME" == "Write" ]]; then
-    # jqがインストールされている場合のみパース
     if command -v jq &> /dev/null; then
         FILE_PATH=$(echo "$TOOL_INPUT" | jq -r '.file_path // empty' 2>/dev/null)
 
         if [ -n "$FILE_PATH" ]; then
             LOCK_FILE="$LOCK_DIR/$(echo "$FILE_PATH" | md5sum | cut -d' ' -f1)"
 
-            # ロックファイルが存在し、30秒以内に作成されていればブロック
+            # 30秒以内のロックがあればブロック
             if [ -f "$LOCK_FILE" ]; then
                 LOCK_AGE=$(($(date +%s) - $(stat -c %Y "$LOCK_FILE" 2>/dev/null || echo 0)))
                 if [ "$LOCK_AGE" -lt 30 ]; then
-                    echo "BLOCK: File is being edited by another agent: $FILE_PATH"
+                    echo "BLOCK: ファイル編集中: $FILE_PATH"
                     exit 1
                 fi
             fi
 
-            # ロックを取得
-            echo "$$" > "$LOCK_FILE"
+            # ロック取得
+            echo "$$:$(date +%s)" > "$LOCK_FILE"
         fi
     fi
 fi

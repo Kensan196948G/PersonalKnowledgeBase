@@ -4,182 +4,207 @@
 
 個人向けメモ・ナレッジベースシステム。OneNoteやNotionのような「メモ＋画像貼り付け」を中核とした、個人利用に特化したナレッジベースを構築する。
 
+### プロジェクト特性
+
+| 項目 | 内容 |
+|------|------|
+| 規模 | 中規模（個人ツール、段階的拡張） |
+| 複雑度 | 中（フロント＋バック＋DB＋将来AI連携） |
+| 開発者 | 1人 |
+| 期間 | 長期育成型 |
+| 重視 | **作り切れる・壊れない・育てられる** |
+
 ## 技術スタック
 
-- **Frontend**: React 18 + TypeScript + Vite
-- **Backend**: Node.js + Express + TypeScript
-- **Database**: PostgreSQL 16 (Docker)
-- **ORM**: Prisma
-- **Editor**: TipTap (リッチテキストエディタ)
-- **State**: Zustand
-- **Styling**: Tailwind CSS
+### Frontend
+- **React 18** + TypeScript
+- **TipTap** (リッチテキストエディタ)
+- **Tailwind CSS**
+- **Vite** (ビルド)
 
-## 開発ルール
+### Backend
+- **Node.js + Express** + TypeScript
+- **SQLite** (個人用、シンプル、バックアップ容易)
+- **Prisma** (ORM)
 
-- コードは日本語コメント可
-- テストは必須（Jest）
-- 型定義は厳格に（strict mode）
-- ESLint + Prettier でコード品質を維持
+### Storage
+- メモ: SQLite (JSON列でリッチコンテンツ)
+- 画像: ローカルファイルシステム (`/data/attachments/`)
+- バックアップ: SQLiteファイル + 添付ファイルのZIP
 
-## 並列開発時の注意
+### 将来AI連携
+- SQLiteのベクトル拡張 (sqlite-vss)
+- または別途ベクトルDB (ChromaDB等)
 
-このプロジェクトは最大8つのSubAgentで並列開発を行う。
+## 開発方針
 
-### 役割分担
+### 3つの原則
 
-| Agent | 役割 | 担当領域 |
-|-------|------|----------|
-| Main | オーケストレーター | 全体調整・タスク配分 |
-| Agent 1 | Frontend Core | `src/frontend/core/` |
-| Agent 2 | Frontend Components | `src/frontend/components/` |
-| Agent 3 | Backend API | `src/backend/api/` |
-| Agent 4 | Backend Storage | `src/backend/storage/` |
-| Agent 5 | Search/Index | `src/backend/search/` |
-| Agent 6 | Testing | `tests/` |
-| Agent 7 | Docs/Review | `docs/` |
+1. **作り切れる** - 1人で管理可能な複雑さに抑える
+2. **壊れない** - 明確な責任分離、競合リスク最小化
+3. **育てられる** - 段階的拡張が容易な構造
 
-### ファイル競合回避ルール
-
-1. 担当領域外のファイルは読み取りのみ
-2. 共有ファイル（型定義、設定）は Main Agent が調整
-3. コミット前に他 Agent の作業完了を確認
-
-### 並列開発の方式
-
-Claude Codeの並列開発には2つの方式があります：
-
-#### 方式A: 内蔵Taskツール（推奨）
-
-**単一のClaude Codeセッション**から内蔵のTaskツールでSubAgentを起動：
+### SubAgent活用ルール
 
 ```
-あなた: "メモ機能を実装してください。フロントエンドとバックエンドを並列で開発してください。"
+並列数: 最大 3-4（コスト効率重視）
 
-Claude Code: Taskツールを使用して複数のSubAgentを並列起動
-  - SubAgent 1: Frontend実装
-  - SubAgent 2: Backend API実装
+用途:
+  - SubAgent 1: フロントエンド実装
+  - SubAgent 2: バックエンドAPI実装
   - SubAgent 3: テスト作成
+  - SubAgent 4: ドキュメント生成（必要時）
 ```
 
-この方式では：
-- Claude Codeが自動的にタスクを分割・調整
-- ファイル競合を内部で管理
-- 結果を統合して報告
+### 並列作業の分割基準
 
-#### 方式B: tmux監視環境 + Claude Code連携
+- ファイル競合が発生しない単位で分割
+- 例: コンポーネント別、API別、機能別
 
-**ターミナル2つを使用**する構成：
+### 禁止事項
 
-```
-ターミナル1 (Claude Code)        ターミナル2 (tmux監視環境)
-┌─────────────────────┐         ┌─────────────────────────┐
-│ $ claude            │         │ $ ./scripts/dev-monitor │
-│                     │ ──────> │ ┌───┬───┬───┬───┐      │
-│ ユーザー指示        │ tmux    │ │ 0 │ 1 │ 2 │ 3 │      │
-│ → Claude実行        │ send-   │ ├───┼───┼───┼───┤      │
-│                     │ keys    │ │ 4 │ 5 │ 6 │ 7 │      │
-└─────────────────────┘         └─────────────────────────┘
-```
+- 同一ファイルへの同時編集
+- DBスキーマの並列変更
+- 依存関係のある処理の並列化
 
-**セットアップ手順:**
+## フェーズ管理
 
-```bash
-# ターミナル2: 先にtmux監視環境を起動
-./scripts/dev-monitor.sh
-# Ctrl+b d でデタッチ（バックグラウンド実行）
+### Phase 1: MVP（書くことに集中）
+- [ ] 基本エディタ（TipTap）
+- [ ] 画像貼り付け（Ctrl+V）
+- [ ] SQLite保存
+- [ ] 一覧表示
+- [ ] 基本検索
 
-# ターミナル1: Claude Codeを起動
-claude
-```
+### Phase 2: 整理機能
+- [ ] タグ管理
+- [ ] フォルダ構造
+- [ ] 高度検索（全文検索）
 
-**Claude Codeから監視環境を操作:**
+### Phase 3: 知識化
+- [ ] ノート間リンク [[]]
+- [ ] バックリンク表示
+- [ ] 関連ノート提案
 
-```bash
-# バックエンドサーバーを起動
-./scripts/tmux-cmd.sh 2 "npm run dev:backend"
-
-# フロントエンドサーバーを起動
-./scripts/tmux-cmd.sh 1 "npm run dev:frontend"
-
-# テストを実行
-./scripts/tmux-cmd.sh 3 "npm test"
-
-# 全ペインの状態を確認
-./scripts/tmux-status.sh
-```
-
-#### ペイン番号対応表（監視用）
-
-| ペイン | 用途 | コマンド例 |
-|--------|------|--------|
-| 0 | Claude Code | `claude` |
-| 1 | フロントエンド | `npm run dev:frontend` |
-| 2 | バックエンド | `npm run dev:backend` |
-| 3 | テスト | `npm run test:watch` |
-| 4 | 型チェック | `npm run typecheck` |
-| 5 | DB | `npx prisma studio` |
-| 6 | ログ | `tail -f logs/*.log` |
-| 7 | Git | `git status` |
+### Phase 4: AI連携
+- [ ] ベクトル検索
+- [ ] 類似ノート検索
+- [ ] AI要約・質問応答
 
 ## ディレクトリ構造
 
 ```
 /
-├── docs/           # アイデア・設計ドキュメント
 ├── src/
-│   ├── frontend/   # Reactアプリケーション
-│   ├── backend/    # Express APIサーバー
-│   └── shared/     # 共有型定義・ユーティリティ
-├── tests/          # テストコード
-├── prisma/         # DBスキーマ定義
-└── scripts/        # 開発スクリプト
+│   ├── frontend/           # React + TipTap
+│   │   ├── components/     # UIコンポーネント
+│   │   ├── hooks/          # カスタムフック
+│   │   ├── stores/         # 状態管理 (Zustand)
+│   │   └── types/          # 型定義
+│   ├── backend/            # Express API
+│   │   ├── api/            # APIルート
+│   │   ├── services/       # ビジネスロジック
+│   │   └── utils/          # ユーティリティ
+│   └── shared/             # 共有型定義
+├── prisma/                 # DBスキーマ
+├── data/                   # SQLite + 添付ファイル
+│   ├── knowledgebase.db    # メインDB
+│   └── attachments/        # 画像・ファイル
+├── tests/                  # テストコード
+├── docs/                   # 設計ドキュメント
+├── .claude/                # Claude Code設定
+│   ├── settings.json
+│   └── hooks/
+└── scripts/                # ユーティリティスクリプト
 ```
 
-## 主要なコマンド
+## 主要コマンド
 
 ```bash
 # 開発サーバー起動
-npm run dev
+npm run dev              # Frontend + Backend 同時起動
 
-# テスト実行
-npm test
+# 個別起動
+npm run dev:frontend     # Vite開発サーバー
+npm run dev:backend      # Express API
 
-# 型チェック
-npm run typecheck
+# テスト
+npm test                 # 全テスト
+npm run test:unit        # 単体テストのみ
 
-# リント
-npm run lint
+# 品質チェック
+npm run lint             # ESLint
+npm run typecheck        # TypeScript型チェック
 
-# PostgreSQL起動
-docker compose up -d
-
-# Prismaマイグレーション
-npx prisma migrate dev
-
-# Prisma Studio（DBブラウザ）
-npx prisma studio
+# データベース
+npm run db:migrate       # マイグレーション実行
+npm run db:studio        # Prisma Studio起動
+npm run db:backup        # バックアップ作成
 ```
 
-## Docker（任意）
+## Git運用
 
-Dockerは検証用に使用可能。**通常開発はホスト環境で行う。**
+### ブランチ戦略
 
-### 使用場面
-- PostgreSQLデータベース（常用）
-- 本番相当の起動テスト
-- SubAgentの危険作業テスト
+```
+main                 # 安定版（常に動作する状態）
+├── feature/editor   # エディタ機能
+├── feature/search   # 検索機能
+├── feature/media    # 画像管理
+└── fix/xxx          # バグ修正
+```
 
-### 方針
-- アプリケーション自体はDockerコンテナ化しない
-- 「詰んだらDocker」として活用
+### Git Worktree（推奨）
+
+複数機能を並行開発する場合:
+
+```bash
+# Worktree作成
+git worktree add ../pkb-editor feature/editor
+git worktree add ../pkb-search feature/search
+
+# 作業後に削除
+git worktree remove ../pkb-editor
+```
+
+### コミットルール
+
+- 機能単位でコミット
+- プレフィックス: `feat:`, `fix:`, `docs:`, `refactor:`, `test:`
+- 日本語コミットメッセージ可
+
+## Hooks設定
+
+### 自動実行されるチェック
+
+| タイミング | 実行内容 |
+|------------|----------|
+| コード編集後 | lint (自動修正) |
+| テスト関連変更後 | 該当テスト実行 |
+| コミット前 | lint + typecheck + test:unit |
+| タスク完了後 | git status 表示 |
 
 ## 設計方針
 
-1. **小さく始め、後から積み上げられる** - 最小限の機能からスタート
-2. **思考を邪魔しないUI/UX** - 書くことに集中できるインターフェース
-3. **書いたあとに"探せる"こと** - 検索性を重視
-4. **データは常に自分の手元にある** - ローカルファースト
-5. **将来のAI連携を阻害しない構造** - 機械可読なデータ形式
+1. **小さく始め、後から積み上げられる**
+   - 最小限の機能からスタート
+   - 必要になってから拡張
+
+2. **思考を邪魔しないUI/UX**
+   - 書くことに集中できるインターフェース
+   - 余計な機能を押し付けない
+
+3. **書いたあとに"探せる"こと**
+   - 検索性を重視
+   - タグ・フォルダ・全文検索
+
+4. **データは常に自分の手元にある**
+   - ローカルファースト
+   - SQLiteファイルで完結
+
+5. **将来のAI連携を阻害しない構造**
+   - 機械可読なデータ形式
+   - ベクトル検索への拡張余地
 
 ## 参考ドキュメント
 

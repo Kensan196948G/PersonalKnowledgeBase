@@ -2,13 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(npm:*)",
-      "Bash(pnpm:*)",
-      "Bash(git:*)",
-      "Bash(tmux:*)",
-      "Bash(node:*)",
       "Bash(npx:*)",
-      "Bash(docker:*)",
-      "Bash(docker-compose:*)",
+      "Bash(node:*)",
+      "Bash(git:*)",
       "Read",
       "Write",
       "Edit"
