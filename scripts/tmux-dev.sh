@@ -30,6 +30,9 @@ for i in {1..7}; do
     tmux select-layout -t $SESSION_NAME tiled
 done
 
+# マウス操作を有効化
+tmux set-option -t $SESSION_NAME mouse on
+
 # ペインボーダーにタイトル表示（bottom=フッター、top=ヘッダー）
 tmux set-option -t $SESSION_NAME pane-border-status bottom
 tmux set-option -t $SESSION_NAME pane-border-format " [#{pane_index}] #{pane_title} "
