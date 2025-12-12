@@ -44,19 +44,29 @@
 2. 共有ファイル（型定義、設定）は Main Agent が調整
 3. コミット前に他 Agent の作業完了を確認
 
-### メインエージェントから他ペインへの指示送信
-
-tmuxの`send-keys`を使用して他ペインにコマンドを送信する。**必ず最後に`Enter`を含める。**
+### 並列開発の起動手順
 
 ```bash
-# 方法1: 直接送信（最後にEnterを忘れずに）
-tmux send-keys -t pkb-dev:0.1 "claude --dangerously-skip-permissions '以降、日本語で対応願います。指示内容'" Enter
+# 1. tmux 8ペインセッション作成
+./scripts/tmux-dev.sh
+# Ctrl+b d でデタッチ
 
-# 方法2: ヘルパースクリプト使用（Enter自動付与）
-./scripts/send-to-pane.sh 1 "claude --dangerously-skip-permissions '指示内容'"
+# 2. 全ペインでClaude起動
+./scripts/start-all-agents.sh
 
-# 方法3: タスク配信スクリプト
-./scripts/dispatch-task.sh 1 "指示内容"
+# 3. tmuxに接続して作業開始
+tmux attach -t pkb-dev
+```
+
+### メインエージェントから他ペインへの指示送信
+
+全ペインでClaudeが起動済みの状態で、メインエージェント（ペイン0）から指示を送信：
+
+```bash
+# 既に起動中のClaudeに指示を送信（推奨）
+./scripts/send-task.sh 1 "NoteEditor.tsxを作成してください"
+./scripts/send-task.sh 3 "APIエンドポイントを確認してください"
+./scripts/send-task.sh 6 "テストを実行して結果を報告してください"
 ```
 
 #### ペイン番号対応表
