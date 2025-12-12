@@ -42,6 +42,22 @@ tmux split-window -v -t $SESSION_NAME:0.6 -c $PROJECT_DIR
 # Step 4: 最終レイアウト調整
 tmux select-layout -t $SESSION_NAME tiled
 
+# Step 5: ペインボーダーにタイトル表示
+tmux set-option -t $SESSION_NAME pane-border-status top
+tmux set-option -t $SESSION_NAME pane-border-format " #{pane_index}: #{pane_title} "
+tmux set-option -t $SESSION_NAME pane-border-style "fg=white"
+tmux set-option -t $SESSION_NAME pane-active-border-style "fg=green,bold"
+
+# 各ペインにタイトル設定
+tmux select-pane -t $SESSION_NAME:0.0 -T "Main Agent"
+tmux select-pane -t $SESSION_NAME:0.1 -T "Frontend Core"
+tmux select-pane -t $SESSION_NAME:0.2 -T "Frontend Comp"
+tmux select-pane -t $SESSION_NAME:0.3 -T "Backend API"
+tmux select-pane -t $SESSION_NAME:0.4 -T "Backend Store"
+tmux select-pane -t $SESSION_NAME:0.5 -T "Search/Index"
+tmux select-pane -t $SESSION_NAME:0.6 -T "Testing"
+tmux select-pane -t $SESSION_NAME:0.7 -T "Docs/Review"
+
 # 各ペインにラベル表示
 ROLES=("Main Agent" "Frontend Core" "Frontend Comp" "Backend API" "Backend Store" "Search/Index" "Testing" "Docs/Review")
 for i in {0..7}; do
