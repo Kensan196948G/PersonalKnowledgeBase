@@ -52,7 +52,7 @@ tmux select-pane -t $SESSION_NAME:0.7 -T "ドキュメント/レビュー"
 # 各ペインにラベル表示
 ROLES=("メインエージェント" "フロントエンド基盤" "フロントエンド部品" "バックエンドAPI" "データ永続化" "検索/インデックス" "テスト" "ドキュメント/レビュー")
 for i in {0..7}; do
-    tmux send-keys -t $SESSION_NAME:0.$i "clear && echo '=== Pane $i: ${ROLES[$i]} ==='" Enter 2>/dev/null
+    tmux send-keys -t $SESSION_NAME:0.$i "clear && echo '=== Pane $i: ${ROLES[$i]} ==='" C-m 2>/dev/null
 done
 
 # ペイン0を選択

@@ -14,6 +14,6 @@ if [ -z "$PANE_NUM" ] || [ -z "$COMMAND" ]; then
 fi
 
 # ペインにコマンドを送信してEnterで実行
-tmux send-keys -t $SESSION_NAME:0.$PANE_NUM "$COMMAND" Enter
+tmux send-keys -t $SESSION_NAME:0.$PANE_NUM "$COMMAND" C-m
 
 echo "ペイン$PANE_NUM に送信完了: $COMMAND"

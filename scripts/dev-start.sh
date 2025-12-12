@@ -65,7 +65,7 @@ ROLES=(
 )
 
 for i in {0..7}; do
-    tmux send-keys -t $SESSION_NAME:0.$i "claude --dangerously-skip-permissions '以降、日本語で対応願います。${ROLES[$i]}'" Enter
+    tmux send-keys -t $SESSION_NAME:0.$i "claude --dangerously-skip-permissions '以降、日本語で対応願います。${ROLES[$i]}'" C-m
     sleep 0.5
 done
 

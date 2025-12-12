@@ -11,7 +11,7 @@ send_claude_task() {
     local task=$2
     local full_command="claude --dangerously-skip-permissions '以降、日本語で対応願います。$task'"
 
-    tmux send-keys -t $SESSION_NAME:0.$pane "$full_command" Enter
+    tmux send-keys -t $SESSION_NAME:0.$pane "$full_command" C-m
     echo "✓ ペイン$pane に送信: $task"
 }
 

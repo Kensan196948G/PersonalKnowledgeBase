@@ -23,6 +23,7 @@ if [ -z "$PANE_NUM" ] || [ -z "$TASK" ]; then
 fi
 
 # 指示を送信（既に起動中のClaudeに対して）
-tmux send-keys -t $SESSION_NAME:0.$PANE_NUM "$TASK" Enter
+# C-m はEnterキーのコントロールコード
+tmux send-keys -t $SESSION_NAME:0.$PANE_NUM "$TASK" C-m
 
 echo "✓ ペイン$PANE_NUM に指示送信: $TASK"

@@ -35,44 +35,44 @@ echo -e "${GREEN}8ペインにコマンドを送信中...${NC}"
 echo ""
 
 # Pane 0: Main Agent - システム監視
-tmux send-keys -t $SESSION_NAME:0.0 "clear" Enter
-tmux send-keys -t $SESSION_NAME:0.0 "echo '=== Pane 0: Main Agent - システム監視 ===' && sleep 1" Enter
-tmux send-keys -t $SESSION_NAME:0.0 "watch -n 3 'echo \"API Status:\"; curl -s http://localhost:3000/api/health | jq -r \".status + \\\" - DB: \\\" + .database\" 2>/dev/null || echo \"Server not running\"'" Enter
+tmux send-keys -t $SESSION_NAME:0.0 "clear" C-m
+tmux send-keys -t $SESSION_NAME:0.0 "echo '=== Pane 0: Main Agent - システム監視 ===' && sleep 1" C-m
+tmux send-keys -t $SESSION_NAME:0.0 "watch -n 3 'echo \"API Status:\"; curl -s http://localhost:3000/api/health | jq -r \".status + \\\" - DB: \\\" + .database\" 2>/dev/null || echo \"Server not running\"'" C-m
 
 # Pane 1: Frontend Core - 開発サーバー
-tmux send-keys -t $SESSION_NAME:0.1 "clear" Enter
-tmux send-keys -t $SESSION_NAME:0.1 "echo '=== Pane 1: Frontend Core ===' && sleep 1" Enter
-tmux send-keys -t $SESSION_NAME:0.1 "cd $PROJECT_DIR && npm run dev:frontend 2>&1" Enter
+tmux send-keys -t $SESSION_NAME:0.1 "clear" C-m
+tmux send-keys -t $SESSION_NAME:0.1 "echo '=== Pane 1: Frontend Core ===' && sleep 1" C-m
+tmux send-keys -t $SESSION_NAME:0.1 "cd $PROJECT_DIR && npm run dev:frontend 2>&1" C-m
 
 # Pane 2: Frontend Components - 型チェック
-tmux send-keys -t $SESSION_NAME:0.2 "clear" Enter
-tmux send-keys -t $SESSION_NAME:0.2 "echo '=== Pane 2: Frontend Comp - 型チェック ===' && sleep 1" Enter
-tmux send-keys -t $SESSION_NAME:0.2 "cd $PROJECT_DIR && npm run typecheck 2>&1" Enter
+tmux send-keys -t $SESSION_NAME:0.2 "clear" C-m
+tmux send-keys -t $SESSION_NAME:0.2 "echo '=== Pane 2: Frontend Comp - 型チェック ===' && sleep 1" C-m
+tmux send-keys -t $SESSION_NAME:0.2 "cd $PROJECT_DIR && npm run typecheck 2>&1" C-m
 
 # Pane 3: Backend API - サーバー
-tmux send-keys -t $SESSION_NAME:0.3 "clear" Enter
-tmux send-keys -t $SESSION_NAME:0.3 "echo '=== Pane 3: Backend API ===' && sleep 1" Enter
-tmux send-keys -t $SESSION_NAME:0.3 "cd $PROJECT_DIR && npm run dev:backend 2>&1" Enter
+tmux send-keys -t $SESSION_NAME:0.3 "clear" C-m
+tmux send-keys -t $SESSION_NAME:0.3 "echo '=== Pane 3: Backend API ===' && sleep 1" C-m
+tmux send-keys -t $SESSION_NAME:0.3 "cd $PROJECT_DIR && npm run dev:backend 2>&1" C-m
 
 # Pane 4: Backend Storage - DB操作
-tmux send-keys -t $SESSION_NAME:0.4 "clear" Enter
-tmux send-keys -t $SESSION_NAME:0.4 "echo '=== Pane 4: Backend Store - DB操作 ===' && sleep 2" Enter
-tmux send-keys -t $SESSION_NAME:0.4 "curl -s -X POST http://localhost:3000/api/notes -H 'Content-Type: application/json' -d '{\"title\":\"並列デモノート\",\"content\":\"8ペインから作成\"}' | jq 2>/dev/null || echo 'Waiting for server...'" Enter
+tmux send-keys -t $SESSION_NAME:0.4 "clear" C-m
+tmux send-keys -t $SESSION_NAME:0.4 "echo '=== Pane 4: Backend Store - DB操作 ===' && sleep 2" C-m
+tmux send-keys -t $SESSION_NAME:0.4 "curl -s -X POST http://localhost:3000/api/notes -H 'Content-Type: application/json' -d '{\"title\":\"並列デモノート\",\"content\":\"8ペインから作成\"}' | jq 2>/dev/null || echo 'Waiting for server...'" C-m
 
 # Pane 5: Search/Index - テスト
-tmux send-keys -t $SESSION_NAME:0.5 "clear" Enter
-tmux send-keys -t $SESSION_NAME:0.5 "echo '=== Pane 5: Search/Index - テスト ===' && sleep 1" Enter
-tmux send-keys -t $SESSION_NAME:0.5 "cd $PROJECT_DIR && npm run test:backend 2>&1" Enter
+tmux send-keys -t $SESSION_NAME:0.5 "clear" C-m
+tmux send-keys -t $SESSION_NAME:0.5 "echo '=== Pane 5: Search/Index - テスト ===' && sleep 1" C-m
+tmux send-keys -t $SESSION_NAME:0.5 "cd $PROJECT_DIR && npm run test:backend 2>&1" C-m
 
 # Pane 6: Testing - ファイル監視
-tmux send-keys -t $SESSION_NAME:0.6 "clear" Enter
-tmux send-keys -t $SESSION_NAME:0.6 "echo '=== Pane 6: Testing - ファイル監視 ===' && sleep 1" Enter
-tmux send-keys -t $SESSION_NAME:0.6 "watch -n 5 'echo \"Recently modified:\"; ls -lt $PROJECT_DIR/src/**/*.ts 2>/dev/null | head -5'" Enter
+tmux send-keys -t $SESSION_NAME:0.6 "clear" C-m
+tmux send-keys -t $SESSION_NAME:0.6 "echo '=== Pane 6: Testing - ファイル監視 ===' && sleep 1" C-m
+tmux send-keys -t $SESSION_NAME:0.6 "watch -n 5 'echo \"Recently modified:\"; ls -lt $PROJECT_DIR/src/**/*.ts 2>/dev/null | head -5'" C-m
 
 # Pane 7: Docs/Review - Git状態
-tmux send-keys -t $SESSION_NAME:0.7 "clear" Enter
-tmux send-keys -t $SESSION_NAME:0.7 "echo '=== Pane 7: Docs/Review - Git ===' && sleep 1" Enter
-tmux send-keys -t $SESSION_NAME:0.7 "watch -n 5 'cd $PROJECT_DIR && git status -s && echo \"\" && git log --oneline -3'" Enter
+tmux send-keys -t $SESSION_NAME:0.7 "clear" C-m
+tmux send-keys -t $SESSION_NAME:0.7 "echo '=== Pane 7: Docs/Review - Git ===' && sleep 1" C-m
+tmux send-keys -t $SESSION_NAME:0.7 "watch -n 5 'cd $PROJECT_DIR && git status -s && echo \"\" && git log --oneline -3'" C-m
 
 echo -e "${GREEN}デモ開始！${NC}"
 echo ""
