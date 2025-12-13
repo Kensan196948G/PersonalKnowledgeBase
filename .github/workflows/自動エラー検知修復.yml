@@ -31,7 +31,7 @@ env:
   MAX_REPAIR_LOOPS: ${{ github.event.inputs.max_loops || '15' }}
 
 jobs:
-  エラー検知修復:
+  error-detection-repair:
     name: エラー検知・自動修復ループ
     runs-on: ubuntu-latest
     permissions:
@@ -279,9 +279,9 @@ jobs:
           echo "| 修復実行 | ${{ steps.repair_loop.outputs.repairs_made }} |" >> $GITHUB_STEP_SUMMARY
           echo "| 最終状態 | 全チェックパス |" >> $GITHUB_STEP_SUMMARY
 
-  通知:
+  notification:
     name: 実行結果通知
-    needs: エラー検知修復
+    needs: error-detection-repair
     runs-on: ubuntu-latest
     if: always()
 
@@ -291,5 +291,5 @@ jobs:
           echo "============================================="
           echo "  自動エラー検知・修復ワークフロー 完了"
           echo "============================================="
-          echo "ジョブ結果: ${{ needs.エラー検知修復.result }}"
+          echo "ジョブ結果: ${{ needs.error-detection-repair.result }}"
           echo "次回実行: 30分後（スケジュール実行の場合）"
