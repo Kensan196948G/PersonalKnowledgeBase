@@ -191,4 +191,112 @@ export const uploadApi = {
     ),
 };
 
+/**
+ * Folders API
+ */
+export const foldersApi = {
+  /**
+   * フォルダ一覧取得
+   */
+  getAll: () => api.get<import("../types/folder").Folder[]>("/folders"),
+
+  /**
+   * フォルダ単体取得
+   */
+  getById: (id: string) =>
+    api.get<import("../types/folder").Folder>(`/folders/${id}`),
+
+  /**
+   * フォルダ作成
+   */
+  create: (data: { name: string; parentId?: string | null }) =>
+    api.post<import("../types/folder").Folder>("/folders", data),
+
+  /**
+   * フォルダ更新
+   */
+  update: (id: string, data: { name: string; parentId?: string | null }) =>
+    api.put<import("../types/folder").Folder>(`/folders/${id}`, data),
+
+  /**
+   * フォルダ削除
+   */
+  delete: (id: string) => api.delete<void>(`/folders/${id}`),
+
+  /**
+   * ノートをフォルダに移動
+   */
+  moveNoteToFolder: (noteId: string, folderId: string | null) =>
+    api.put<void>(`/notes/${noteId}/move`, { folderId }),
+};
+
+/**
+ * Tags API
+ */
+export const tagsApi = {
+  /**
+   * タグ一覧取得
+   */
+  getAll: () => api.get<import("../types/tag").Tag[]>("/tags"),
+
+  /**
+   * タグ単体取得
+   */
+  getById: (id: string) => api.get<import("../types/tag").Tag>(`/tags/${id}`),
+
+  /**
+   * タグ作成
+   */
+  create: (data: import("../types/tag").CreateTagData) =>
+    api.post<import("../types/tag").Tag>("/tags", data),
+
+  /**
+   * タグ更新
+   */
+  update: (id: string, data: import("../types/tag").UpdateTagData) =>
+    api.put<import("../types/tag").Tag>(`/tags/${id}`, data),
+
+  /**
+   * タグ削除
+   */
+  delete: (id: string) => api.delete<void>(`/tags/${id}`),
+
+  /**
+   * ノートにタグを付与
+   */
+  addToNote: (noteId: string, tagId: string) =>
+    api.post<void>(`/notes/${noteId}/tags/${tagId}`),
+
+  /**
+   * ノートからタグを削除
+   */
+  removeFromNote: (noteId: string, tagId: string) =>
+    api.delete<void>(`/notes/${noteId}/tags/${tagId}`),
+};
+
+/**
+ * Export API
+ */
+export const exportApi = {
+  /**
+   * Markdown形式でエクスポート
+   */
+  markdown: (noteId: string) => `/api/export/markdown/${noteId}`,
+
+  /**
+   * HTML形式でエクスポート
+   */
+  html: (noteId: string) => `/api/export/html/${noteId}`,
+
+  /**
+   * PDF形式でエクスポート
+   */
+  pdf: (noteId: string) => `/api/export/pdf/${noteId}`,
+
+  /**
+   * JSON形式でエクスポート（バックアップ用）
+   */
+  json: (noteId: string) => `/api/export/json/${noteId}`,
+};
+
 export default api;

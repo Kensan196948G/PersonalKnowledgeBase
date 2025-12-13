@@ -15,6 +15,10 @@ const router = Router();
  * - isFavorite: お気に入りフィルタ ('true' | 'false')
  * - isArchived: アーカイブフィルタ ('true' | 'false')
  * - search: タイトル・コンテンツの部分一致検索
+ * - tags: タグIDのカンマ区切り（例: "tag1,tag2,tag3"）
+ * - tagsMode: 'AND' | 'OR' (デフォルト: 'AND')
+ * - fromDate: 作成日の開始日（YYYY-MM-DD）
+ * - toDate: 作成日の終了日（YYYY-MM-DD）
  */
 router.get("/", async (req: Request, res: Response) => {
   try {
@@ -26,6 +30,10 @@ router.get("/", async (req: Request, res: Response) => {
       isFavorite,
       isArchived,
       search,
+      tags,
+      tagsMode = "AND",
+      fromDate,
+      toDate,
     } = req.query;
 
     // ソートバリデーション
@@ -55,10 +63,49 @@ router.get("/", async (req: Request, res: Response) => {
     }
 
     if (search) {
+      // SQLiteでは大文字小文字を区別しない検索はLIKE演算子で実現
+      // Prismaのcontainsはデフォルトで大文字小文字を区別しないため、modeオプションは不要
       where.OR = [
-        { title: { contains: search as string, mode: "insensitive" } },
-        { content: { contains: search as string, mode: "insensitive" } },
+        { title: { contains: search as string } },
+        { content: { contains: search as string } },
       ];
+    }
+
+    // タグフィルタ（AND/OR対応）
+    if (tags) {
+      const tagIds = (tags as string).split(",").filter((id) => id.trim());
+      if (tagIds.length > 0) {
+        if (tagsMode === "OR") {
+          // OR検索: いずれかのタグを含む
+          where.tags = {
+            some: { tagId: { in: tagIds } },
+          };
+        } else {
+          // AND検索: 全てのタグを含む
+          where.AND = tagIds.map((tagId) => ({
+            tags: { some: { tagId } },
+          }));
+        }
+      }
+    }
+
+    // 日付範囲フィルタ
+    if (fromDate || toDate) {
+      where.createdAt = {};
+      if (fromDate) {
+        const fromDateTime = new Date(fromDate as string);
+        if (!isNaN(fromDateTime.getTime())) {
+          where.createdAt.gte = fromDateTime;
+        }
+      }
+      if (toDate) {
+        const toDateTime = new Date(toDate as string);
+        if (!isNaN(toDateTime.getTime())) {
+          // 終了日は23:59:59まで含める
+          toDateTime.setHours(23, 59, 59, 999);
+          where.createdAt.lte = toDateTime;
+        }
+      }
     }
 
     const notes = await prisma.note.findMany({

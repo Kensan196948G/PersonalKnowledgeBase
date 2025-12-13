@@ -16,6 +16,15 @@ interface NoteStore {
   sortBy: "updatedAt" | "createdAt" | "title";
   sortOrder: "asc" | "desc";
 
+  // 高度検索フィルタ
+  searchTags: string[];
+  searchTagsMode: "AND" | "OR";
+  searchFolderId: string | null;
+  searchFromDate: string | null;
+  searchToDate: string | null;
+  searchIsPinned: boolean | null;
+  searchIsFavorite: boolean | null;
+
   // アクション
   fetchNotes: () => Promise<void>;
   fetchNoteById: (id: string) => Promise<Note | null>;
@@ -28,14 +37,21 @@ interface NoteStore {
   setSortOrder: (order: "asc" | "desc") => void;
   clearError: () => void;
 
+  // 高度検索アクション
+  setSearchTags: (tagIds: string[], mode: "AND" | "OR") => void;
+  setSearchFolder: (folderId: string | null) => void;
+  setSearchDateRange: (fromDate: string | null, toDate: string | null) => void;
+  setSearchIsPinned: (isPinned: boolean | null) => void;
+  setSearchIsFavorite: (isFavorite: boolean | null) => void;
+  clearAllFilters: () => void;
+
   // セレクター（computed values）
   getSelectedNote: () => Note | null;
   getFilteredNotes: () => Note[];
 }
 
-// APIベースURL（環境変数またはデフォルト）
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
+// APIベースURL（Viteプロキシ経由で /api に統一）
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
 
 export const useNoteStore = create<NoteStore>()(
   devtools(
@@ -50,16 +66,63 @@ export const useNoteStore = create<NoteStore>()(
         sortBy: "updatedAt",
         sortOrder: "desc",
 
+        // 高度検索フィルタ初期値
+        searchTags: [],
+        searchTagsMode: "AND",
+        searchFolderId: null,
+        searchFromDate: null,
+        searchToDate: null,
+        searchIsPinned: null,
+        searchIsFavorite: null,
+
         // ノート一覧取得
         fetchNotes: async () => {
           set({ isLoading: true, error: null });
           try {
-            const { sortBy, sortOrder, searchQuery } = get();
+            const {
+              sortBy,
+              sortOrder,
+              searchQuery,
+              searchTags,
+              searchTagsMode,
+              searchFolderId,
+              searchFromDate,
+              searchToDate,
+              searchIsPinned,
+              searchIsFavorite,
+            } = get();
+
             const params = new URLSearchParams();
             params.append("sortBy", sortBy);
             params.append("order", sortOrder);
+
             if (searchQuery) {
               params.append("search", searchQuery);
+            }
+
+            if (searchTags.length > 0) {
+              params.append("tags", searchTags.join(","));
+              params.append("tagsMode", searchTagsMode);
+            }
+
+            if (searchFolderId) {
+              params.append("folderId", searchFolderId);
+            }
+
+            if (searchFromDate) {
+              params.append("fromDate", searchFromDate);
+            }
+
+            if (searchToDate) {
+              params.append("toDate", searchToDate);
+            }
+
+            if (searchIsPinned !== null) {
+              params.append("isPinned", String(searchIsPinned));
+            }
+
+            if (searchIsFavorite !== null) {
+              params.append("isFavorite", String(searchIsFavorite));
             }
 
             const response = await fetch(`${API_BASE_URL}/notes?${params}`);
@@ -250,6 +313,45 @@ export const useNoteStore = create<NoteStore>()(
           set({ error: null });
         },
 
+        // 高度検索: タグフィルタ設定
+        setSearchTags: (tagIds: string[], mode: "AND" | "OR") => {
+          set({ searchTags: tagIds, searchTagsMode: mode });
+        },
+
+        // 高度検索: フォルダフィルタ設定
+        setSearchFolder: (folderId: string | null) => {
+          set({ searchFolderId: folderId });
+        },
+
+        // 高度検索: 日付範囲設定
+        setSearchDateRange: (fromDate: string | null, toDate: string | null) => {
+          set({ searchFromDate: fromDate, searchToDate: toDate });
+        },
+
+        // 高度検索: ピン留めフィルタ設定
+        setSearchIsPinned: (isPinned: boolean | null) => {
+          set({ searchIsPinned: isPinned });
+        },
+
+        // 高度検索: お気に入りフィルタ設定
+        setSearchIsFavorite: (isFavorite: boolean | null) => {
+          set({ searchIsFavorite: isFavorite });
+        },
+
+        // 全フィルタクリア
+        clearAllFilters: () => {
+          set({
+            searchQuery: "",
+            searchTags: [],
+            searchTagsMode: "AND",
+            searchFolderId: null,
+            searchFromDate: null,
+            searchToDate: null,
+            searchIsPinned: null,
+            searchIsFavorite: null,
+          });
+        },
+
         // セレクター: 選択中のノート取得
         getSelectedNote: () => {
           const { notes, selectedNoteId } = get();
@@ -301,12 +403,19 @@ export const useNoteStore = create<NoteStore>()(
       }),
       {
         name: "note-store",
-        // 永続化する状態を選択（APIデータは除外）
+        // 永続化する状態を選択（APIデータとselectedNoteIdは除外）
         partialize: (state) => ({
           searchQuery: state.searchQuery,
           sortBy: state.sortBy,
           sortOrder: state.sortOrder,
-          selectedNoteId: state.selectedNoteId,
+          // selectedNoteId: state.selectedNoteId, // 初回アクセス時にウェルカムページを表示するため除外
+          searchTags: state.searchTags,
+          searchTagsMode: state.searchTagsMode,
+          searchFolderId: state.searchFolderId,
+          searchFromDate: state.searchFromDate,
+          searchToDate: state.searchToDate,
+          searchIsPinned: state.searchIsPinned,
+          searchIsFavorite: state.searchIsFavorite,
         }),
       },
     ),
