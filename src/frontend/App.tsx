@@ -60,7 +60,7 @@ function App() {
         }, 1000);
       }
     },
-    [selectedNote, updateNote, setSaving]
+    [selectedNote, updateNote, setSaving],
   );
 
   // タイトル変更時の保存（デバウンス1秒）
@@ -89,7 +89,7 @@ function App() {
         }, 1000);
       }
     },
-    [selectedNote, updateNote, setSaving]
+    [selectedNote, updateNote, setSaving],
   );
 
   // クリーンアップ：コンポーネントアンマウント時にタイマーをクリア
