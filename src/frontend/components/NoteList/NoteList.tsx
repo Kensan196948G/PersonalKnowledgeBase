@@ -14,6 +14,8 @@ export interface NoteListProps {
   initialSortBy?: "createdAt" | "updatedAt" | "title";
   /** 初期ソート順序 */
   initialOrder?: "asc" | "desc";
+  /** タグクリック時のコールバック（フィルタ用） */
+  onTagClick?: (tagId: string) => void;
 }
 
 export type SortField = "createdAt" | "updatedAt" | "title";
@@ -26,9 +28,10 @@ export type SortOrder = "asc" | "desc";
 export function NoteList({
   onNoteSelect,
   selectedNoteId = null,
-  apiBaseUrl = "http://localhost:3000",
+  apiBaseUrl = "/api", // Viteプロキシ経由でバックエンドに接続
   initialSortBy = "updatedAt",
   initialOrder = "desc",
+  onTagClick,
 }: NoteListProps) {
   const [notes, setNotes] = useState<NoteListItem[]>([]);
   const [filteredNotes, setFilteredNotes] = useState<NoteListItem[]>([]);
@@ -56,7 +59,7 @@ export function NoteList({
         params.append("search", searchQuery);
       }
 
-      const response = await fetch(`${apiBaseUrl}/api/notes?${params}`);
+      const response = await fetch(`${apiBaseUrl}/notes?${params}`);
 
       if (!response.ok) {
         throw new Error(`Failed to fetch notes: ${response.statusText}`);
@@ -108,7 +111,7 @@ export function NoteList({
    */
   const handleDeleteNote = async (noteId: string) => {
     try {
-      const response = await fetch(`${apiBaseUrl}/api/notes/${noteId}`, {
+      const response = await fetch(`${apiBaseUrl}/notes/${noteId}`, {
         method: "DELETE",
       });
 
@@ -273,6 +276,7 @@ export function NoteList({
                 isSelected={note.id === selectedNoteId}
                 onClick={onNoteSelect}
                 onDelete={handleDeleteNote}
+                onTagClick={onTagClick}
               />
             ))}
           </div>

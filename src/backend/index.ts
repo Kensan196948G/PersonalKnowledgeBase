@@ -5,17 +5,35 @@ import { prisma } from "./db.js";
 import path from "path";
 import notesRouter from "./api/notes.js";
 import uploadRouter from "./api/upload.js";
+import tagsRouter from "./api/tags.js";
+import foldersRouter from "./api/folders.js";
+import exportRouter from "./api/export.js";
+import importRouter from "./api/import.js";
 
 // 環境変数読み込み
 config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = Number(process.env.PORT) || 3000;
 
 // ミドルウェア
+// ネットワークIPアドレスからのアクセスも許可
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://192.168.0.187:5173", // ネットワークIPアドレス
+  process.env.CORS_ORIGIN,
+].filter(Boolean);
+
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || "http://localhost:5173",
+    origin: (origin, callback) => {
+      // originがundefined（サーバー間通信など）または許可リストに含まれる場合は許可
+      if (!origin || allowedOrigins.some(allowed => origin.startsWith(allowed as string))) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
   }),
 );
@@ -28,6 +46,10 @@ app.use("/api/attachments", express.static(UPLOAD_DIR));
 // APIルート
 app.use("/api/notes", notesRouter);
 app.use("/api/upload", uploadRouter);
+app.use("/api/tags", tagsRouter);
+app.use("/api/folders", foldersRouter);
+app.use("/api/export", exportRouter);
+app.use("/api/import", importRouter);
 
 // ヘルスチェック
 app.get("/api/health", async (_req, res) => {
@@ -47,10 +69,12 @@ app.get("/api/health", async (_req, res) => {
   }
 });
 
-// サーバー起動
-app.listen(PORT, () => {
-  console.log(`🚀 Server is running on http://localhost:${PORT}`);
-  console.log(`📚 API documentation: http://localhost:${PORT}/api/health`);
+// サーバー起動（0.0.0.0でリッスン - ネットワークアクセス許可）
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Server is running on:`);
+  console.log(`   - Local:   http://localhost:${PORT}`);
+  console.log(`   - Network: http://192.168.0.187:${PORT}`);
+  console.log(`📚 API Health: http://localhost:${PORT}/api/health`);
 });
 
 // グレースフルシャットダウン

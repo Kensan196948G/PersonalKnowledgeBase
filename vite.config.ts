@@ -18,6 +18,7 @@ export default defineConfig({
     },
   },
   server: {
+    host: true, // ネットワークIPアドレスでのアクセスを許可
     port: 5173,
     proxy: {
       '/api': {

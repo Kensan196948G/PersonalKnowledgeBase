@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { NoteListItem } from "../../types/note";
+import { extractTextFromTipTap, truncateText } from "../../lib/utils";
 
 export interface NoteCardProps {
   /** ノートデータ */
@@ -10,6 +11,8 @@ export interface NoteCardProps {
   onClick?: (noteId: string) => void;
   /** 削除時のコールバック */
   onDelete?: (noteId: string) => void;
+  /** タグクリック時のコールバック（フィルタ用） */
+  onTagClick?: (tagId: string) => void;
 }
 
 /**
@@ -21,6 +24,7 @@ export function NoteCard({
   isSelected = false,
   onClick,
   onDelete,
+  onTagClick,
 }: NoteCardProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -49,14 +53,9 @@ export function NoteCard({
     });
   };
 
-  /**
-   * コンテンツのプレビューテキストを生成（HTMLタグを除去）
-   */
-  const getPreviewText = (html: string, maxLength: number = 100): string => {
-    const text = html.replace(/<[^>]*>/g, "").trim();
-    if (text.length <= maxLength) return text;
-    return text.slice(0, maxLength) + "...";
-  };
+  // コンテンツプレビュー: TipTap JSONから純粋なテキストを抽出
+  const contentText = extractTextFromTipTap(note.content);
+  const previewText = truncateText(contentText, 150);
 
   const handleCardClick = () => {
     if (!showDeleteConfirm) {
@@ -84,8 +83,6 @@ export function NoteCard({
     e.stopPropagation();
     setShowDeleteConfirm(false);
   };
-
-  const previewText = getPreviewText(note.content);
 
   return (
     <div
@@ -260,9 +257,13 @@ export function NoteCard({
       {note.tags && note.tags.length > 0 && (
         <div className="flex flex-wrap gap-1 mt-2">
           {note.tags.slice(0, 3).map((noteTag) => (
-            <span
+            <button
               key={noteTag.tagId}
-              className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700"
+              onClick={(e) => {
+                e.stopPropagation();
+                onTagClick?.(noteTag.tagId);
+              }}
+              className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700 hover:ring-2 hover:ring-offset-1 transition-all"
               style={
                 noteTag.tag.color
                   ? {
@@ -271,9 +272,10 @@ export function NoteCard({
                     }
                   : undefined
               }
+              title={`${noteTag.tag.name}でフィルタ`}
             >
               {noteTag.tag.name}
-            </span>
+            </button>
           ))}
           {note.tags.length > 3 && (
             <span className="text-xs text-gray-400">

@@ -123,3 +123,38 @@ export function formatFileSize(bytes: number): string {
 
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 }
+
+/**
+ * TipTap JSONフォーマットからプレーンテキストを抽出
+ * @param content TipTap JSONコンテンツ（文字列またはオブジェクト）
+ * @returns プレーンテキスト
+ */
+export function extractTextFromTipTap(content: string | object): string {
+  try {
+    // 文字列の場合はJSONパース
+    const json = typeof content === "string" ? JSON.parse(content) : content;
+
+    // TipTap JSONの構造を再帰的に走査してテキストを抽出
+    const extractText = (node: any): string => {
+      if (!node) return "";
+
+      // テキストノードの場合
+      if (node.type === "text") {
+        return node.text || "";
+      }
+
+      // コンテンツ配列を持つ場合、再帰的に処理
+      if (node.content && Array.isArray(node.content)) {
+        return node.content.map(extractText).join(" ");
+      }
+
+      return "";
+    };
+
+    const text = extractText(json);
+    return text.trim();
+  } catch (error) {
+    // JSONパースエラーの場合、元の文字列をそのまま返す
+    return typeof content === "string" ? content : String(content);
+  }
+}
