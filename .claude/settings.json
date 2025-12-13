@@ -19,15 +19,20 @@
   "hooks": {
     "preToolUse": [
       {
-        "matcher": "Edit|Write",
+        "matcher": "Edit|Write|Bash",
         "command": ".claude/hooks/pre-tool-use.sh"
       }
     ],
     "postToolUse": [
       {
-        "matcher": "Edit|Write",
+        "matcher": "Edit|Write|Bash|Task",
         "command": ".claude/hooks/post-tool-use.sh"
       }
     ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "/home/kensan/.claude/statusline.sh",
+    "padding": 0
   }
 }

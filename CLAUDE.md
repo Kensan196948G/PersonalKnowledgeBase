@@ -31,7 +31,7 @@
 |------|------|------|
 | SubAgent | ✅ | 3-4並列動作確認済み |
 | Hooks | ✅ | ファイルロック機構有効 |
-| MCP | ✅ | GitHub, SQLite設定済み |
+| MCP | ✅ | GitHub, SQLite, Brave Search, Memory設定済み |
 | 標準機能 | ✅ | 全機能利用可能 |
 
 ---
@@ -83,28 +83,64 @@ SubAgent 4 (general-purpose): [テストコード作成]
 
 ---
 
-## Hooks 自動化ルール
+## Hooks 自動化ルール（統合版）
 
 ### 有効なHooks
 
 | Hook | タイミング | 処理内容 |
 |------|-----------|----------|
-| pre-tool-use | Edit/Write前 | ファイルロック取得 |
-| post-tool-use | Edit/Write後 | ファイルロック解除 |
+| pre-tool-use | Edit/Write/Bash/Task前 | ファイルロック・競合検出・DBスキーマ保護・GitHub Issue作成 |
+| post-tool-use | Edit/Write/Bash/Task後 | ロック解除・進捗記録・セッション記憶・コンテキスト共有 |
+
+### 並列開発機能
+
+| 機能 | 説明 |
+|------|------|
+| ファイルロック | SubAgent間の同一ファイル編集を防止（30秒タイムアウト） |
+| 競合検出 | ロック済みファイルへのアクセスをエラーで通知 |
+| DBスキーマ保護 | Prismaコマンドの並列実行を防止（60秒タイムアウト） |
+| 進捗記録 | 編集・テスト・ビルドの履歴を自動記録 |
+| ステータス確認 | 現在のロック状態・進捗を確認可能 |
+
+### MCP/SubAgent統合機能
+
+| 機能 | 説明 |
+|------|------|
+| **SQLite連携** | 進捗・ロック履歴をDBに保存（検索可能） |
+| **GitHub連携** | 競合発生時にIssue自動作成 |
+| **Memory連携** | 重要情報をセッション間で記憶 |
+| **SubAgentコンテキスト共有** | SubAgent間で作業状態を共有 |
+
+### SQLiteテーブル構成
+
+| テーブル | 用途 |
+|----------|------|
+| `hook_progress` | 進捗ログ（ツール使用履歴） |
+| `lock_history` | ロック履歴（競合検出記録含む） |
+| `subagent_context` | SubAgent間共有コンテキスト |
+| `session_memory` | セッション間記憶（重要情報） |
+| `github_issues` | 自動作成されたIssue記録 |
 
 ### 動作確認コマンド
 
 ```bash
+# 並列開発ステータス確認
+.claude/hooks/parallel-status.sh
+
 # ロックディレクトリ確認
 ls -la .claude/hooks/locks/
 
-# ロックが残った場合のクリア
-rm -rf .claude/hooks/locks/*.lock
+# 進捗ログ確認
+cat .claude/hooks/progress.log
+
+# Hooksログ確認
+cat .claude/hooks/logs/hooks.log
 ```
 
 ### トラブルシューティング
 
 - ロックが残った場合: `rm -rf .claude/hooks/locks/*.lock`
+- ログクリア: `rm -rf .claude/hooks/logs/* .claude/hooks/progress.log`
 - Hooks未動作時: Claude Code再起動
 
 ---
@@ -117,11 +153,15 @@ rm -rf .claude/hooks/locks/*.lock
 |-----|------|----------------|
 | **GitHub** | Issue作成、PR、コード管理 | 機能完了時、バグ発見時 |
 | **SQLite** | DB直接操作、デバッグ | データ確認、スキーマ変更 |
+| **Brave Search** | 技術調査、ライブラリ検索 | 実装方法調査時 |
+| **Memory** | セッション間記憶、知識蓄積 | 設計方針・決定事項の保持 |
 
 ### MCP使用ガイドライン
 
-- **GitHub**: コミット前にIssue確認、PR作成は機能完了後
+- **GitHub**: コミット前にIssue確認、PR作成は機能完了後、競合時Issue自動作成
 - **SQLite**: データ確認やデバッグ時に使用（個人開発のためDB直接操作可）
+- **Brave Search**: ライブラリ選定、エラー解決時に活用
+- **Memory**: 設計方針の記憶、過去の実装判断の参照、フェーズ進捗の把握
 
 ### MCP動作確認
 

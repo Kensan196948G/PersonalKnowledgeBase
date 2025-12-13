@@ -83,6 +83,9 @@ attachments/
 # -------------------------------------------
 .claude/plans/
 .claude/hooks/locks/*.lock
+.claude/hooks/logs/
+.claude/hooks/parallel-status.json
+.claude/hooks/progress.log
 
 # -------------------------------------------
 # Archive (削除予定ファイル)
