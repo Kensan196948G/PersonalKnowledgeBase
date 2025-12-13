@@ -1,0 +1,129 @@
+# ===========================================
+# CI ワークフロー
+# - プルリクエスト・プッシュ時に実行
+# - テスト、リント、型チェック、ビルド
+# ===========================================
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  品質チェック:
+    name: 品質チェック
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: リポジトリチェックアウト
+        uses: actions/checkout@v4
+
+      - name: Node.js セットアップ
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 依存関係インストール
+        run: npm ci
+
+      - name: Prisma クライアント生成
+        run: npx prisma generate
+
+      - name: ESLint
+        run: npm run lint
+
+      - name: TypeScript 型チェック
+        run: npm run typecheck
+
+      - name: Prettier フォーマットチェック
+        run: npx prettier --check "src/**/*.{ts,tsx,json,css}"
+
+  テスト:
+    name: テスト実行
+    runs-on: ubuntu-latest
+    needs: 品質チェック
+
+    steps:
+      - name: リポジトリチェックアウト
+        uses: actions/checkout@v4
+
+      - name: Node.js セットアップ
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 依存関係インストール
+        run: npm ci
+
+      - name: Prisma クライアント生成
+        run: npx prisma generate
+
+      - name: テスト実行
+        run: npm test -- --passWithNoTests --coverage
+
+      - name: カバレッジレポート
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 7
+
+  ビルド:
+    name: ビルド
+    runs-on: ubuntu-latest
+    needs: テスト
+
+    steps:
+      - name: リポジトリチェックアウト
+        uses: actions/checkout@v4
+
+      - name: Node.js セットアップ
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 依存関係インストール
+        run: npm ci
+
+      - name: Prisma クライアント生成
+        run: npx prisma generate
+
+      - name: フロントエンドビルド
+        run: npm run build:frontend
+
+      - name: バックエンドビルド
+        run: npm run build:backend
+
+      - name: ビルド成果物アップロード
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: dist/
+          retention-days: 7
+
+  完了通知:
+    name: CI完了
+    runs-on: ubuntu-latest
+    needs: [品質チェック, テスト, ビルド]
+    if: always()
+
+    steps:
+      - name: 結果サマリー
+        run: |
+          echo "## CI 実行結果" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| ジョブ | 結果 |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 品質チェック | ${{ needs.品質チェック.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| テスト | ${{ needs.テスト.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ビルド | ${{ needs.ビルド.result }} |" >> $GITHUB_STEP_SUMMARY

@@ -1,0 +1,295 @@
+# ===========================================
+# 自動エラー検知・修復ワークフロー
+# - 30分間隔で自動実行
+# - エラー検知 → 自動修復 → 確認を最大15回ループ
+# - 無限実行（スケジュール）
+# ===========================================
+
+name: 自動エラー検知修復
+
+on:
+  # 30分間隔でスケジュール実行
+  schedule:
+    - cron: '*/30 * * * *'
+  # 手動実行も可能
+  workflow_dispatch:
+    inputs:
+      max_loops:
+        description: '最大ループ回数'
+        required: false
+        default: '15'
+        type: string
+  # Push時にも実行
+  push:
+    branches: [main, feature/*]
+  # PR時にも実行
+  pull_request:
+    branches: [main]
+
+env:
+  NODE_VERSION: '20'
+  MAX_REPAIR_LOOPS: ${{ github.event.inputs.max_loops || '15' }}
+
+jobs:
+  エラー検知修復:
+    name: エラー検知・自動修復ループ
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+
+    steps:
+      - name: リポジトリチェックアウト
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Node.js セットアップ
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 依存関係インストール
+        run: npm ci
+
+      - name: Prisma クライアント生成
+        run: npx prisma generate
+
+      - name: 自動エラー検知・修復ループ
+        id: repair_loop
+        run: |
+          #!/bin/bash
+          set -e
+
+          MAX_LOOPS=${{ env.MAX_REPAIR_LOOPS }}
+          LOOP_COUNT=0
+          ERRORS_FOUND=true
+          REPAIRS_MADE=false
+          ERROR_LOG=""
+
+          echo "============================================="
+          echo "  自動エラー検知・修復ループ開始"
+          echo "  最大ループ回数: $MAX_LOOPS"
+          echo "============================================="
+
+          while [ "$ERRORS_FOUND" = true ] && [ $LOOP_COUNT -lt $MAX_LOOPS ]; do
+            LOOP_COUNT=$((LOOP_COUNT + 1))
+            ERRORS_FOUND=false
+            CURRENT_ERRORS=""
+
+            echo ""
+            echo "=== ループ $LOOP_COUNT / $MAX_LOOPS ==="
+            echo ""
+
+            # 1. ESLint エラー検知
+            echo "📋 ESLint チェック中..."
+            if ! npm run lint 2>&1; then
+              echo "⚠️ ESLint エラー検出 - 自動修復を試行"
+              ERRORS_FOUND=true
+              CURRENT_ERRORS="$CURRENT_ERRORS\n- ESLintエラー"
+
+              # 自動修復
+              npm run lint:fix 2>&1 || true
+              REPAIRS_MADE=true
+              echo "✅ ESLint 自動修復完了"
+            else
+              echo "✅ ESLint OK"
+            fi
+
+            # 2. TypeScript 型チェック
+            echo ""
+            echo "📋 TypeScript 型チェック中..."
+            if ! npm run typecheck 2>&1; then
+              echo "⚠️ TypeScript エラー検出"
+              ERRORS_FOUND=true
+              CURRENT_ERRORS="$CURRENT_ERRORS\n- TypeScriptエラー"
+              ERROR_LOG="$ERROR_LOG\n[ループ$LOOP_COUNT] TypeScriptエラー検出"
+            else
+              echo "✅ TypeScript OK"
+            fi
+
+            # 3. Prettier フォーマットチェック
+            echo ""
+            echo "📋 Prettier フォーマットチェック中..."
+            if ! npx prettier --check "src/**/*.{ts,tsx,json,css}" 2>&1; then
+              echo "⚠️ フォーマットエラー検出 - 自動修復を試行"
+              ERRORS_FOUND=true
+              CURRENT_ERRORS="$CURRENT_ERRORS\n- フォーマットエラー"
+
+              # 自動修復
+              npm run format 2>&1 || true
+              REPAIRS_MADE=true
+              echo "✅ フォーマット自動修復完了"
+            else
+              echo "✅ Prettier OK"
+            fi
+
+            # 4. テスト実行
+            echo ""
+            echo "📋 テスト実行中..."
+            if ! npm test -- --passWithNoTests 2>&1; then
+              echo "⚠️ テストエラー検出"
+              ERRORS_FOUND=true
+              CURRENT_ERRORS="$CURRENT_ERRORS\n- テストエラー"
+              ERROR_LOG="$ERROR_LOG\n[ループ$LOOP_COUNT] テストエラー検出"
+            else
+              echo "✅ テスト OK"
+            fi
+
+            # 5. ビルドチェック
+            echo ""
+            echo "📋 ビルドチェック中..."
+            if ! npm run build 2>&1; then
+              echo "⚠️ ビルドエラー検出"
+              ERRORS_FOUND=true
+              CURRENT_ERRORS="$CURRENT_ERRORS\n- ビルドエラー"
+              ERROR_LOG="$ERROR_LOG\n[ループ$LOOP_COUNT] ビルドエラー検出"
+            else
+              echo "✅ ビルド OK"
+            fi
+
+            # ループ結果サマリー
+            if [ "$ERRORS_FOUND" = true ]; then
+              echo ""
+              echo "⚠️ ループ $LOOP_COUNT: エラーあり"
+              echo -e "検出エラー: $CURRENT_ERRORS"
+            else
+              echo ""
+              echo "✅ ループ $LOOP_COUNT: 全チェックパス！"
+              break
+            fi
+
+            # 短い待機（連続実行を避ける）
+            if [ $LOOP_COUNT -lt $MAX_LOOPS ] && [ "$ERRORS_FOUND" = true ]; then
+              echo "⏳ 5秒待機後、次のループへ..."
+              sleep 5
+            fi
+          done
+
+          # 最終結果
+          echo ""
+          echo "============================================="
+          echo "  自動エラー検知・修復ループ完了"
+          echo "============================================="
+          echo "総ループ回数: $LOOP_COUNT"
+          echo "修復実行: $REPAIRS_MADE"
+          echo "最終状態: $([ "$ERRORS_FOUND" = true ] && echo 'エラーあり' || echo '全チェックパス')"
+
+          # 出力変数設定
+          echo "loop_count=$LOOP_COUNT" >> $GITHUB_OUTPUT
+          echo "repairs_made=$REPAIRS_MADE" >> $GITHUB_OUTPUT
+          echo "final_status=$([ "$ERRORS_FOUND" = true ] && echo 'error' || echo 'success')" >> $GITHUB_OUTPUT
+
+          # エラーがある場合は失敗ステータス
+          if [ "$ERRORS_FOUND" = true ]; then
+            exit 1
+          fi
+
+      - name: 修復内容をコミット
+        if: steps.repair_loop.outputs.repairs_made == 'true'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+
+          # 変更があればコミット
+          if git diff --quiet && git diff --staged --quiet; then
+            echo "変更なし - コミットスキップ"
+          else
+            git add -A
+            git commit -m "fix: 自動エラー修復 (ループ ${{ steps.repair_loop.outputs.loop_count }}回)
+
+            🤖 GitHub Actions による自動修復
+            - ESLint自動修復
+            - Prettierフォーマット修正
+
+            Generated by: 自動エラー検知修復ワークフロー"
+            git push
+            echo "✅ 修復内容をコミット・プッシュしました"
+          fi
+
+      - name: エラー時Issue作成
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const loopCount = '${{ steps.repair_loop.outputs.loop_count }}' || '不明';
+            const today = new Date().toISOString().split('T')[0];
+
+            // 既存のオープンIssueを確認
+            const existingIssues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'auto-repair,bug'
+            });
+
+            const todayIssue = existingIssues.data.find(issue =>
+              issue.title.includes(today)
+            );
+
+            if (todayIssue) {
+              // 既存Issueにコメント追加
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: todayIssue.number,
+                body: `## 自動修復失敗レポート (${new Date().toLocaleString('ja-JP')})\n\n` +
+                      `- **ループ回数**: ${loopCount}回\n` +
+                      `- **ワークフロー実行**: [#${context.runNumber}](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})\n\n` +
+                      `最大${loopCount}回のループでも解決できないエラーが存在します。手動確認が必要です。`
+              });
+              console.log(`既存Issue #${todayIssue.number} にコメント追加`);
+            } else {
+              // 新規Issue作成
+              const issue = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `[自動検知] エラー修復失敗 - ${today}`,
+                body: `## 自動エラー検知・修復ワークフロー 失敗レポート\n\n` +
+                      `### 概要\n` +
+                      `自動エラー検知・修復ワークフローが最大ループ回数に達しても全てのエラーを解決できませんでした。\n\n` +
+                      `### 詳細\n` +
+                      `| 項目 | 値 |\n` +
+                      `|------|-----|\n` +
+                      `| 実行日時 | ${new Date().toLocaleString('ja-JP')} |\n` +
+                      `| ループ回数 | ${loopCount}回 |\n` +
+                      `| ワークフロー実行 | [#${context.runNumber}](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}) |\n\n` +
+                      `### 必要なアクション\n` +
+                      `- [ ] ワークフローログを確認してエラー原因を特定\n` +
+                      `- [ ] 手動でエラーを修正\n` +
+                      `- [ ] 修正後、ワークフローを再実行して確認\n\n` +
+                      `---\n` +
+                      `*このIssueは自動エラー検知修復ワークフローにより自動作成されました*`,
+                labels: ['auto-repair', 'bug', 'needs-review']
+              });
+              console.log(`新規Issue #${issue.data.number} を作成`);
+            }
+
+      - name: 成功時サマリー
+        if: success()
+        run: |
+          echo "## ✅ 自動エラー検知・修復 成功" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| 項目 | 値 |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|-----|" >> $GITHUB_STEP_SUMMARY
+          echo "| ループ回数 | ${{ steps.repair_loop.outputs.loop_count }}回 |" >> $GITHUB_STEP_SUMMARY
+          echo "| 修復実行 | ${{ steps.repair_loop.outputs.repairs_made }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 最終状態 | 全チェックパス |" >> $GITHUB_STEP_SUMMARY
+
+  通知:
+    name: 実行結果通知
+    needs: エラー検知修復
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - name: 結果サマリー
+        run: |
+          echo "============================================="
+          echo "  自動エラー検知・修復ワークフロー 完了"
+          echo "============================================="
+          echo "ジョブ結果: ${{ needs.エラー検知修復.result }}"
+          echo "次回実行: 30分後（スケジュール実行の場合）"
