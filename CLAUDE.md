@@ -121,7 +121,7 @@ rm -rf .claude/hooks/locks/*.lock
 ### MCP使用ガイドライン
 
 - **GitHub**: コミット前にIssue確認、PR作成は機能完了後
-- **SQLite**: 本番DBへの直接変更は禁止、開発DBのみ
+- **SQLite**: データ確認やデバッグ時に使用（個人開発のためDB直接操作可）
 
 ### MCP動作確認
 
@@ -207,8 +207,9 @@ npm run lint             # ESLint
 npm run typecheck        # TypeScript型チェック
 
 # データベース
-npm run db:migrate       # マイグレーション実行
-npm run db:studio        # Prisma Studio起動
+npx prisma db push       # スキーマ反映
+npx prisma generate      # クライアント生成
+npx prisma studio        # Prisma Studio起動
 ```
 
 ---
@@ -254,3 +255,4 @@ main                 # 安定版（常に動作する状態）
 - `docs/01_コンセプト（Concept）/` - 基本思想・ビジョン
 - `docs/02_メモ機能（Note）/` - メモ機能の詳細アイデア
 - `docs/08_AI連携（AI）/` - 将来のAI連携構想
+- `docs/09_開発フェーズ（Development）/` - 開発フェーズ・技術選定・進捗管理

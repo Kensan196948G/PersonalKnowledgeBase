@@ -15,12 +15,13 @@
         "@anthropic-ai/mcp-server-memory"
       ]
     },
-    "postgres": {
+    "sqlite": {
       "command": "npx",
       "args": [
         "-y",
-        "@anthropic-ai/mcp-server-postgres",
-        "postgresql://pkb_user:pkb_password@localhost:5432/knowledgebase"
+        "@anthropic-ai/mcp-server-sqlite",
+        "--db-path",
+        "/mnt/LinuxHDD/PersonalKnowledgeBase/data/knowledge.db"
       ]
     }
   }
