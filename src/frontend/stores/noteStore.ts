@@ -35,7 +35,7 @@ interface NoteStore {
 
 // APIベースURL（環境変数またはデフォルト）
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
 
 export const useNoteStore = create<NoteStore>()(
   devtools(
@@ -62,7 +62,7 @@ export const useNoteStore = create<NoteStore>()(
               params.append("search", searchQuery);
             }
 
-            const response = await fetch(`${API_BASE_URL}/api/notes?${params}`);
+            const response = await fetch(`${API_BASE_URL}/notes?${params}`);
             if (!response.ok) {
               throw new Error(`Failed to fetch notes: ${response.statusText}`);
             }
@@ -85,7 +85,7 @@ export const useNoteStore = create<NoteStore>()(
         fetchNoteById: async (id: string) => {
           set({ isLoading: true, error: null });
           try {
-            const response = await fetch(`${API_BASE_URL}/api/notes/${id}`);
+            const response = await fetch(`${API_BASE_URL}/notes/${id}`);
             if (!response.ok) {
               if (response.status === 404) {
                 throw new Error("Note not found");
@@ -130,7 +130,7 @@ export const useNoteStore = create<NoteStore>()(
         createNote: async (data?: Partial<Note>) => {
           set({ isLoading: true, error: null });
           try {
-            const response = await fetch(`${API_BASE_URL}/api/notes`, {
+            const response = await fetch(`${API_BASE_URL}/notes`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
@@ -166,7 +166,7 @@ export const useNoteStore = create<NoteStore>()(
         updateNote: async (id: string, data: Partial<Note>) => {
           set({ isLoading: true, error: null });
           try {
-            const response = await fetch(`${API_BASE_URL}/api/notes/${id}`, {
+            const response = await fetch(`${API_BASE_URL}/notes/${id}`, {
               method: "PUT",
               headers: {
                 "Content-Type": "application/json",
@@ -201,7 +201,7 @@ export const useNoteStore = create<NoteStore>()(
         deleteNote: async (id: string) => {
           set({ isLoading: true, error: null });
           try {
-            const response = await fetch(`${API_BASE_URL}/api/notes/${id}`, {
+            const response = await fetch(`${API_BASE_URL}/notes/${id}`, {
               method: "DELETE",
             });
 

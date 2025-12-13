@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import { config } from "dotenv";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "./db.js";
 import path from "path";
 import notesRouter from "./api/notes.js";
 import uploadRouter from "./api/upload.js";
@@ -10,11 +10,15 @@ import uploadRouter from "./api/upload.js";
 config();
 
 const app = express();
-const prisma = new PrismaClient();
 const PORT = process.env.PORT || 3000;
 
 // ミドルウェア
-app.use(cors());
+app.use(
+  cors({
+    origin: process.env.CORS_ORIGIN || "http://localhost:5173",
+    credentials: true,
+  }),
+);
 app.use(express.json());
 
 // 静的ファイル配信（アップロードされた画像）
@@ -34,7 +38,7 @@ app.get("/api/health", async (_req, res) => {
       timestamp: new Date().toISOString(),
       database: "connected",
     });
-  } catch (error) {
+  } catch (_error) {
     res.status(500).json({
       status: "error",
       timestamp: new Date().toISOString(),

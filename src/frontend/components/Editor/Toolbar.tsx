@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { Editor } from "@tiptap/react";
 
 interface ToolbarProps {
@@ -5,17 +6,49 @@ interface ToolbarProps {
   editor: Editor;
   /** 指定したフォーマットがアクティブかどうか */
   isActive: (name: string, attributes?: Record<string, unknown>) => boolean;
+  /** 画像アップロード関数（オプション） */
+  uploadImage?: (file: File) => Promise<string>;
+  /** アップロード中かどうか */
+  isUploading?: boolean;
 }
 
 /**
  * エディタのツールバーコンポーネント
  * フォーマットボタンを提供する
  */
-export function Toolbar({ editor, isActive }: ToolbarProps) {
-  const handleAddImage = () => {
+export function Toolbar({
+  editor,
+  isActive,
+  uploadImage,
+  isUploading = false,
+}: ToolbarProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAddImageUrl = () => {
     const url = window.prompt("画像URLを入力してください:");
     if (url) {
       editor.chain().focus().setImage({ src: url }).run();
+    }
+  };
+
+  const handleFileSelect = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file || !uploadImage) return;
+
+    try {
+      const imageUrl = await uploadImage(file);
+      if (imageUrl) {
+        editor.chain().focus().setImage({ src: imageUrl }).run();
+      }
+    } catch (err) {
+      console.error("Image upload failed:", err);
+    }
+
+    // ファイル選択をリセット（同じファイルを再選択可能にする）
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
     }
   };
 
@@ -142,7 +175,30 @@ export function Toolbar({ editor, isActive }: ToolbarProps) {
       >
         🔗
       </ToolbarButton>
-      <ToolbarButton onClick={handleAddImage} title="画像挿入">
+
+      {/* 画像挿入 - ファイルアップロード（uploadImage が提供されている場合） */}
+      {uploadImage && (
+        <>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleFileSelect}
+            className="hidden"
+            disabled={isUploading}
+          />
+          <ToolbarButton
+            onClick={() => fileInputRef.current?.click()}
+            title="画像ファイルをアップロード"
+            disabled={isUploading}
+          >
+            📁
+          </ToolbarButton>
+        </>
+      )}
+
+      {/* 画像挿入 - URL入力 */}
+      <ToolbarButton onClick={handleAddImageUrl} title="画像URL挿入">
         🖼
       </ToolbarButton>
 

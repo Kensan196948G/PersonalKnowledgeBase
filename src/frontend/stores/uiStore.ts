@@ -18,6 +18,7 @@ interface UIStore {
   isEditorFocused: boolean;
   activeModal: string | null;
   toasts: Toast[];
+  isSaving: boolean;
 
   // アクション
   toggleSidebar: () => void;
@@ -27,6 +28,7 @@ interface UIStore {
   closeModal: () => void;
   addToast: (toast: Omit<Toast, "id">) => void;
   removeToast: (id: string) => void;
+  setSaving: (saving: boolean) => void;
 }
 
 // トーストID生成
@@ -43,6 +45,7 @@ export const useUIStore = create<UIStore>()(
         isEditorFocused: false,
         activeModal: null,
         toasts: [],
+        isSaving: false,
 
         // サイドバートグル
         toggleSidebar: () => {
@@ -97,6 +100,11 @@ export const useUIStore = create<UIStore>()(
           set((state) => ({
             toasts: state.toasts.filter((toast) => toast.id !== id),
           }));
+        },
+
+        // 保存状態設定
+        setSaving: (saving: boolean) => {
+          set({ isSaving: saving });
         },
       }),
       {

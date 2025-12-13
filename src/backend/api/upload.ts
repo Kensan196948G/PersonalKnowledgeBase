@@ -1,12 +1,11 @@
 import { Router, Request, Response } from "express";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../db.js";
 import multer from "multer";
 import path from "path";
 import { promises as fs } from "fs";
 import crypto from "crypto";
 
 const router = Router();
-const prisma = new PrismaClient();
 
 // 許可する画像形式
 const ALLOWED_MIME_TYPES = [

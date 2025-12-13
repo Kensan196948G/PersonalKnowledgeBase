@@ -1,15 +1,21 @@
-import { useState } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { MainLayout } from "./components/Layout/MainLayout";
 import { Header } from "./components/Layout/Header";
 import { NoteList } from "./components/NoteList";
 import { TipTapEditor } from "./components/Editor";
 import { ToastContainer } from "./components/UI/ToastContainer";
 import { useNotes } from "./hooks/useNotes";
+import { useUIStore } from "./stores/uiStore";
 
 function App() {
   const { selectedNote, createNote, updateNote } = useNotes();
+  const { isSaving, setSaving } = useUIStore();
   const [editorContent, setEditorContent] = useState("");
   const [editorTitle, setEditorTitle] = useState("");
+
+  // デバウンスタイマー用ref
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const titleSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // ノート選択時にエディタを更新
   const handleNoteSelect = (noteId: string | null) => {
@@ -29,26 +35,74 @@ function App() {
     setEditorContent(newNote.content);
   };
 
-  // エディタ内容変更時の自動保存（デバウンス）
-  const handleEditorChange = (html: string) => {
-    setEditorContent(html);
+  // エディタ内容変更時の自動保存（デバウンス1秒）
+  const handleEditorChange = useCallback(
+    (html: string) => {
+      setEditorContent(html);
 
-    // 選択中のノートがあれば自動保存
-    if (selectedNote) {
-      // デバウンス処理は後で実装（今はシンプルに即時更新）
-      updateNote(selectedNote.id, { content: html });
-    }
-  };
+      // 既存のタイマーをクリア
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
 
-  // タイトル変更時の保存
-  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newTitle = e.target.value;
-    setEditorTitle(newTitle);
+      // 選択中のノートがあれば1秒後に保存
+      if (selectedNote) {
+        setSaving(true);
 
-    if (selectedNote) {
-      updateNote(selectedNote.id, { title: newTitle });
-    }
-  };
+        saveTimeoutRef.current = setTimeout(async () => {
+          try {
+            await updateNote(selectedNote.id, { content: html });
+            setSaving(false);
+          } catch (error) {
+            setSaving(false);
+            console.error("Failed to save note content:", error);
+          }
+        }, 1000);
+      }
+    },
+    [selectedNote, updateNote, setSaving]
+  );
+
+  // タイトル変更時の保存（デバウンス1秒）
+  const handleTitleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const newTitle = e.target.value;
+      setEditorTitle(newTitle);
+
+      // 既存のタイマーをクリア
+      if (titleSaveTimeoutRef.current) {
+        clearTimeout(titleSaveTimeoutRef.current);
+      }
+
+      // 選択中のノートがあれば1秒後に保存
+      if (selectedNote) {
+        setSaving(true);
+
+        titleSaveTimeoutRef.current = setTimeout(async () => {
+          try {
+            await updateNote(selectedNote.id, { title: newTitle });
+            setSaving(false);
+          } catch (error) {
+            setSaving(false);
+            console.error("Failed to save note title:", error);
+          }
+        }, 1000);
+      }
+    },
+    [selectedNote, updateNote, setSaving]
+  );
+
+  // クリーンアップ：コンポーネントアンマウント時にタイマーをクリア
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+      if (titleSaveTimeoutRef.current) {
+        clearTimeout(titleSaveTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
     <>
@@ -95,6 +149,52 @@ function App() {
 
               {/* メタ情報 */}
               <div className="mt-4 pt-4 border-t border-gray-200 text-xs text-gray-500 flex items-center gap-4">
+                {/* 保存状態インジケーター */}
+                <span className="flex items-center gap-1">
+                  {isSaving ? (
+                    <>
+                      <svg
+                        className="w-3 h-3 animate-spin text-blue-600"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      <span className="text-blue-600">保存中...</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg
+                        className="w-3 h-3 text-green-600"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                      <span className="text-green-600">保存済み</span>
+                    </>
+                  )}
+                </span>
                 <span>
                   作成:{" "}
                   {new Date(selectedNote.createdAt).toLocaleString("ja-JP")}
