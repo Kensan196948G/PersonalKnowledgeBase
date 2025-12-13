@@ -9,6 +9,6 @@ export type {
   NoteTag,
   Folder,
   Attachment,
-} from './note'
+} from "./note";
 
-export type { Toast } from '../stores/uiStore'
+export type { Toast } from "../stores/uiStore";

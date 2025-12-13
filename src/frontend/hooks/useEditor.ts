@@ -1,28 +1,28 @@
-import { useEditor as useTipTapEditor, Editor } from '@tiptap/react'
-import StarterKit from '@tiptap/starter-kit'
-import Image from '@tiptap/extension-image'
-import Link from '@tiptap/extension-link'
-import Placeholder from '@tiptap/extension-placeholder'
-import TaskList from '@tiptap/extension-task-list'
-import TaskItem from '@tiptap/extension-task-item'
-import { useCallback } from 'react'
+import { useEditor as useTipTapEditor, Editor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import Image from "@tiptap/extension-image";
+import Link from "@tiptap/extension-link";
+import Placeholder from "@tiptap/extension-placeholder";
+import TaskList from "@tiptap/extension-task-list";
+import TaskItem from "@tiptap/extension-task-item";
+import { useCallback } from "react";
 
 export interface UseEditorOptions {
   /** 初期コンテンツ（HTML形式） */
-  content?: string
+  content?: string;
   /** コンテンツ変更時のコールバック */
-  onChange?: (html: string) => void
+  onChange?: (html: string) => void;
   /** プレースホルダーテキスト */
-  placeholder?: string
+  placeholder?: string;
   /** 編集可能かどうか */
-  editable?: boolean
+  editable?: boolean;
 }
 
 export interface UseEditorReturn {
   /** TipTap エディタインスタンス */
-  editor: Editor | null
+  editor: Editor | null;
   /** 指定したフォーマットがアクティブかどうか */
-  isActive: (name: string, attributes?: Record<string, unknown>) => boolean
+  isActive: (name: string, attributes?: Record<string, unknown>) => boolean;
 }
 
 /**
@@ -30,9 +30,9 @@ export interface UseEditorReturn {
  * エディタインスタンスの作成と状態管理を行う
  */
 export function useEditor({
-  content = '',
+  content = "",
   onChange,
-  placeholder = 'ここにメモを入力...',
+  placeholder = "ここにメモを入力...",
   editable = true,
 }: UseEditorOptions = {}): UseEditorReturn {
   const editor = useTipTapEditor({
@@ -44,13 +44,13 @@ export function useEditor({
       }),
       Image.configure({
         HTMLAttributes: {
-          class: 'max-w-full h-auto rounded',
+          class: "max-w-full h-auto rounded",
         },
       }),
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
-          class: 'text-blue-600 hover:underline cursor-pointer',
+          class: "text-blue-600 hover:underline cursor-pointer",
         },
       }),
       Placeholder.configure({
@@ -64,22 +64,22 @@ export function useEditor({
     content,
     editable,
     onUpdate: ({ editor }) => {
-      onChange?.(editor.getHTML())
+      onChange?.(editor.getHTML());
     },
-  })
+  });
 
   // ツールバーボタンのアクティブ状態を取得
   const isActive = useCallback(
     (name: string, attributes?: Record<string, unknown>) => {
-      return editor?.isActive(name, attributes) ?? false
+      return editor?.isActive(name, attributes) ?? false;
     },
-    [editor]
-  )
+    [editor],
+  );
 
   return {
     editor,
     isActive,
-  }
+  };
 }
 
-export default useEditor
+export default useEditor;

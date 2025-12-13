@@ -5,14 +5,14 @@
  * TipTapEditorを使用する際の参考にしてください。
  */
 
-import { useState } from 'react'
-import { TipTapEditor } from './TipTapEditor'
+import { useState } from "react";
+import { TipTapEditor } from "./TipTapEditor";
 
 /**
  * 基本的な使用例
  */
 export function BasicExample() {
-  const [content, setContent] = useState('<p>初期コンテンツ</p>')
+  const [content, setContent] = useState("<p>初期コンテンツ</p>");
 
   return (
     <div className="max-w-4xl mx-auto p-4">
@@ -23,42 +23,40 @@ export function BasicExample() {
         placeholder="ここにメモを入力してください..."
       />
     </div>
-  )
+  );
 }
 
 /**
  * 読み取り専用モード
  */
 export function ReadOnlyExample() {
-  const content = '<h1>読み取り専用コンテンツ</h1><p>このコンテンツは編集できません。</p>'
+  const content =
+    "<h1>読み取り専用コンテンツ</h1><p>このコンテンツは編集できません。</p>";
 
   return (
     <div className="max-w-4xl mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">読み取り専用エディタ</h1>
-      <TipTapEditor
-        content={content}
-        editable={false}
-      />
+      <TipTapEditor content={content} editable={false} />
     </div>
-  )
+  );
 }
 
 /**
  * 保存機能付きエディタ
  */
 export function EditorWithSave() {
-  const [content, setContent] = useState('')
-  const [savedContent, setSavedContent] = useState('')
+  const [content, setContent] = useState("");
+  const [savedContent, setSavedContent] = useState("");
 
   const handleSave = () => {
-    setSavedContent(content)
-    alert('保存しました！')
-  }
+    setSavedContent(content);
+    alert("保存しました！");
+  };
 
   const handleLoad = () => {
-    setContent(savedContent)
-    alert('読み込みました！')
-  }
+    setContent(savedContent);
+    alert("読み込みました！");
+  };
 
   return (
     <div className="max-w-4xl mx-auto p-4">
@@ -87,17 +85,21 @@ export function EditorWithSave() {
 
       <div className="mt-4 p-4 bg-gray-100 rounded">
         <h2 className="font-bold mb-2">保存済みコンテンツのプレビュー:</h2>
-        <div dangerouslySetInnerHTML={{ __html: savedContent || '(まだ保存されていません)' }} />
+        <div
+          dangerouslySetInnerHTML={{
+            __html: savedContent || "(まだ保存されていません)",
+          }}
+        />
       </div>
     </div>
-  )
+  );
 }
 
 /**
  * リアルタイムプレビュー付きエディタ
  */
 export function EditorWithPreview() {
-  const [content, setContent] = useState('')
+  const [content, setContent] = useState("");
 
   return (
     <div className="max-w-6xl mx-auto p-4">
@@ -116,19 +118,19 @@ export function EditorWithPreview() {
         <div>
           <h2 className="font-bold mb-2">HTML出力</h2>
           <pre className="p-4 bg-gray-100 rounded text-xs overflow-auto max-h-[500px]">
-            {content || '(コンテンツなし)'}
+            {content || "(コンテンツなし)"}
           </pre>
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 /**
  * カスタムフック使用例
  */
 export function CustomHookExample() {
-  const [content, setContent] = useState('')
+  const [content, setContent] = useState("");
 
   return (
     <div className="max-w-4xl mx-auto p-4">
@@ -144,11 +146,11 @@ export function CustomHookExample() {
       <div className="mt-4 p-4 bg-blue-50 rounded">
         <h2 className="font-bold mb-2">統計情報:</h2>
         <ul className="list-disc list-inside space-y-1">
-          <li>文字数: {content.replace(/<[^>]*>/g, '').length} 文字</li>
+          <li>文字数: {content.replace(/<[^>]*>/g, "").length} 文字</li>
           <li>HTML長: {content.length} 文字</li>
-          <li>空かどうか: {content === '' ? 'はい' : 'いいえ'}</li>
+          <li>空かどうか: {content === "" ? "はい" : "いいえ"}</li>
         </ul>
       </div>
     </div>
-  )
+  );
 }

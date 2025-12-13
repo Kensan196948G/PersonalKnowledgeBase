@@ -1,6 +1,19 @@
 // Jest セットアップファイル
 import '@testing-library/jest-dom'
 
+// Vite の import.meta.env をモック
+globalThis.import = {
+  meta: {
+    env: {
+      VITE_API_BASE_URL: 'http://localhost:3001',
+      MODE: 'test',
+      DEV: false,
+      PROD: false,
+      SSR: false,
+    },
+  },
+} as ImportMeta & { meta: { env: Record<string, unknown> } }
+
 // グローバルモック（必要に応じて追加）
 beforeAll(() => {
   // テスト開始前の共通処理

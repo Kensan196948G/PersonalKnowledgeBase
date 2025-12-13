@@ -1,54 +1,54 @@
-import { useState } from 'react'
-import { MainLayout } from './components/Layout/MainLayout'
-import { Header } from './components/Layout/Header'
-import { NoteList } from './components/NoteList'
-import { TipTapEditor } from './components/Editor'
-import { ToastContainer } from './components/UI/ToastContainer'
-import { useNotes } from './hooks/useNotes'
+import { useState } from "react";
+import { MainLayout } from "./components/Layout/MainLayout";
+import { Header } from "./components/Layout/Header";
+import { NoteList } from "./components/NoteList";
+import { TipTapEditor } from "./components/Editor";
+import { ToastContainer } from "./components/UI/ToastContainer";
+import { useNotes } from "./hooks/useNotes";
 
 function App() {
-  const { selectedNote, createNote, updateNote } = useNotes()
-  const [editorContent, setEditorContent] = useState('')
-  const [editorTitle, setEditorTitle] = useState('')
+  const { selectedNote, createNote, updateNote } = useNotes();
+  const [editorContent, setEditorContent] = useState("");
+  const [editorTitle, setEditorTitle] = useState("");
 
   // ノート選択時にエディタを更新
   const handleNoteSelect = (noteId: string | null) => {
     if (noteId && selectedNote) {
-      setEditorTitle(selectedNote.title)
-      setEditorContent(selectedNote.content)
+      setEditorTitle(selectedNote.title);
+      setEditorContent(selectedNote.content);
     }
-  }
+  };
 
   // 新規ノート作成
   const handleNewNote = async () => {
     const newNote = await createNote({
-      title: '無題のノート',
-      content: '',
-    })
-    setEditorTitle(newNote.title)
-    setEditorContent(newNote.content)
-  }
+      title: "無題のノート",
+      content: "",
+    });
+    setEditorTitle(newNote.title);
+    setEditorContent(newNote.content);
+  };
 
   // エディタ内容変更時の自動保存（デバウンス）
   const handleEditorChange = (html: string) => {
-    setEditorContent(html)
+    setEditorContent(html);
 
     // 選択中のノートがあれば自動保存
     if (selectedNote) {
       // デバウンス処理は後で実装（今はシンプルに即時更新）
-      updateNote(selectedNote.id, { content: html })
+      updateNote(selectedNote.id, { content: html });
     }
-  }
+  };
 
   // タイトル変更時の保存
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newTitle = e.target.value
-    setEditorTitle(newTitle)
+    const newTitle = e.target.value;
+    setEditorTitle(newTitle);
 
     if (selectedNote) {
-      updateNote(selectedNote.id, { title: newTitle })
+      updateNote(selectedNote.id, { title: newTitle });
     }
-  }
+  };
 
   return (
     <>
@@ -58,10 +58,7 @@ function App() {
       {/* メインレイアウト */}
       <MainLayout
         header={
-          <Header
-            title="Personal Knowledge Base"
-            onNewNote={handleNewNote}
-          />
+          <Header title="Personal Knowledge Base" onNewNote={handleNewNote} />
         }
         sidebar={
           <NoteList
@@ -98,15 +95,30 @@ function App() {
 
               {/* メタ情報 */}
               <div className="mt-4 pt-4 border-t border-gray-200 text-xs text-gray-500 flex items-center gap-4">
-                <span>作成: {new Date(selectedNote.createdAt).toLocaleString('ja-JP')}</span>
-                <span>更新: {new Date(selectedNote.updatedAt).toLocaleString('ja-JP')}</span>
-                {selectedNote.isPinned && <span className="text-yellow-600">📌 ピン留め</span>}
-                {selectedNote.isFavorite && <span className="text-red-600">⭐ お気に入り</span>}
+                <span>
+                  作成:{" "}
+                  {new Date(selectedNote.createdAt).toLocaleString("ja-JP")}
+                </span>
+                <span>
+                  更新:{" "}
+                  {new Date(selectedNote.updatedAt).toLocaleString("ja-JP")}
+                </span>
+                {selectedNote.isPinned && (
+                  <span className="text-yellow-600">📌 ピン留め</span>
+                )}
+                {selectedNote.isFavorite && (
+                  <span className="text-red-600">⭐ お気に入り</span>
+                )}
               </div>
             </div>
           ) : (
             <div className="h-full flex flex-col items-center justify-center text-gray-500 p-8">
-              <svg className="w-24 h-24 mb-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+                className="w-24 h-24 mb-6 text-gray-300"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -130,8 +142,18 @@ function App() {
                   flex items-center gap-2
                 "
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 4v16m8-8H4"
+                  />
                 </svg>
                 新しいノートを作成
               </button>
@@ -140,7 +162,7 @@ function App() {
         }
       />
     </>
-  )
+  );
 }
 
-export default App
+export default App;

@@ -1,18 +1,18 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from "react";
 
 export interface SearchBarProps {
   /** 検索クエリ変更時のコールバック */
-  onSearchChange: (query: string) => void
+  onSearchChange: (query: string) => void;
   /** 現在の検索クエリ */
-  value?: string
+  value?: string;
   /** 検索結果件数 */
-  resultCount?: number
+  resultCount?: number;
   /** 総ノート数 */
-  totalCount?: number
+  totalCount?: number;
   /** プレースホルダーテキスト */
-  placeholder?: string
+  placeholder?: string;
   /** デバウンス遅延（ミリ秒） */
-  debounceMs?: number
+  debounceMs?: number;
 }
 
 /**
@@ -21,61 +21,61 @@ export interface SearchBarProps {
  */
 export function SearchBar({
   onSearchChange,
-  value = '',
+  value = "",
   resultCount,
   totalCount,
-  placeholder = 'ノートを検索... (Ctrl/Cmd + K)',
+  placeholder = "ノートを検索... (Ctrl/Cmd + K)",
   debounceMs = 300,
 }: SearchBarProps) {
-  const [searchQuery, setSearchQuery] = useState(value)
-  const inputRef = useRef<HTMLInputElement>(null)
-  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const [searchQuery, setSearchQuery] = useState(value);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // キーボードショートカット（Cmd/Ctrl + K）
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
-        event.preventDefault()
-        inputRef.current?.focus()
+      if ((event.metaKey || event.ctrlKey) && event.key === "k") {
+        event.preventDefault();
+        inputRef.current?.focus();
       }
-    }
+    };
 
-    window.addEventListener('keydown', handleKeyDown)
+    window.addEventListener("keydown", handleKeyDown);
     return () => {
-      window.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [])
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
 
   // デバウンス付き検索
   useEffect(() => {
     if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current)
+      clearTimeout(debounceTimerRef.current);
     }
 
     debounceTimerRef.current = setTimeout(() => {
-      onSearchChange(searchQuery)
-    }, debounceMs)
+      onSearchChange(searchQuery);
+    }, debounceMs);
 
     return () => {
       if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current)
+        clearTimeout(debounceTimerRef.current);
       }
-    }
-  }, [searchQuery, onSearchChange, debounceMs])
+    };
+  }, [searchQuery, onSearchChange, debounceMs]);
 
   // 外部からのvalue変更を反映
   useEffect(() => {
-    setSearchQuery(value)
-  }, [value])
+    setSearchQuery(value);
+  }, [value]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value)
-  }
+    setSearchQuery(e.target.value);
+  };
 
   const handleClear = () => {
-    setSearchQuery('')
-    inputRef.current?.focus()
-  }
+    setSearchQuery("");
+    inputRef.current?.focus();
+  };
 
   return (
     <div className="bg-white border-b border-gray-200 p-4">
@@ -147,8 +147,8 @@ export function SearchBar({
         <div className="mt-2 text-xs text-gray-500">
           {resultCount > 0 ? (
             <>
-              <span className="font-medium text-gray-700">{resultCount}件</span>
-              {' '}のノートが見つかりました
+              <span className="font-medium text-gray-700">{resultCount}件</span>{" "}
+              のノートが見つかりました
               {resultCount < totalCount && (
                 <span className="text-gray-400"> (全{totalCount}件中)</span>
               )}
@@ -161,7 +161,7 @@ export function SearchBar({
         </div>
       )}
     </div>
-  )
+  );
 }
 
-export default SearchBar
+export default SearchBar;

@@ -1,15 +1,15 @@
-import { useState } from 'react'
-import type { NoteListItem } from '../../types/note'
+import { useState } from "react";
+import type { NoteListItem } from "../../types/note";
 
 export interface NoteCardProps {
   /** ノートデータ */
-  note: NoteListItem
+  note: NoteListItem;
   /** 選択状態 */
-  isSelected?: boolean
+  isSelected?: boolean;
   /** クリック時のコールバック */
-  onClick?: (noteId: string) => void
+  onClick?: (noteId: string) => void;
   /** 削除時のコールバック */
-  onDelete?: (noteId: string) => void
+  onDelete?: (noteId: string) => void;
 }
 
 /**
@@ -22,70 +22,70 @@ export function NoteCard({
   onClick,
   onDelete,
 }: NoteCardProps) {
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   /**
    * 日時フォーマット（相対時間表示）
    */
   const formatRelativeTime = (dateString: string): string => {
-    const date = new Date(dateString)
-    const now = new Date()
-    const diffMs = now.getTime() - date.getTime()
-    const diffMins = Math.floor(diffMs / 60000)
-    const diffHours = Math.floor(diffMs / 3600000)
-    const diffDays = Math.floor(diffMs / 86400000)
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMins < 1) return '今'
-    if (diffMins < 60) return `${diffMins}分前`
-    if (diffHours < 24) return `${diffHours}時間前`
-    if (diffDays < 7) return `${diffDays}日前`
+    if (diffMins < 1) return "今";
+    if (diffMins < 60) return `${diffMins}分前`;
+    if (diffHours < 24) return `${diffHours}時間前`;
+    if (diffDays < 7) return `${diffDays}日前`;
 
     // 1週間以上前は日付表示
-    return date.toLocaleDateString('ja-JP', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    })
-  }
+    return date.toLocaleDateString("ja-JP", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
 
   /**
    * コンテンツのプレビューテキストを生成（HTMLタグを除去）
    */
   const getPreviewText = (html: string, maxLength: number = 100): string => {
-    const text = html.replace(/<[^>]*>/g, '').trim()
-    if (text.length <= maxLength) return text
-    return text.slice(0, maxLength) + '...'
-  }
+    const text = html.replace(/<[^>]*>/g, "").trim();
+    if (text.length <= maxLength) return text;
+    return text.slice(0, maxLength) + "...";
+  };
 
   const handleCardClick = () => {
     if (!showDeleteConfirm) {
-      onClick?.(note.id)
+      onClick?.(note.id);
     }
-  }
+  };
 
   const handleDeleteClick = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    setShowDeleteConfirm(true)
-  }
+    e.stopPropagation();
+    setShowDeleteConfirm(true);
+  };
 
   const handleConfirmDelete = async (e: React.MouseEvent) => {
-    e.stopPropagation()
-    setIsDeleting(true)
+    e.stopPropagation();
+    setIsDeleting(true);
     try {
-      await onDelete?.(note.id)
+      await onDelete?.(note.id);
     } finally {
-      setIsDeleting(false)
-      setShowDeleteConfirm(false)
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
     }
-  }
+  };
 
   const handleCancelDelete = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    setShowDeleteConfirm(false)
-  }
+    e.stopPropagation();
+    setShowDeleteConfirm(false);
+  };
 
-  const previewText = getPreviewText(note.content)
+  const previewText = getPreviewText(note.content);
 
   return (
     <div
@@ -95,10 +95,10 @@ export function NoteCard({
         border-l-4
         ${
           isSelected
-            ? 'bg-blue-50 border-blue-500 shadow-sm'
-            : 'bg-white border-transparent hover:bg-gray-50 hover:border-gray-200'
+            ? "bg-blue-50 border-blue-500 shadow-sm"
+            : "bg-white border-transparent hover:bg-gray-50 hover:border-gray-200"
         }
-        ${isDeleting ? 'opacity-50 pointer-events-none' : ''}
+        ${isDeleting ? "opacity-50 pointer-events-none" : ""}
       `}
     >
       {/* 削除確認オーバーレイ */}
@@ -122,7 +122,7 @@ export function NoteCard({
                 transition-colors
               "
             >
-              {isDeleting ? '削除中...' : '削除'}
+              {isDeleting ? "削除中..." : "削除"}
             </button>
             <button
               onClick={handleCancelDelete}
@@ -146,21 +146,17 @@ export function NoteCard({
         <h3
           className={`
             font-medium flex-1 truncate
-            ${isSelected ? 'text-blue-900' : 'text-gray-900'}
+            ${isSelected ? "text-blue-900" : "text-gray-900"}
           `}
         >
-          {note.title || '無題のノート'}
+          {note.title || "無題のノート"}
         </h3>
 
         <div className="flex items-center gap-1 ml-2 flex-shrink-0">
           {/* ピン留めアイコン */}
           {note.isPinned && (
             <span className="text-yellow-500" title="ピン留め">
-              <svg
-                className="w-4 h-4"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M10 3a1 1 0 011 1v5h3a1 1 0 110 2h-3v5a1 1 0 11-2 0v-5H6a1 1 0 110-2h3V4a1 1 0 011-1z" />
               </svg>
             </span>
@@ -169,11 +165,7 @@ export function NoteCard({
           {/* お気に入りアイコン */}
           {note.isFavorite && (
             <span className="text-red-500" title="お気に入り">
-              <svg
-                className="w-4 h-4"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path
                   fillRule="evenodd"
                   d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"
@@ -214,23 +206,25 @@ export function NoteCard({
 
       {/* プレビューテキスト */}
       {previewText && (
-        <p className="text-sm text-gray-600 mb-2 line-clamp-2">
-          {previewText}
-        </p>
+        <p className="text-sm text-gray-600 mb-2 line-clamp-2">{previewText}</p>
       )}
 
       {/* フッター部分：メタ情報 */}
       <div className="flex items-center justify-between text-xs text-gray-500">
         <div className="flex items-center gap-3">
           {/* 更新日時 */}
-          <span title={new Date(note.updatedAt).toLocaleString('ja-JP')}>
+          <span title={new Date(note.updatedAt).toLocaleString("ja-JP")}>
             {formatRelativeTime(note.updatedAt)}
           </span>
 
           {/* フォルダ */}
           {note.folder && (
             <span className="flex items-center">
-              <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+              <svg
+                className="w-3 h-3 mr-1"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
                 <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
               </svg>
               {note.folder.name}
@@ -240,7 +234,11 @@ export function NoteCard({
           {/* タグ数 */}
           {note.tags && note.tags.length > 0 && (
             <span className="flex items-center">
-              <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+              <svg
+                className="w-3 h-3 mr-1"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
                 <path
                   fillRule="evenodd"
                   d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z"
@@ -285,7 +283,7 @@ export function NoteCard({
         </div>
       )}
     </div>
-  )
+  );
 }
 
-export default NoteCard
+export default NoteCard;
