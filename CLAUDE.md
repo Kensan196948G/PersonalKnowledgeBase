@@ -1,4 +1,4 @@
-# Personal Knowledge Base System
+# Personal Knowledge Base System - 開発ガイド
 
 ## プロジェクト概要
 
@@ -14,52 +14,66 @@
 | 期間 | 長期育成型 |
 | 重視 | **作り切れる・壊れない・育てられる** |
 
-## 技術スタック
+### 技術スタック
 
-### Frontend
-- **React 18** + TypeScript
-- **TipTap** (リッチテキストエディタ)
-- **Tailwind CSS**
-- **Vite** (ビルド)
+- **Frontend**: React 18 + TypeScript + TipTap + Tailwind CSS + Vite
+- **Backend**: Node.js + Express + TypeScript
+- **Database**: SQLite（シンプル、バックアップ容易）
+- **ORM**: Prisma
 
-### Backend
-- **Node.js + Express** + TypeScript
-- **SQLite** (個人用、シンプル、バックアップ容易)
-- **Prisma** (ORM)
+---
 
-### Storage
-- メモ: SQLite (JSON列でリッチコンテンツ)
-- 画像: ローカルファイルシステム (`/data/attachments/`)
-- バックアップ: SQLiteファイル + 添付ファイルのZIP
+## 開発環境構成
 
-### 将来AI連携
-- SQLiteのベクトル拡張 (sqlite-vss)
-- または別途ベクトルDB (ChromaDB等)
+### 確認済み機能
 
-## 開発方針
+| 機能 | 状態 | 備考 |
+|------|------|------|
+| SubAgent | ✅ | 3-4並列動作確認済み |
+| Hooks | ✅ | ファイルロック機構有効 |
+| MCP | ✅ | GitHub, SQLite設定済み |
+| 標準機能 | ✅ | 全機能利用可能 |
 
-### 3つの原則
+---
 
-1. **作り切れる** - 1人で管理可能な複雑さに抑える
-2. **壊れない** - 明確な責任分離、競合リスク最小化
-3. **育てられる** - 段階的拡張が容易な構造
+## SubAgent 並列開発ルール
 
-### SubAgent活用ルール
+### 利用可能なSubAgent
+
+| タイプ | 用途 |
+|--------|------|
+| **general-purpose** | コード実装、調査、ドキュメント作成 |
+| **Explore** | コードベース探索、依存関係調査 |
+| **Plan** | 設計・計画立案 |
+
+### 並列実行ルール
+
+- 最大同時実行: **4**
+- バックグラウンド実行: 有効 (`run_in_background: true`)
+- ファイル競合: Hooksで自動防止
+
+### タスク分割基準
+
+機能実装時は以下の4分割を基本とする:
+
+1. **UI/フロントエンド** - Reactコンポーネント
+2. **API/バックエンド** - エンドポイント実装
+3. **データ層** - DB操作、スキーマ
+4. **テスト** - ユニットテスト、統合テスト
+
+### SubAgent起動テンプレート
 
 ```
-並列数: 最大 3-4（コスト効率重視）
+以下のタスクを4つのSubAgentで並列実行してください:
 
-用途:
-  - SubAgent 1: フロントエンド実装
-  - SubAgent 2: バックエンドAPI実装
-  - SubAgent 3: テスト作成
-  - SubAgent 4: ドキュメント生成（必要時）
+SubAgent 1 (general-purpose): [フロントエンド実装内容]
+SubAgent 2 (general-purpose): [バックエンドAPI実装内容]
+SubAgent 3 (general-purpose): [データ層実装内容]
+SubAgent 4 (general-purpose): [テストコード作成]
+
+各SubAgentは独立したファイルを担当し、競合を避けてください。
+完了後、統合確認を行ってください。
 ```
-
-### 並列作業の分割基準
-
-- ファイル競合が発生しない単位で分割
-- 例: コンポーネント別、API別、機能別
 
 ### 禁止事項
 
@@ -67,22 +81,72 @@
 - DBスキーマの並列変更
 - 依存関係のある処理の並列化
 
+---
+
+## Hooks 自動化ルール
+
+### 有効なHooks
+
+| Hook | タイミング | 処理内容 |
+|------|-----------|----------|
+| pre-tool-use | Edit/Write前 | ファイルロック取得 |
+| post-tool-use | Edit/Write後 | ファイルロック解除 |
+
+### 動作確認コマンド
+
+```bash
+# ロックディレクトリ確認
+ls -la .claude/hooks/locks/
+
+# ロックが残った場合のクリア
+rm -rf .claude/hooks/locks/*.lock
+```
+
+### トラブルシューティング
+
+- ロックが残った場合: `rm -rf .claude/hooks/locks/*.lock`
+- Hooks未動作時: Claude Code再起動
+
+---
+
+## MCP 外部連携ルール
+
+### 利用可能なMCP
+
+| MCP | 用途 | 使用タイミング |
+|-----|------|----------------|
+| **GitHub** | Issue作成、PR、コード管理 | 機能完了時、バグ発見時 |
+| **SQLite** | DB直接操作、デバッグ | データ確認、スキーマ変更 |
+
+### MCP使用ガイドライン
+
+- **GitHub**: コミット前にIssue確認、PR作成は機能完了後
+- **SQLite**: 本番DBへの直接変更は禁止、開発DBのみ
+
+### MCP動作確認
+
+```bash
+# MCP設定確認
+claude mcp list
+```
+
+---
+
 ## フェーズ管理
 
 ### Phase 1: MVP（書くことに集中）
-- [ ] 基本エディタ（TipTap）
+- [ ] TipTapエディタ基本実装
 - [ ] 画像貼り付け（Ctrl+V）
-- [ ] SQLite保存
-- [ ] 一覧表示
-- [ ] 基本検索
+- [ ] SQLite保存機能
+- [ ] メモ一覧・基本検索
 
 ### Phase 2: 整理機能
-- [ ] タグ管理
+- [ ] タグ管理システム
 - [ ] フォルダ構造
-- [ ] 高度検索（全文検索）
+- [ ] 高度検索（AND/OR）
 
 ### Phase 3: 知識化
-- [ ] ノート間リンク [[]]
+- [ ] ノート間リンク [[ノート名]]
 - [ ] バックリンク表示
 - [ ] 関連ノート提案
 
@@ -90,6 +154,8 @@
 - [ ] ベクトル検索
 - [ ] 類似ノート検索
 - [ ] AI要約・質問応答
+
+---
 
 ## ディレクトリ構造
 
@@ -108,15 +174,19 @@
 │   └── shared/             # 共有型定義
 ├── prisma/                 # DBスキーマ
 ├── data/                   # SQLite + 添付ファイル
-│   ├── knowledgebase.db    # メインDB
+│   ├── knowledge.db        # メインDB
 │   └── attachments/        # 画像・ファイル
 ├── tests/                  # テストコード
 ├── docs/                   # 設計ドキュメント
 ├── .claude/                # Claude Code設定
-│   ├── settings.json
-│   └── hooks/
+│   ├── settings.json       # 権限・Hooks設定
+│   ├── commands/           # スラッシュコマンド
+│   └── hooks/              # Hooksスクリプト
+│       └── locks/          # ロックファイル
 └── scripts/                # ユーティリティスクリプト
 ```
+
+---
 
 ## 主要コマンド
 
@@ -139,8 +209,9 @@ npm run typecheck        # TypeScript型チェック
 # データベース
 npm run db:migrate       # マイグレーション実行
 npm run db:studio        # Prisma Studio起動
-npm run db:backup        # バックアップ作成
 ```
+
+---
 
 ## Git運用
 
@@ -154,57 +225,29 @@ main                 # 安定版（常に動作する状態）
 └── fix/xxx          # バグ修正
 ```
 
-### Git Worktree（推奨）
-
-複数機能を並行開発する場合:
-
-```bash
-# Worktree作成
-git worktree add ../pkb-editor feature/editor
-git worktree add ../pkb-search feature/search
-
-# 作業後に削除
-git worktree remove ../pkb-editor
-```
-
 ### コミットルール
 
 - 機能単位でコミット
 - プレフィックス: `feat:`, `fix:`, `docs:`, `refactor:`, `test:`
 - 日本語コミットメッセージ可
 
-## Hooks設定
+### スラッシュコマンド
 
-### 自動実行されるチェック
+```
+/commit-push-pr-merge   # Git操作の一括実行
+```
 
-| タイミング | 実行内容 |
-|------------|----------|
-| コード編集後 | lint (自動修正) |
-| テスト関連変更後 | 該当テスト実行 |
-| コミット前 | lint + typecheck + test:unit |
-| タスク完了後 | git status 表示 |
+---
 
 ## 設計方針
 
-1. **小さく始め、後から積み上げられる**
-   - 最小限の機能からスタート
-   - 必要になってから拡張
+1. **小さく始め、後から積み上げられる** - 最小限の機能からスタート
+2. **思考を邪魔しないUI/UX** - 書くことに集中できるインターフェース
+3. **書いたあとに"探せる"こと** - 検索性を重視
+4. **データは常に自分の手元にある** - ローカルファースト
+5. **将来のAI連携を阻害しない構造** - 機械可読なデータ形式
 
-2. **思考を邪魔しないUI/UX**
-   - 書くことに集中できるインターフェース
-   - 余計な機能を押し付けない
-
-3. **書いたあとに"探せる"こと**
-   - 検索性を重視
-   - タグ・フォルダ・全文検索
-
-4. **データは常に自分の手元にある**
-   - ローカルファースト
-   - SQLiteファイルで完結
-
-5. **将来のAI連携を阻害しない構造**
-   - 機械可読なデータ形式
-   - ベクトル検索への拡張余地
+---
 
 ## 参考ドキュメント
 

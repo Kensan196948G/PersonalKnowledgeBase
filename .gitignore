@@ -82,6 +82,7 @@ attachments/
 # Claude Code
 # -------------------------------------------
 .claude/plans/
+.claude/hooks/locks/*.lock
 
 # -------------------------------------------
 # Lock files (optional)

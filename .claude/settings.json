@@ -5,6 +5,8 @@
       "Bash(npx:*)",
       "Bash(node:*)",
       "Bash(git:*)",
+      "Bash(gh:*)",
+      "Bash(curl:*)",
       "Read",
       "Write",
       "Edit"
