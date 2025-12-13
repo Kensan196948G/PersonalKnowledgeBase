@@ -5,7 +5,7 @@
  * 実際のテストを実行する前に、モックサーバーのセットアップが必要です。
  */
 
-import { renderHook, act, waitFor } from '@testing-library/react'
+import { renderHook, act } from '@testing-library/react'
 import { useNoteStore } from '../noteStore'
 
 // グローバルfetchのモック

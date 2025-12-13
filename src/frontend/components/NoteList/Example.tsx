@@ -7,7 +7,6 @@
 
 import { useState } from 'react'
 import { NoteList } from './NoteList'
-import type { NoteListItem } from '../../types/note'
 
 /**
  * 例1: 基本的な使い方
@@ -133,7 +132,7 @@ export function CustomApiExample() {
  */
 export function DeleteNotificationExample() {
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null)
-  const [notification, setNotification] = useState<string | null>(null)
+  const [notification] = useState<string | null>(null)
 
   const handleNoteSelect = (noteId: string) => {
     setSelectedNoteId(noteId)
