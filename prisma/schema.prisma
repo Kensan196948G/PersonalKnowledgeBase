@@ -1,12 +1,12 @@
 // Personal Knowledge Base - Prisma Schema
-// データベース: PostgreSQL 16
+// データベース: SQLite（シンプル・バックアップ容易）
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -14,7 +14,7 @@ datasource db {
 model Note {
   id        String   @id @default(uuid())
   title     String
-  content   String   @db.Text
+  content   String
   isPinned  Boolean  @default(false)
   isFavorite Boolean @default(false)
   isArchived Boolean @default(false)
@@ -94,7 +94,7 @@ model Attachment {
 model Template {
   id        String   @id @default(uuid())
   name      String   @unique
-  content   String   @db.Text
+  content   String
   category  String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
