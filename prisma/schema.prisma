@@ -84,8 +84,8 @@ model Attachment {
   fileSize    Int
   createdAt   DateTime @default(now())
 
-  note        Note     @relation(fields: [noteId], references: [id], onDelete: Cascade)
-  noteId      String
+  note        Note?    @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  noteId      String?
 
   @@index([noteId])
 }

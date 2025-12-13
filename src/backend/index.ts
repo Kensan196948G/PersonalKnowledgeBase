@@ -2,7 +2,9 @@ import express from 'express'
 import cors from 'cors'
 import { config } from 'dotenv'
 import { PrismaClient } from '@prisma/client'
-import notesRouter from './api/notes'
+import path from 'path'
+import notesRouter from './api/notes.js'
+import uploadRouter from './api/upload.js'
 
 // 環境変数読み込み
 config()
@@ -15,8 +17,13 @@ const PORT = process.env.PORT || 3000
 app.use(cors())
 app.use(express.json())
 
+// 静的ファイル配信（アップロードされた画像）
+const UPLOAD_DIR = path.join(process.cwd(), 'data', 'attachments')
+app.use('/api/attachments', express.static(UPLOAD_DIR))
+
 // APIルート
 app.use('/api/notes', notesRouter)
+app.use('/api/upload', uploadRouter)
 
 // ヘルスチェック
 app.get('/api/health', async (_req, res) => {

@@ -10,3 +10,5 @@ export type {
   Folder,
   Attachment,
 } from './note'
+
+export type { Toast } from '../stores/uiStore'
