@@ -2,7 +2,7 @@
  * グラフビューコントロール
  */
 
-import type { GraphControlsProps } from '../../types/graph';
+import type { GraphControlsProps } from "../../types/graph";
 
 export function GraphControls({
   onZoomIn,
@@ -22,8 +22,18 @@ export function GraphControls({
             className="px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-sm"
             title="拡大"
           >
-            <svg className="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            <svg
+              className="w-4 h-4 mx-auto"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
             </svg>
           </button>
           <button
@@ -31,8 +41,18 @@ export function GraphControls({
             className="px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-sm"
             title="縮小"
           >
-            <svg className="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+            <svg
+              className="w-4 h-4 mx-auto"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M20 12H4"
+              />
             </svg>
           </button>
           <button
@@ -40,7 +60,12 @@ export function GraphControls({
             className="px-3 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors text-sm"
             title="リセット"
           >
-            <svg className="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+              className="w-4 h-4 mx-auto"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -93,7 +118,10 @@ export function GraphControls({
             max="10"
             value={filter.minLinkCount}
             onChange={(e) =>
-              onFilterChange({ ...filter, minLinkCount: parseInt(e.target.value) })
+              onFilterChange({
+                ...filter,
+                minLinkCount: parseInt(e.target.value),
+              })
             }
             className="w-full"
           />

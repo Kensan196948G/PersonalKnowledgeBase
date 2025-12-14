@@ -2,11 +2,11 @@
  * グラフデータ取得フック
  */
 
-import { useState, useEffect } from 'react';
-import type { GraphNode, GraphLink } from '../types/graph';
+import { useState, useEffect } from "react";
+import type { GraphNode, GraphLink } from "../types/graph";
 
 // Viteのプロキシを通じてAPIにアクセス（相対パス使用）
-const API_BASE_URL = '/api';
+const API_BASE_URL = "/api";
 
 /**
  * ノート間リンクをグラフデータに変換する
@@ -37,26 +37,29 @@ export function useGraphData(centerNoteId?: string, depth: number = 2) {
         // 全ノート情報を取得
         const notesResponse = await fetch(`${API_BASE_URL}/notes`);
         if (!notesResponse.ok) {
-          throw new Error('ノート一覧の取得に失敗しました');
+          throw new Error("ノート一覧の取得に失敗しました");
         }
         const allNotes = await notesResponse.json();
 
         // ノート情報をマップに格納
-        const noteInfoMap = new Map<string, {
-          title: string;
-          isPinned: boolean;
-          isFavorite: boolean;
-          tagCount: number;
-        }>(
+        const noteInfoMap = new Map<
+          string,
+          {
+            title: string;
+            isPinned: boolean;
+            isFavorite: boolean;
+            tagCount: number;
+          }
+        >(
           allNotes.map((note: any) => [
             note.id,
             {
-              title: note.title || '無題',
+              title: note.title || "無題",
               isPinned: note.isPinned || false,
               isFavorite: note.isFavorite || false,
               tagCount: note.tags?.length || 0,
             },
-          ])
+          ]),
         );
 
         // 中心ノードが指定されている場合、そこから開始
@@ -81,14 +84,18 @@ export function useGraphData(centerNoteId?: string, depth: number = 2) {
 
           try {
             // 発リンク取得
-            const outLinksResponse = await fetch(`${API_BASE_URL}/links/${noteId}`);
+            const outLinksResponse = await fetch(
+              `${API_BASE_URL}/links/${noteId}`,
+            );
             let outLinks: any[] = [];
             if (outLinksResponse.ok) {
               outLinks = await outLinksResponse.json();
             }
 
             // 被リンク取得
-            const backLinksResponse = await fetch(`${API_BASE_URL}/links/backlinks/${noteId}`);
+            const backLinksResponse = await fetch(
+              `${API_BASE_URL}/links/backlinks/${noteId}`,
+            );
             let backLinks: any[] = [];
             if (backLinksResponse.ok) {
               backLinks = await backLinksResponse.json();
@@ -129,7 +136,7 @@ export function useGraphData(centerNoteId?: string, depth: number = 2) {
               // リンクを追加（双方向チェック）
               if (!linkSet.has(linkKey) && !linkSet.has(reverseLinkKey)) {
                 const isBidirectional = backLinks.some(
-                  (bl: any) => bl.sourceNoteId === targetId
+                  (bl: any) => bl.sourceNoteId === targetId,
                 );
                 linkList.push({
                   source: noteId,
@@ -141,7 +148,10 @@ export function useGraphData(centerNoteId?: string, depth: number = 2) {
 
               // 次の深度へ
               if (currentDepth < depth) {
-                queue.push({ noteId: targetId, currentDepth: currentDepth + 1 });
+                queue.push({
+                  noteId: targetId,
+                  currentDepth: currentDepth + 1,
+                });
               }
             });
 
@@ -176,7 +186,10 @@ export function useGraphData(centerNoteId?: string, depth: number = 2) {
 
               // 次の深度へ
               if (currentDepth < depth) {
-                queue.push({ noteId: sourceId, currentDepth: currentDepth + 1 });
+                queue.push({
+                  noteId: sourceId,
+                  currentDepth: currentDepth + 1,
+                });
               }
             });
           } catch (err) {
@@ -189,9 +202,13 @@ export function useGraphData(centerNoteId?: string, depth: number = 2) {
         setNodes(Array.from(nodeMap.values()));
         setLinks(linkList);
       } catch (err) {
-        console.error('グラフデータ取得エラー:', err);
+        console.error("グラフデータ取得エラー:", err);
         if (isMounted) {
-          setError(err instanceof Error ? err : new Error('グラフデータの取得に失敗しました'));
+          setError(
+            err instanceof Error
+              ? err
+              : new Error("グラフデータの取得に失敗しました"),
+          );
         }
       } finally {
         if (isMounted) {

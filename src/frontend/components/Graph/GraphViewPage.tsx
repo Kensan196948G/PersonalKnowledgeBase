@@ -19,8 +19,8 @@
  * )}
  */
 
-import { useState } from 'react';
-import { NoteGraphView } from './NoteGraphView';
+import { useState } from "react";
+import { NoteGraphView } from "./NoteGraphView";
 
 interface GraphViewPageProps {
   noteId?: string;
@@ -35,7 +35,9 @@ export function GraphViewPage({ noteId }: GraphViewPageProps) {
       <div className="flex-shrink-0 bg-white border-b border-gray-200 p-4">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-bold text-gray-900">ノートグラフビュー</h2>
+            <h2 className="text-xl font-bold text-gray-900">
+              ノートグラフビュー
+            </h2>
             <p className="text-sm text-gray-500 mt-1">
               ノート間のリンク関係を可視化します
             </p>
@@ -44,7 +46,9 @@ export function GraphViewPage({ noteId }: GraphViewPageProps) {
           {/* 深度設定 */}
           <div className="flex items-center gap-4">
             <label className="flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-700">リンク深度:</span>
+              <span className="text-sm font-medium text-gray-700">
+                リンク深度:
+              </span>
               <select
                 value={depth}
                 onChange={(e) => setDepth(parseInt(e.target.value))}
@@ -79,7 +83,9 @@ export function GraphViewPage({ noteId }: GraphViewPageProps) {
       {/* ヘルプ情報 */}
       <div className="flex-shrink-0 bg-white border-t border-gray-200 p-4">
         <div className="text-xs text-gray-600 space-y-1">
-          <p><strong>操作方法:</strong></p>
+          <p>
+            <strong>操作方法:</strong>
+          </p>
           <ul className="list-disc list-inside space-y-1 ml-2">
             <li>ノードをクリック: そのノートを開く</li>
             <li>ノードをドラッグ: 位置を移動</li>

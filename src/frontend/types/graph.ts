@@ -51,8 +51,8 @@ export interface GraphFilter {
  * グラフビューのプロパティ
  */
 export interface NoteGraphViewProps {
-  noteId?: string;  // 中心ノード（オプション）
-  depth?: number;   // リンク深度（デフォルト2）
+  noteId?: string; // 中心ノード（オプション）
+  depth?: number; // リンク深度（デフォルト2）
   width?: number;
   height?: number;
 }
