@@ -43,7 +43,7 @@ export function BacklinkPanel({
         setLoading(true);
         setError(null);
 
-        const response = await fetch(`/api/notes/${noteId}/backlinks`);
+        const response = await fetch(`/api/links/backlinks/${noteId}`);
         if (!response.ok) {
           throw new Error("バックリンクの取得に失敗しました");
         }

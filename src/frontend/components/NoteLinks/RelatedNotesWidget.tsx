@@ -48,7 +48,7 @@ export function RelatedNotesWidget({
         setError(null);
 
         const response = await fetch(
-          `/api/notes/${noteId}/related?limit=${limit}`,
+          `/api/links/related/${noteId}?limit=${limit}`,
         );
         if (!response.ok) {
           throw new Error("関連ノートの取得に失敗しました");

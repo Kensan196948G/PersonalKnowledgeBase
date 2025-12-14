@@ -44,7 +44,7 @@ export function OutgoingLinksPanel({
         setLoading(true);
         setError(null);
 
-        const response = await fetch(`/api/notes/${noteId}/links`);
+        const response = await fetch(`/api/links/${noteId}`);
         if (!response.ok) {
           throw new Error("発リンクの取得に失敗しました");
         }

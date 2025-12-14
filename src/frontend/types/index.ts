@@ -12,3 +12,12 @@ export type {
 } from "./note";
 
 export type { Toast } from "../stores/uiStore";
+
+export type {
+  GraphNode,
+  GraphLink,
+  GraphData,
+  GraphFilter,
+  NoteGraphViewProps,
+  GraphControlsProps,
+} from "./graph";

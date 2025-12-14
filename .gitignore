@@ -97,3 +97,7 @@ _archive/
 # -------------------------------------------
 # package-lock.json
 # pnpm-lock.yaml
+
+# Playwright
+playwright-report/
+test-results/
