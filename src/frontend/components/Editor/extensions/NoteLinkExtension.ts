@@ -282,7 +282,7 @@ export function getSuggestionRenderer(
         return true;
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+       
       return (component?.ref as any)?.onKeyDown?.(props) ?? false;
     },
 
