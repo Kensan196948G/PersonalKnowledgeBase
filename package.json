@@ -26,13 +26,18 @@
     "db:studio": "prisma studio",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
-    "db:check": "tsx scripts/check-db.ts"
+    "db:seed:links": "tsx prisma/seed-links.ts",
+    "db:check": "tsx scripts/check-db.ts",
+    "db:test:links": "tsx scripts/test-links.ts",
+    "db:verify": "tsx scripts/verify-schema.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
+    "@tippyjs/react": "^4.2.6",
     "@tiptap/core": "^2.9.1",
     "@tiptap/extension-image": "^2.9.1",
     "@tiptap/extension-link": "^2.9.1",
+    "@tiptap/extension-mention": "^2.27.1",
     "@tiptap/extension-placeholder": "^2.9.1",
     "@tiptap/extension-task-item": "^2.9.1",
     "@tiptap/extension-task-list": "^2.9.1",
@@ -45,6 +50,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.21.1",
+    "fuse.js": "^7.1.0",
     "iconv-lite": "^0.7.1",
     "jsdom": "^27.3.0",
     "mammoth": "^1.11.0",
@@ -54,6 +60,7 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.28.0",
+    "tippy.js": "^6.3.7",
     "turndown": "^7.2.2",
     "zod": "^3.23.8",
     "zustand": "^5.0.1"
@@ -71,6 +78,7 @@
     "@types/jest": "^29.5.14",
     "@types/jsdom": "^27.0.0",
     "@types/multer": "^1.4.12",
+    "@types/natural": "^5.1.5",
     "@types/node": "^22.9.1",
     "@types/pdf-parse": "^1.1.5",
     "@types/react": "^18.3.12",

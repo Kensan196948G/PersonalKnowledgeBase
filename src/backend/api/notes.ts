@@ -1,5 +1,6 @@
 import { Router, Request, Response } from "express";
 import { prisma } from "../db.js";
+import { syncNoteLinks } from "../utils/linkParser.js";
 
 const router = Router();
 
@@ -324,6 +325,11 @@ router.put("/:id", async (req: Request, res: Response) => {
         folder: true,
       },
     });
+
+    // Phase 3: コンテンツが更新された場合、リンクを同期
+    if (content !== undefined) {
+      await syncNoteLinks(id, content);
+    }
 
     res.json({
       success: true,

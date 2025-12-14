@@ -12,6 +12,11 @@ import {
   FolderCreateModal,
 } from "./components/Folders";
 import { SettingsModal } from "./components/Settings";
+import {
+  BacklinkPanel,
+  RelatedNotesWidget,
+  OutgoingLinksPanel,
+} from "./components/NoteLinks";
 import { useNotes } from "./hooks/useNotes";
 import { useUIStore } from "./stores/uiStore";
 import { useTagStore } from "./stores/tagStore";
@@ -259,6 +264,18 @@ function App() {
             <TagFilterSidebar />
           </div>
         }
+        rightSidebar={
+          selectedNote ? (
+            <div className="p-4 space-y-4">
+              {/* 関連ノートウィジェット */}
+              <RelatedNotesWidget
+                noteId={selectedNote.id}
+                onNoteClick={handleNoteSelect}
+                limit={5}
+              />
+            </div>
+          ) : null
+        }
         editor={
           selectedNote ? (
             <div className="h-full flex flex-col p-6">
@@ -359,13 +376,25 @@ function App() {
                     {new Date(selectedNote.updatedAt).toLocaleString("ja-JP")}
                   </span>
                   {selectedNote.isPinned && (
-                    <span className="text-yellow-600">📌 ピン留め</span>
+                    <span className="text-yellow-600">ピン留め</span>
                   )}
                   {selectedNote.isFavorite && (
-                    <span className="text-red-600">⭐ お気に入り</span>
+                    <span className="text-red-600">お気に入り</span>
                   )}
                 </div>
               </div>
+
+              {/* バックリンクパネル */}
+              <BacklinkPanel
+                noteId={selectedNote.id}
+                onNoteClick={handleNoteSelect}
+              />
+
+              {/* 発リンクパネル */}
+              <OutgoingLinksPanel
+                noteId={selectedNote.id}
+                onNoteClick={handleNoteSelect}
+              />
             </div>
           ) : (
             <div className="h-full flex flex-col items-center justify-center text-gray-500 p-8">
