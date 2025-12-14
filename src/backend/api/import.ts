@@ -327,7 +327,7 @@ router.post(
                     content: [
                       {
                         type: "text",
-                        text: '「ファイル」→「エクスポート」→「Webページ (.html)」を選択',
+                        text: "「ファイル」→「エクスポート」→「Webページ (.html)」を選択",
                       },
                     ],
                   },
@@ -411,16 +411,16 @@ router.post(
  * quoted-printableデコード（UTF-8マルチバイト対応）
  */
 function decodeQuotedPrintable(buffer: Buffer): string {
-  let text = buffer.toString('binary');
+  let text = buffer.toString("binary");
 
   // ソフト改行を削除（=\r\n または =\n）
-  text = text.replace(/=\r?\n/g, '');
+  text = text.replace(/=\r?\n/g, "");
 
   // =XX形式をバイト値に変換
   const bytes: number[] = [];
   let i = 0;
   while (i < text.length) {
-    if (text[i] === '=' && i + 2 < text.length) {
+    if (text[i] === "=" && i + 2 < text.length) {
       const hex = text.substring(i + 1, i + 3);
       if (/^[0-9A-F]{2}$/i.test(hex)) {
         bytes.push(parseInt(hex, 16));
@@ -428,11 +428,11 @@ function decodeQuotedPrintable(buffer: Buffer): string {
         continue;
       }
     }
-    bytes.push(text.charCodeAt(i) & 0xFF);
+    bytes.push(text.charCodeAt(i) & 0xff);
     i++;
   }
 
-  return Buffer.from(bytes).toString('utf-8');
+  return Buffer.from(bytes).toString("utf-8");
 }
 
 /**
@@ -442,7 +442,7 @@ function extractHtmlFromMht(buffer: Buffer): string {
   // MHTファイル全体をquoted-printableデコード
   const decoded = decodeQuotedPrintable(buffer);
 
-  console.log('MHT decoded (first 500 chars):', decoded.substring(0, 500));
+  console.log("MHT decoded (first 500 chars):", decoded.substring(0, 500));
 
   // HTMLタグを抽出
   const htmlMatch = decoded.match(/<html[\s\S]*<\/html>/i);
@@ -520,8 +520,7 @@ router.post(
 
       // タイトル抽出（HTMLから、またはファイル名）
       const title =
-        extractTitle(html) ||
-        path.basename(req.file.originalname, ".docx");
+        extractTitle(html) || path.basename(req.file.originalname, ".docx");
 
       // HTML → TipTap JSON変換
       const bodyHtml = cleanOneNoteHtml(html);
@@ -763,7 +762,10 @@ router.post(
       const htmlContent = extractHtmlFromMht(buffer);
 
       // デバッグ: HTMLの最初の2000文字をログ出力
-      console.log('MHT extracted HTML preview:', htmlContent.substring(0, 2000));
+      console.log(
+        "MHT extracted HTML preview:",
+        htmlContent.substring(0, 2000),
+      );
 
       // JSDOM でパース
       const dom = new JSDOM(htmlContent);
@@ -777,9 +779,9 @@ router.post(
       const firstParagraph = document.querySelector("p, div");
       const firstText = firstParagraph?.textContent?.trim().substring(0, 100);
 
-      console.log('Raw h1:', h1?.innerHTML);
-      console.log('Raw title tag:', titleTag?.innerHTML);
-      console.log('First text:', firstText);
+      console.log("Raw h1:", h1?.innerHTML);
+      console.log("Raw title tag:", titleTag?.innerHTML);
+      console.log("First text:", firstText);
 
       const title =
         h1?.textContent?.trim() ||
@@ -787,16 +789,16 @@ router.post(
         firstText ||
         "インポートされたノート";
 
-      console.log('MHT extracted title:', title);
+      console.log("MHT extracted title:", title);
 
       // OneNote特有のスタイルをクリーンアップ
       const bodyHtml = cleanOneNoteHtml(document.body.innerHTML);
 
-      console.log('MHT cleaned body HTML length:', bodyHtml.length);
-      console.log('MHT cleaned body preview:', bodyHtml.substring(0, 500));
+      console.log("MHT cleaned body HTML length:", bodyHtml.length);
+      console.log("MHT cleaned body preview:", bodyHtml.substring(0, 500));
 
       // HTML → TipTap JSON変換
-      console.log('Converting HTML to TipTap JSON...');
+      console.log("Converting HTML to TipTap JSON...");
       const tiptapJson = generateJSON(bodyHtml, [
         StarterKit,
         Link,
@@ -805,18 +807,18 @@ router.post(
       ]);
 
       const jsonString = JSON.stringify(tiptapJson);
-      console.log('TipTap JSON size:', jsonString.length, 'bytes');
-      console.log('TipTap JSON preview:', jsonString.substring(0, 500));
+      console.log("TipTap JSON size:", jsonString.length, "bytes");
+      console.log("TipTap JSON preview:", jsonString.substring(0, 500));
 
       // ノート作成
-      console.log('Creating note in database...');
+      console.log("Creating note in database...");
       const note = await prisma.note.create({
         data: {
           title: title.trim(),
           content: jsonString,
         },
       });
-      console.log('Note created successfully, ID:', note.id);
+      console.log("Note created successfully, ID:", note.id);
 
       // オプション処理
       const options = req.body.options ? JSON.parse(req.body.options) : {};

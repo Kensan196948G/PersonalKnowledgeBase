@@ -324,7 +324,10 @@ export const useNoteStore = create<NoteStore>()(
         },
 
         // 高度検索: 日付範囲設定
-        setSearchDateRange: (fromDate: string | null, toDate: string | null) => {
+        setSearchDateRange: (
+          fromDate: string | null,
+          toDate: string | null,
+        ) => {
           set({ searchFromDate: fromDate, searchToDate: toDate });
         },
 

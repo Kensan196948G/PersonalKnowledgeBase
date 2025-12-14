@@ -120,9 +120,7 @@ export const useTagStore = create<TagStore>()(
             const updatedTag = result.data;
 
             set((state) => ({
-              tags: state.tags.map((tag) =>
-                tag.id === id ? updatedTag : tag,
-              ),
+              tags: state.tags.map((tag) => (tag.id === id ? updatedTag : tag)),
               isLoading: false,
               error: null,
             }));

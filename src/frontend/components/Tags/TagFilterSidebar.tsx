@@ -44,11 +44,7 @@ export function TagFilterSidebar({ onFilterChange }: TagFilterSidebarProps) {
       {/* ヘッダー */}
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-          <svg
-            className="w-4 h-4"
-            fill="currentColor"
-            viewBox="0 0 20 20"
-          >
+          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
             <path
               fillRule="evenodd"
               d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z"
@@ -77,9 +73,7 @@ export function TagFilterSidebar({ onFilterChange }: TagFilterSidebarProps) {
       {/* タグ一覧 */}
       <div className="space-y-1">
         {tags.length === 0 ? (
-          <p className="text-xs text-gray-400 italic py-2">
-            タグがありません
-          </p>
+          <p className="text-xs text-gray-400 italic py-2">タグがありません</p>
         ) : (
           tags.map((tag) => {
             const isSelected = selectedTags.includes(tag.id);

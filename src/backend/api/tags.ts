@@ -414,92 +414,95 @@ router.get("/notes/:noteId", async (req: Request, res: Response) => {
  * POST /api/notes/:noteId/tags/:tagId
  * ノートにタグを付与
  */
-router.post("/notes/:noteId/tags/:tagId", async (req: Request, res: Response) => {
-  try {
-    const { noteId, tagId } = req.params;
+router.post(
+  "/notes/:noteId/tags/:tagId",
+  async (req: Request, res: Response) => {
+    try {
+      const { noteId, tagId } = req.params;
 
-    // UUIDバリデーション
-    if (!isValidUUID(noteId)) {
-      return res.status(400).json({
-        success: false,
-        error: "Invalid note ID format",
+      // UUIDバリデーション
+      if (!isValidUUID(noteId)) {
+        return res.status(400).json({
+          success: false,
+          error: "Invalid note ID format",
+        });
+      }
+
+      if (!isValidUUID(tagId)) {
+        return res.status(400).json({
+          success: false,
+          error: "Invalid tag ID format",
+        });
+      }
+
+      // ノート存在チェック
+      const note = await prisma.note.findUnique({
+        where: { id: noteId },
       });
-    }
 
-    if (!isValidUUID(tagId)) {
-      return res.status(400).json({
-        success: false,
-        error: "Invalid tag ID format",
+      if (!note) {
+        return res.status(404).json({
+          success: false,
+          error: "Note not found",
+        });
+      }
+
+      // タグ存在チェック
+      const tag = await prisma.tag.findUnique({
+        where: { id: tagId },
       });
-    }
 
-    // ノート存在チェック
-    const note = await prisma.note.findUnique({
-      where: { id: noteId },
-    });
+      if (!tag) {
+        return res.status(404).json({
+          success: false,
+          error: "Tag not found",
+        });
+      }
 
-    if (!note) {
-      return res.status(404).json({
-        success: false,
-        error: "Note not found",
+      // 既に付与済みかチェック
+      const existingNoteTag = await prisma.noteTag.findUnique({
+        where: {
+          noteId_tagId: {
+            noteId,
+            tagId,
+          },
+        },
       });
-    }
 
-    // タグ存在チェック
-    const tag = await prisma.tag.findUnique({
-      where: { id: tagId },
-    });
+      if (existingNoteTag) {
+        return res.status(409).json({
+          success: false,
+          error: "Tag already assigned to note",
+          message: "This tag is already assigned to this note",
+        });
+      }
 
-    if (!tag) {
-      return res.status(404).json({
-        success: false,
-        error: "Tag not found",
-      });
-    }
-
-    // 既に付与済みかチェック
-    const existingNoteTag = await prisma.noteTag.findUnique({
-      where: {
-        noteId_tagId: {
+      // NoteTag作成
+      const noteTag = await prisma.noteTag.create({
+        data: {
           noteId,
           tagId,
         },
-      },
-    });
+        include: {
+          tag: true,
+        },
+      });
 
-    if (existingNoteTag) {
-      return res.status(409).json({
+      res.status(201).json({
+        success: true,
+        message: "Tag assigned to note successfully",
+        data: noteTag,
+      });
+    } catch (error) {
+      console.error("Error assigning tag to note:", error);
+      res.status(500).json({
         success: false,
-        error: "Tag already assigned to note",
-        message: "This tag is already assigned to this note",
+        error: "Failed to assign tag to note",
+        message: error instanceof Error ? error.message : "Unknown error",
       });
     }
-
-    // NoteTag作成
-    const noteTag = await prisma.noteTag.create({
-      data: {
-        noteId,
-        tagId,
-      },
-      include: {
-        tag: true,
-      },
-    });
-
-    res.status(201).json({
-      success: true,
-      message: "Tag assigned to note successfully",
-      data: noteTag,
-    });
-  } catch (error) {
-    console.error("Error assigning tag to note:", error);
-    res.status(500).json({
-      success: false,
-      error: "Failed to assign tag to note",
-      message: error instanceof Error ? error.message : "Unknown error",
-    });
-  }
-});
+  },
+);
 
 /**
  * DELETE /api/notes/:noteId/tags/:tagId

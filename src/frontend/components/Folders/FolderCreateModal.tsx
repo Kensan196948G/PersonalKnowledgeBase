@@ -230,7 +230,12 @@ export function FolderCreateModal({
               disabled={isLoading}
               className="text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -339,11 +344,7 @@ export function FolderCreateModal({
                   transition-colors
                 "
               >
-                {isLoading
-                  ? "保存中..."
-                  : isEditMode
-                    ? "更新"
-                    : "作成"}
+                {isLoading ? "保存中..." : isEditMode ? "更新" : "作成"}
               </button>
             </div>
           </form>

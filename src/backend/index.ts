@@ -28,10 +28,13 @@ app.use(
   cors({
     origin: (origin, callback) => {
       // originがundefined（サーバー間通信など）または許可リストに含まれる場合は許可
-      if (!origin || allowedOrigins.some(allowed => origin.startsWith(allowed as string))) {
+      if (
+        !origin ||
+        allowedOrigins.some((allowed) => origin.startsWith(allowed as string))
+      ) {
         callback(null, true);
       } else {
-        callback(new Error('Not allowed by CORS'));
+        callback(new Error("Not allowed by CORS"));
       }
     },
     credentials: true,
@@ -70,7 +73,7 @@ app.get("/api/health", async (_req, res) => {
 });
 
 // サーバー起動（0.0.0.0でリッスン - ネットワークアクセス許可）
-app.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 Server is running on:`);
   console.log(`   - Local:   http://localhost:${PORT}`);
   console.log(`   - Network: http://192.168.0.187:${PORT}`);

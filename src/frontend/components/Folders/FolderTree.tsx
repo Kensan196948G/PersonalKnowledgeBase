@@ -146,7 +146,10 @@ function FolderTreeItem({
 
         {/* アクションボタン */}
         {showActions && !showDeleteConfirm && (
-          <div className="flex items-center gap-1 ml-2" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="flex items-center gap-1 ml-2"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* 新規サブフォルダ */}
             {onCreate && (
               <button
@@ -154,8 +157,18 @@ function FolderTreeItem({
                 className="p-1 rounded text-gray-400 hover:text-blue-600 hover:bg-blue-50"
                 title="サブフォルダを作成"
               >
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                <svg
+                  className="w-3 h-3"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 4v16m8-8H4"
+                  />
                 </svg>
               </button>
             )}
@@ -167,7 +180,12 @@ function FolderTreeItem({
                 className="p-1 rounded text-gray-400 hover:text-green-600 hover:bg-green-50"
                 title="編集"
               >
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-3 h-3"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -185,7 +203,12 @@ function FolderTreeItem({
                 className="p-1 rounded text-gray-400 hover:text-red-600 hover:bg-red-50"
                 title="削除"
               >
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-3 h-3"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -338,11 +361,26 @@ export function FolderTree({
             className="p-1 rounded text-gray-500 hover:text-gray-700 hover:bg-gray-200"
             title={showAllFolders ? "全て折りたたむ" : "全て展開"}
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               {showAllFolders ? (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 15l7-7 7 7"
+                />
               ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
               )}
             </svg>
           </button>
@@ -354,8 +392,18 @@ export function FolderTree({
               className="p-1 rounded text-gray-500 hover:text-blue-600 hover:bg-blue-50"
               title="新規フォルダ"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v16m8-8H4"
+                />
               </svg>
             </button>
           )}
@@ -373,7 +421,11 @@ export function FolderTree({
           `}
           onClick={handleAllNotesClick}
         >
-          <svg className="w-4 h-4 mr-2 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+          <svg
+            className="w-4 h-4 mr-2 text-gray-500"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
             <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z" />
           </svg>
           <span className="text-sm font-medium">全てのノート</span>
@@ -401,9 +453,7 @@ export function FolderTree({
         )}
 
         {folderTree.length > 0 && (
-          <div className="py-1">
-            {renderFolderTree(folderTree)}
-          </div>
+          <div className="py-1">{renderFolderTree(folderTree)}</div>
         )}
       </div>
     </div>

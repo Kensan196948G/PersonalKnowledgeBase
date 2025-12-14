@@ -83,7 +83,9 @@ export function AdvancedSearchBar({
   const [localFromDate, setLocalFromDate] = useState<string | null>(fromDate);
   const [localToDate, setLocalToDate] = useState<string | null>(toDate);
   const [localIsPinned, setLocalIsPinned] = useState<boolean | null>(isPinned);
-  const [localIsFavorite, setLocalIsFavorite] = useState<boolean | null>(isFavorite);
+  const [localIsFavorite, setLocalIsFavorite] = useState<boolean | null>(
+    isFavorite,
+  );
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
   const inputRef = useRef<HTMLInputElement>(null);
@@ -239,7 +241,12 @@ export function AdvancedSearchBar({
                 className="text-gray-400 hover:text-gray-600 transition-colors"
                 title="検索をクリア"
               >
-                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -272,22 +279,27 @@ export function AdvancedSearchBar({
         </div>
 
         {/* 検索結果件数 */}
-        {localSearchQuery && resultCount !== undefined && totalCount !== undefined && (
-          <div className="mt-2 text-xs text-gray-500">
-            {resultCount > 0 ? (
-              <>
-                <span className="font-medium text-gray-700">{resultCount}件</span> のノートが見つかりました
-                {resultCount < totalCount && (
-                  <span className="text-gray-400"> (全{totalCount}件中)</span>
-                )}
-              </>
-            ) : (
-              <span className="text-gray-600">
-                「{localSearchQuery}」に一致するノートが見つかりませんでした
-              </span>
-            )}
-          </div>
-        )}
+        {localSearchQuery &&
+          resultCount !== undefined &&
+          totalCount !== undefined && (
+            <div className="mt-2 text-xs text-gray-500">
+              {resultCount > 0 ? (
+                <>
+                  <span className="font-medium text-gray-700">
+                    {resultCount}件
+                  </span>{" "}
+                  のノートが見つかりました
+                  {resultCount < totalCount && (
+                    <span className="text-gray-400"> (全{totalCount}件中)</span>
+                  )}
+                </>
+              ) : (
+                <span className="text-gray-600">
+                  「{localSearchQuery}」に一致するノートが見つかりませんでした
+                </span>
+              )}
+            </div>
+          )}
       </div>
 
       {/* 高度検索オプション */}
@@ -295,7 +307,9 @@ export function AdvancedSearchBar({
         <div className="px-4 pb-4 space-y-3 border-t border-gray-100 pt-3">
           {/* タグフィルタ */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">タグ</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              タグ
+            </label>
             <div className="flex flex-wrap gap-2 mb-2">
               {availableTags.map((tag) => (
                 <button
@@ -346,7 +360,9 @@ export function AdvancedSearchBar({
 
           {/* フォルダフィルタ */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">フォルダ</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              フォルダ
+            </label>
             <select
               value={localFolder || ""}
               onChange={handleFolderChange}
@@ -368,7 +384,9 @@ export function AdvancedSearchBar({
 
           {/* 日付範囲フィルタ */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">作成日</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              作成日
+            </label>
             <div className="flex items-center gap-2">
               <input
                 type="date"
@@ -398,7 +416,9 @@ export function AdvancedSearchBar({
 
           {/* フラグフィルタ */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">その他</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              その他
+            </label>
             <div className="flex gap-3">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input

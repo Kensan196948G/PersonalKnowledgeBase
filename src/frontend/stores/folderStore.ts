@@ -106,7 +106,9 @@ export const useFolderStore = create<FolderStore>()(
           try {
             const response = await fetch(`${API_BASE_URL}/folders`);
             if (!response.ok) {
-              throw new Error(`Failed to fetch folders: ${response.statusText}`);
+              throw new Error(
+                `Failed to fetch folders: ${response.statusText}`,
+              );
             }
 
             const result = await response.json();
@@ -136,7 +138,9 @@ export const useFolderStore = create<FolderStore>()(
             });
 
             if (!response.ok) {
-              throw new Error(`Failed to create folder: ${response.statusText}`);
+              throw new Error(
+                `Failed to create folder: ${response.statusText}`,
+              );
             }
 
             const result = await response.json();
@@ -180,7 +184,9 @@ export const useFolderStore = create<FolderStore>()(
             });
 
             if (!response.ok) {
-              throw new Error(`Failed to update folder: ${response.statusText}`);
+              throw new Error(
+                `Failed to update folder: ${response.statusText}`,
+              );
             }
 
             const result = await response.json();
@@ -211,7 +217,9 @@ export const useFolderStore = create<FolderStore>()(
             });
 
             if (!response.ok) {
-              throw new Error(`Failed to delete folder: ${response.statusText}`);
+              throw new Error(
+                `Failed to delete folder: ${response.statusText}`,
+              );
             }
 
             set((state) => {

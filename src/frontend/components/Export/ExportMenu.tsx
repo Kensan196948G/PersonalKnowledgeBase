@@ -1,11 +1,11 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from "react";
 
 export interface ExportMenuProps {
   noteId: string;
   noteTitle: string;
 }
 
-type ExportFormat = 'markdown' | 'html' | 'pdf' | 'json';
+type ExportFormat = "markdown" | "html" | "pdf" | "json";
 
 interface FormatOption {
   format: ExportFormat;
@@ -15,10 +15,15 @@ interface FormatOption {
 }
 
 const EXPORT_FORMATS: FormatOption[] = [
-  { format: 'markdown', label: 'Markdown', icon: '📄', extension: 'md' },
-  { format: 'html', label: 'HTML', icon: '🌐', extension: 'html' },
-  { format: 'pdf', label: 'PDF', icon: '📕', extension: 'pdf' },
-  { format: 'json', label: 'JSON (バックアップ)', icon: '📦', extension: 'json' },
+  { format: "markdown", label: "Markdown", icon: "📄", extension: "md" },
+  { format: "html", label: "HTML", icon: "🌐", extension: "html" },
+  { format: "pdf", label: "PDF", icon: "📕", extension: "pdf" },
+  {
+    format: "json",
+    label: "JSON (バックアップ)",
+    icon: "📦",
+    extension: "json",
+  },
 ];
 
 /**
@@ -43,11 +48,11 @@ export function ExportMenu({ noteId, noteTitle }: ExportMenuProps) {
     };
 
     if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isOpen]);
 
@@ -60,8 +65,10 @@ export function ExportMenu({ noteId, noteTitle }: ExportMenuProps) {
       const response = await fetch(`/api/export/${format}/${noteId}`);
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'エクスポートに失敗しました' }));
-        throw new Error(errorData.error || 'エクスポートに失敗しました');
+        const errorData = await response
+          .json()
+          .catch(() => ({ error: "エクスポートに失敗しました" }));
+        throw new Error(errorData.error || "エクスポートに失敗しました");
       }
 
       // レスポンスからBlobを取得
@@ -69,7 +76,7 @@ export function ExportMenu({ noteId, noteTitle }: ExportMenuProps) {
 
       // ダウンロード用のリンクを作成
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
       a.download = `${noteTitle}.${extension}`;
       document.body.appendChild(a);
@@ -81,8 +88,10 @@ export function ExportMenu({ noteId, noteTitle }: ExportMenuProps) {
 
       setIsOpen(false);
     } catch (error) {
-      console.error('Export error:', error);
-      alert(error instanceof Error ? error.message : 'エクスポートに失敗しました');
+      console.error("Export error:", error);
+      alert(
+        error instanceof Error ? error.message : "エクスポートに失敗しました",
+      );
     } finally {
       setIsExporting(false);
     }
@@ -149,7 +158,7 @@ export function ExportMenu({ noteId, noteTitle }: ExportMenuProps) {
             </svg>
             <span>エクスポート</span>
             <svg
-              className={`w-3 h-3 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+              className={`w-3 h-3 transition-transform ${isOpen ? "rotate-180" : ""}`}
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"
@@ -197,9 +206,7 @@ export function ExportMenu({ noteId, noteTitle }: ExportMenuProps) {
               <span className="text-xl">{option.icon}</span>
               <div className="flex-1">
                 <div className="font-medium">{option.label}</div>
-                <div className="text-xs text-gray-500">
-                  .{option.extension}
-                </div>
+                <div className="text-xs text-gray-500">.{option.extension}</div>
               </div>
             </button>
           ))}

@@ -54,7 +54,9 @@ export function FolderSelector({
     };
   }, [isOpen]);
 
-  const selectedFolder = selectedFolderId ? getFolderById(selectedFolderId) : null;
+  const selectedFolder = selectedFolderId
+    ? getFolderById(selectedFolderId)
+    : null;
 
   const handleToggle = () => {
     if (!disabled) {
@@ -261,9 +263,7 @@ export function FolderSelector({
           )}
 
           {/* 区切り線 */}
-          {onCreateFolder && (
-            <div className="border-t border-gray-200 my-1" />
-          )}
+          {onCreateFolder && <div className="border-t border-gray-200 my-1" />}
 
           {/* 新規フォルダ作成ボタン */}
           {onCreateFolder && (

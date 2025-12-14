@@ -149,11 +149,7 @@ export function SearchFilterChips({
 
         {/* ピン留めチップ */}
         {isPinned === true && (
-          <Chip
-            label="ピン留めのみ"
-            onRemove={onClearPinned}
-            color="red"
-          />
+          <Chip label="ピン留めのみ" onRemove={onClearPinned} color="red" />
         )}
 
         {/* お気に入りチップ */}
@@ -242,7 +238,12 @@ function Chip({ label, onRemove, color = "gray", badge }: ChipProps) {
           "
           title="削除"
         >
-          <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg
+            className="h-3.5 w-3.5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
             <path
               strokeLinecap="round"
               strokeLinejoin="round"

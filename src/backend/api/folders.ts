@@ -19,11 +19,17 @@ function validateFolderName(name: string): { valid: boolean; error?: string } {
 
   const trimmedName = name.trim();
   if (trimmedName.length === 0) {
-    return { valid: false, error: "Folder name cannot be empty or whitespace only" };
+    return {
+      valid: false,
+      error: "Folder name cannot be empty or whitespace only",
+    };
   }
 
   if (trimmedName.length > 100) {
-    return { valid: false, error: "Folder name must be 100 characters or less" };
+    return {
+      valid: false,
+      error: "Folder name must be 100 characters or less",
+    };
   }
 
   return { valid: true };
@@ -61,10 +67,11 @@ async function checkCircularReference(
     visitedIds.add(currentId);
 
     // 親フォルダを取得
-    const folder: { parentId: string | null } | null = await prisma.folder.findUnique({
-      where: { id: currentId },
-      select: { parentId: true },
-    });
+    const folder: { parentId: string | null } | null =
+      await prisma.folder.findUnique({
+        where: { id: currentId },
+        select: { parentId: true },
+      });
 
     currentId = folder?.parentId || null;
   }
@@ -426,7 +433,8 @@ router.put("/:id", async (req: Request, res: Response) => {
         if (hasCircularRef) {
           return res.status(400).json({
             success: false,
-            error: "Circular reference detected: cannot set a folder or its descendants as parent",
+            error:
+              "Circular reference detected: cannot set a folder or its descendants as parent",
           });
         }
 
@@ -627,7 +635,7 @@ router.post("/:folderId/notes/:noteId", async (req: Request, res: Response) => {
         folder: true,
         tags: {
           include: { tag: true },
-          },
+        },
       },
     });
 

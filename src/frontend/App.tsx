@@ -6,7 +6,11 @@ import { TipTapEditor } from "./components/Editor";
 import { ToastContainer } from "./components/UI/ToastContainer";
 import { TagSelector } from "./components/Tags/TagSelector";
 import { TagFilterSidebar } from "./components/Tags/TagFilterSidebar";
-import { FolderTree, FolderSelector, FolderCreateModal } from "./components/Folders";
+import {
+  FolderTree,
+  FolderSelector,
+  FolderCreateModal,
+} from "./components/Folders";
 import { SettingsModal } from "./components/Settings";
 import { useNotes } from "./hooks/useNotes";
 import { useUIStore } from "./stores/uiStore";
@@ -16,7 +20,8 @@ import type { Folder } from "./types/folder";
 import { tiptapJsonToHtml } from "./utils/tiptap";
 
 function App() {
-  const { selectedNote, createNote, updateNote, fetchNoteById, selectNote } = useNotes();
+  const { selectedNote, createNote, updateNote, fetchNoteById, selectNote } =
+    useNotes();
   const { isSaving, setSaving } = useUIStore();
   const { toggleTagSelection } = useTagStore();
   const { selectFolder } = useFolderStore();
@@ -26,7 +31,9 @@ function App() {
 
   // フォルダモーダル管理
   const [isFolderModalOpen, setIsFolderModalOpen] = useState(false);
-  const [editingFolder, setEditingFolder] = useState<Folder | undefined>(undefined);
+  const [editingFolder, setEditingFolder] = useState<Folder | undefined>(
+    undefined,
+  );
   const [defaultParentId, setDefaultParentId] = useState<string | null>(null);
 
   // 設定モーダル管理
@@ -39,25 +46,30 @@ function App() {
 
   // ノート選択時にストアを更新（API取得を含む）
   const handleNoteSelect = async (noteId: string | null) => {
-    console.log('handleNoteSelect called, noteId:', noteId);
+    console.log("handleNoteSelect called, noteId:", noteId);
     await selectNote(noteId);
   };
 
   // selectedNoteが変更されたときにエディタを更新
   useEffect(() => {
-    console.log('selectedNote changed:', selectedNote);
+    console.log("selectedNote changed:", selectedNote);
     if (selectedNote) {
-      console.log('Setting editor content, title:', selectedNote.title);
-      console.log('Content type:', typeof selectedNote.content, 'length:', selectedNote.content.length);
+      console.log("Setting editor content, title:", selectedNote.title);
+      console.log(
+        "Content type:",
+        typeof selectedNote.content,
+        "length:",
+        selectedNote.content.length,
+      );
       setEditorTitle(selectedNote.title);
       // TipTap JSON文字列をHTMLに変換
       try {
         const htmlContent = tiptapJsonToHtml(selectedNote.content);
-        console.log('Converted HTML length:', htmlContent.length);
-        console.log('HTML preview:', htmlContent.substring(0, 200));
+        console.log("Converted HTML length:", htmlContent.length);
+        console.log("HTML preview:", htmlContent.substring(0, 200));
         setEditorContent(htmlContent);
       } catch (error) {
-        console.error('Failed to convert TipTap JSON to HTML:', error);
+        console.error("Failed to convert TipTap JSON to HTML:", error);
       }
       setEditorFolderId(selectedNote.folderId);
     }
@@ -284,7 +296,10 @@ function App() {
               </div>
 
               {/* タグセレクター */}
-              <TagSelector note={selectedNote} onTagsChanged={handleTagsChanged} />
+              <TagSelector
+                note={selectedNote}
+                onTagsChanged={handleTagsChanged}
+              />
 
               {/* メタ情報 */}
               <div className="mt-4 pt-4 border-t border-gray-200">
