@@ -35,16 +35,10 @@ export function useNotes() {
   const { addToast } = useUIStore();
 
   // 選択中のノート（computed）
-  const selectedNote = useMemo(
-    () => getSelectedNote(),
-    [getSelectedNote],
-  );
+  const selectedNote = useMemo(() => getSelectedNote(), [getSelectedNote]);
 
   // フィルタ・ソート済みノート（computed）
-  const filteredNotes = useMemo(
-    () => getFilteredNotes(),
-    [getFilteredNotes],
-  );
+  const filteredNotes = useMemo(() => getFilteredNotes(), [getFilteredNotes]);
 
   // ノート作成（トースト通知付き）
   const handleCreateNote = useCallback(

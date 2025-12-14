@@ -71,7 +71,10 @@ export const BacklinkPanel = memo(function BacklinkPanel({
   }, []);
 
   return (
-    <div className={`border-t border-gray-200 ${className}`} data-testid="backlink-panel">
+    <div
+      className={`border-t border-gray-200 ${className}`}
+      data-testid="backlink-panel"
+    >
       {/* ヘッダー */}
       <div
         className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
@@ -171,7 +174,10 @@ export const BacklinkPanel = memo(function BacklinkPanel({
           {!loading && !error && backlinks.length > 0 && (
             <div className="space-y-2" data-testid="backlink-list">
               {backlinks.map((backlink) => (
-                <div key={backlink.noteId} data-testid={`backlink-item-${backlink.noteId}`}>
+                <div
+                  key={backlink.noteId}
+                  data-testid={`backlink-item-${backlink.noteId}`}
+                >
                   <NoteLinkCard
                     noteId={backlink.noteId}
                     noteTitle={backlink.noteTitle}

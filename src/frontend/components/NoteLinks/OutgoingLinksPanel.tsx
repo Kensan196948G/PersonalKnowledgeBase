@@ -71,7 +71,10 @@ export function OutgoingLinksPanel({
   const missingLinks = outgoingLinks.filter((link) => !link.exists);
 
   return (
-    <div className={`border-t border-gray-200 ${className}`} data-testid="outgoing-links-panel">
+    <div
+      className={`border-t border-gray-200 ${className}`}
+      data-testid="outgoing-links-panel"
+    >
       {/* ヘッダー */}
       <div
         className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
@@ -173,7 +176,10 @@ export function OutgoingLinksPanel({
               {existingLinks.length > 0 && (
                 <div className="space-y-2">
                   {existingLinks.map((link) => (
-                    <div key={link.noteId} data-testid={`outgoing-link-item-${link.noteId}`}>
+                    <div
+                      key={link.noteId}
+                      data-testid={`outgoing-link-item-${link.noteId}`}
+                    >
                       <NoteLinkCard
                         noteId={link.noteId}
                         noteTitle={link.anchorText || link.noteTitle}

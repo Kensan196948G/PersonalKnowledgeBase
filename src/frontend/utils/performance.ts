@@ -3,14 +3,14 @@
  * React Profiler と Performance API を使用した測定
  */
 
-import { ProfilerOnRenderCallback } from 'react';
+import { ProfilerOnRenderCallback } from "react";
 
 /**
  * パフォーマンスメトリクス
  */
 export interface PerformanceMetrics {
   id: string;
-  phase: 'mount' | 'update';
+  phase: "mount" | "update";
   actualDuration: number;
   baseDuration: number;
   startTime: number;
@@ -30,18 +30,20 @@ export interface MemoryInfo {
 /**
  * React Profiler用のコールバック
  */
-export const createProfilerCallback = (componentName: string): ProfilerOnRenderCallback => {
+export const createProfilerCallback = (
+  componentName: string,
+): ProfilerOnRenderCallback => {
   return (
     id: string,
-    phase: 'mount' | 'update' | 'nested-update',
+    phase: "mount" | "update" | "nested-update",
     actualDuration: number,
     baseDuration: number,
     startTime: number,
-    commitTime: number
+    commitTime: number,
   ) => {
-    const metrics: Omit<PerformanceMetrics, 'interactions'> = {
+    const metrics: Omit<PerformanceMetrics, "interactions"> = {
       id,
-      phase: phase === 'nested-update' ? 'update' : phase,
+      phase: phase === "nested-update" ? "update" : phase,
       actualDuration,
       baseDuration,
       startTime,
@@ -49,17 +51,17 @@ export const createProfilerCallback = (componentName: string): ProfilerOnRenderC
     };
 
     console.group(`[Profiler] ${componentName}`);
-    console.log('Phase:', phase);
-    console.log('Actual Duration:', `${actualDuration.toFixed(2)}ms`);
-    console.log('Base Duration:', `${baseDuration.toFixed(2)}ms`);
-    console.log('Start Time:', `${startTime.toFixed(2)}ms`);
-    console.log('Commit Time:', `${commitTime.toFixed(2)}ms`);
+    console.log("Phase:", phase);
+    console.log("Actual Duration:", `${actualDuration.toFixed(2)}ms`);
+    console.log("Base Duration:", `${baseDuration.toFixed(2)}ms`);
+    console.log("Start Time:", `${startTime.toFixed(2)}ms`);
+    console.log("Commit Time:", `${commitTime.toFixed(2)}ms`);
     console.groupEnd();
 
     // パフォーマンス警告
     if (actualDuration > 16) {
       console.warn(
-        `⚠️ ${componentName}: レンダリングに${actualDuration.toFixed(2)}msかかりました（60fps = 16ms以下が理想）`
+        `⚠️ ${componentName}: レンダリングに${actualDuration.toFixed(2)}msかかりました（60fps = 16ms以下が理想）`,
       );
     }
 
@@ -71,7 +73,7 @@ export const createProfilerCallback = (componentName: string): ProfilerOnRenderC
  * メモリ使用量を取得
  */
 export const getMemoryUsage = (): MemoryInfo | null => {
-  if ('memory' in performance && (performance as any).memory) {
+  if ("memory" in performance && (performance as any).memory) {
     const memory = (performance as any).memory;
     return {
       usedJSHeapSize: memory.usedJSHeapSize,
@@ -92,16 +94,16 @@ export const formatMemoryUsage = (bytes: number): string => {
 /**
  * メモリ使用量をログ出力
  */
-export const logMemoryUsage = (label: string = 'Memory Usage') => {
+export const logMemoryUsage = (label: string = "Memory Usage") => {
   const memory = getMemoryUsage();
   if (memory) {
     console.group(`[Memory] ${label}`);
-    console.log('Used:', formatMemoryUsage(memory.usedJSHeapSize));
-    console.log('Total:', formatMemoryUsage(memory.totalJSHeapSize));
-    console.log('Limit:', formatMemoryUsage(memory.jsHeapSizeLimit));
+    console.log("Used:", formatMemoryUsage(memory.usedJSHeapSize));
+    console.log("Total:", formatMemoryUsage(memory.totalJSHeapSize));
+    console.log("Limit:", formatMemoryUsage(memory.jsHeapSizeLimit));
     console.log(
-      'Usage:',
-      `${((memory.usedJSHeapSize / memory.totalJSHeapSize) * 100).toFixed(2)}%`
+      "Usage:",
+      `${((memory.usedJSHeapSize / memory.totalJSHeapSize) * 100).toFixed(2)}%`,
     );
     console.groupEnd();
   } else {
@@ -224,16 +226,34 @@ export class PerformanceReporter {
     }
 
     console.group(`[Performance Report] ${componentName}`);
-    console.log('Render Count:', report.metrics.renderCount);
-    console.log('Total Render Time:', `${report.metrics.totalRenderTime.toFixed(2)}ms`);
-    console.log('Avg Render Time:', `${report.metrics.avgRenderTime.toFixed(2)}ms`);
-    console.log('Max Render Time:', `${report.metrics.maxRenderTime.toFixed(2)}ms`);
-    console.log('Min Render Time:', `${report.metrics.minRenderTime.toFixed(2)}ms`);
+    console.log("Render Count:", report.metrics.renderCount);
+    console.log(
+      "Total Render Time:",
+      `${report.metrics.totalRenderTime.toFixed(2)}ms`,
+    );
+    console.log(
+      "Avg Render Time:",
+      `${report.metrics.avgRenderTime.toFixed(2)}ms`,
+    );
+    console.log(
+      "Max Render Time:",
+      `${report.metrics.maxRenderTime.toFixed(2)}ms`,
+    );
+    console.log(
+      "Min Render Time:",
+      `${report.metrics.minRenderTime.toFixed(2)}ms`,
+    );
 
     if (report.memory) {
-      console.log('Memory Delta:', formatMemoryUsage(report.memory.delta));
-      console.log('Memory Before:', formatMemoryUsage(report.memory.before.usedJSHeapSize));
-      console.log('Memory After:', formatMemoryUsage(report.memory.after.usedJSHeapSize));
+      console.log("Memory Delta:", formatMemoryUsage(report.memory.delta));
+      console.log(
+        "Memory Before:",
+        formatMemoryUsage(report.memory.before.usedJSHeapSize),
+      );
+      console.log(
+        "Memory After:",
+        formatMemoryUsage(report.memory.after.usedJSHeapSize),
+      );
     }
 
     console.groupEnd();

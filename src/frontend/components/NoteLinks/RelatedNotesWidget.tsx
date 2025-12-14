@@ -22,7 +22,7 @@ export interface RelatedNotesWidgetProps {
 
 // キャッシュ設定
 const CACHE_DURATION_MS = 5 * 60 * 1000; // 5分間有効
-const CACHE_KEY_PREFIX = 'related-notes-cache-';
+const CACHE_KEY_PREFIX = "related-notes-cache-";
 
 interface CachedData {
   data: RelatedNote[];
@@ -49,7 +49,7 @@ export const RelatedNotesWidget = memo(function RelatedNotesWidget({
   // キャッシュキー生成（メモ化）
   const cacheKey = useMemo(
     () => `${CACHE_KEY_PREFIX}${noteId}-${limit}`,
-    [noteId, limit]
+    [noteId, limit],
   );
 
   useEffect(() => {
@@ -69,7 +69,8 @@ export const RelatedNotesWidget = memo(function RelatedNotesWidget({
         if (cached) {
           try {
             const cachedData: CachedData = JSON.parse(cached);
-            const isExpired = Date.now() - cachedData.timestamp > CACHE_DURATION_MS;
+            const isExpired =
+              Date.now() - cachedData.timestamp > CACHE_DURATION_MS;
 
             if (!isExpired) {
               // キャッシュが有効
@@ -108,7 +109,7 @@ export const RelatedNotesWidget = memo(function RelatedNotesWidget({
           localStorage.setItem(cacheKey, JSON.stringify(cacheData));
         } catch (e) {
           // localStorage容量エラーは無視
-          console.warn('Failed to cache related notes:', e);
+          console.warn("Failed to cache related notes:", e);
         }
       } catch (err) {
         console.error("Failed to fetch related notes:", err);
@@ -126,7 +127,10 @@ export const RelatedNotesWidget = memo(function RelatedNotesWidget({
   }, []);
 
   return (
-    <div className={`bg-white rounded-lg border border-gray-200 ${className}`} data-testid="related-notes-widget">
+    <div
+      className={`bg-white rounded-lg border border-gray-200 ${className}`}
+      data-testid="related-notes-widget"
+    >
       {/* ヘッダー */}
       <div
         className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
@@ -225,7 +229,10 @@ export const RelatedNotesWidget = memo(function RelatedNotesWidget({
           {!loading && !error && relatedNotes.length > 0 && (
             <div className="space-y-2" data-testid="related-notes-list">
               {relatedNotes.map((note) => (
-                <div key={note.noteId} data-testid={`related-note-item-${note.noteId}`}>
+                <div
+                  key={note.noteId}
+                  data-testid={`related-note-item-${note.noteId}`}
+                >
                   <NoteLinkCard
                     noteId={note.noteId}
                     noteTitle={note.noteTitle}
@@ -235,7 +242,10 @@ export const RelatedNotesWidget = memo(function RelatedNotesWidget({
                     onClick={onNoteClick}
                   />
                   {note.score !== undefined && (
-                    <span data-testid={`related-note-score-${note.noteId}`} style={{ display: 'none' }}>
+                    <span
+                      data-testid={`related-note-score-${note.noteId}`}
+                      style={{ display: "none" }}
+                    >
                       {note.score}
                     </span>
                   )}

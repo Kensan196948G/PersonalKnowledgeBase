@@ -12,7 +12,10 @@ export function GraphControls({
   filter,
 }: GraphControlsProps) {
   return (
-    <div className="absolute top-4 right-4 bg-white rounded-lg shadow-lg p-4 space-y-4 z-10" data-testid="graph-controls">
+    <div
+      className="absolute top-4 right-4 bg-white rounded-lg shadow-lg p-4 space-y-4 z-10"
+      data-testid="graph-controls"
+    >
       {/* ズームコントロール */}
       <div className="space-y-2">
         <div className="text-xs font-medium text-gray-700 mb-2">ズーム</div>

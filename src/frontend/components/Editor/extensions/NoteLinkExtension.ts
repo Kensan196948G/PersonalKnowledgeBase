@@ -234,7 +234,6 @@ export function getSuggestionRenderer(
   let component: ReactRenderer | null = null;
   let popup: TippyInstance[] | null = null;
 
-   
   return {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onStart: (props: any) => {
