@@ -22,7 +22,7 @@ describe("NoteLinkCard", () => {
 
   it("displays preview text when provided", () => {
     render(
-      <NoteLinkCard {...defaultProps} previewText="This is preview text" />
+      <NoteLinkCard {...defaultProps} previewText="This is preview text" />,
     );
     expect(screen.getByText("This is preview text")).toBeInTheDocument();
   });
@@ -68,7 +68,7 @@ describe("NoteLinkCard", () => {
 
   it("applies custom className when provided", () => {
     const { container } = render(
-      <NoteLinkCard {...defaultProps} className="custom-class" />
+      <NoteLinkCard {...defaultProps} className="custom-class" />,
     );
     const card = container.querySelector("div");
     expect(card).toHaveClass("custom-class");

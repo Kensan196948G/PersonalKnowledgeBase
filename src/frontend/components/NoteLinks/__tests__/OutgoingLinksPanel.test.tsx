@@ -35,11 +35,11 @@ describe("OutgoingLinksPanel", () => {
 
   it("renders loading state initially", () => {
     (global.fetch as any).mockImplementation(
-      () => new Promise(() => {}) // Never resolves
+      () => new Promise(() => {}), // Never resolves
     );
 
     render(
-      <OutgoingLinksPanel noteId="test-note" onNoteClick={mockOnNoteClick} />
+      <OutgoingLinksPanel noteId="test-note" onNoteClick={mockOnNoteClick} />,
     );
     expect(screen.getByText("発リンク")).toBeInTheDocument();
   });
@@ -51,7 +51,7 @@ describe("OutgoingLinksPanel", () => {
     });
 
     render(
-      <OutgoingLinksPanel noteId="test-note" onNoteClick={mockOnNoteClick} />
+      <OutgoingLinksPanel noteId="test-note" onNoteClick={mockOnNoteClick} />,
     );
 
     await waitFor(() => {
@@ -70,7 +70,7 @@ describe("OutgoingLinksPanel", () => {
     });
 
     render(
-      <OutgoingLinksPanel noteId="test-note" onNoteClick={mockOnNoteClick} />
+      <OutgoingLinksPanel noteId="test-note" onNoteClick={mockOnNoteClick} />,
     );
 
     await waitFor(() => {
@@ -85,13 +85,13 @@ describe("OutgoingLinksPanel", () => {
     });
 
     render(
-      <OutgoingLinksPanel noteId="test-note" onNoteClick={mockOnNoteClick} />
+      <OutgoingLinksPanel noteId="test-note" onNoteClick={mockOnNoteClick} />,
     );
 
     await waitFor(() => {
       expect(screen.getByText("リンク先が存在しません")).toBeInTheDocument();
       expect(
-        screen.getByText("クリックして新しいノートを作成")
+        screen.getByText("クリックして新しいノートを作成"),
       ).toBeInTheDocument();
     });
   });
@@ -103,15 +103,15 @@ describe("OutgoingLinksPanel", () => {
     });
 
     render(
-      <OutgoingLinksPanel noteId="test-note" onNoteClick={mockOnNoteClick} />
+      <OutgoingLinksPanel noteId="test-note" onNoteClick={mockOnNoteClick} />,
     );
 
     await waitFor(() => {
       expect(
-        screen.getByText("このノートからのリンクはありません")
+        screen.getByText("このノートからのリンクはありません"),
       ).toBeInTheDocument();
       expect(
-        screen.getByText("[[ノート名]]の形式でリンクを作成できます")
+        screen.getByText("[[ノート名]]の形式でリンクを作成できます"),
       ).toBeInTheDocument();
     });
   });
@@ -123,12 +123,12 @@ describe("OutgoingLinksPanel", () => {
     });
 
     render(
-      <OutgoingLinksPanel noteId="test-note" onNoteClick={mockOnNoteClick} />
+      <OutgoingLinksPanel noteId="test-note" onNoteClick={mockOnNoteClick} />,
     );
 
     await waitFor(() => {
       expect(
-        screen.getByText("発リンクの取得に失敗しました")
+        screen.getByText("発リンクの取得に失敗しました"),
       ).toBeInTheDocument();
     });
   });
@@ -150,7 +150,7 @@ describe("OutgoingLinksPanel", () => {
     });
 
     render(
-      <OutgoingLinksPanel noteId="test-note" onNoteClick={mockOnNoteClick} />
+      <OutgoingLinksPanel noteId="test-note" onNoteClick={mockOnNoteClick} />,
     );
 
     await waitFor(() => {
@@ -171,7 +171,7 @@ describe("OutgoingLinksPanel", () => {
     });
 
     const { rerender } = render(
-      <OutgoingLinksPanel noteId="note-1" onNoteClick={mockOnNoteClick} />
+      <OutgoingLinksPanel noteId="note-1" onNoteClick={mockOnNoteClick} />,
     );
 
     await waitFor(() => {
@@ -179,7 +179,7 @@ describe("OutgoingLinksPanel", () => {
     });
 
     rerender(
-      <OutgoingLinksPanel noteId="note-2" onNoteClick={mockOnNoteClick} />
+      <OutgoingLinksPanel noteId="note-2" onNoteClick={mockOnNoteClick} />,
     );
 
     await waitFor(() => {
@@ -204,7 +204,7 @@ describe("OutgoingLinksPanel", () => {
     });
 
     const { container } = render(
-      <OutgoingLinksPanel noteId="test-note" onNoteClick={mockOnNoteClick} />
+      <OutgoingLinksPanel noteId="test-note" onNoteClick={mockOnNoteClick} />,
     );
 
     await waitFor(() => {

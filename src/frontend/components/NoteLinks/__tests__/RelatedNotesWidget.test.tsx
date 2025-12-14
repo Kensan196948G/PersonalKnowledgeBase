@@ -38,11 +38,11 @@ describe("RelatedNotesWidget", () => {
 
   it("renders loading state initially", () => {
     (global.fetch as any).mockImplementation(
-      () => new Promise(() => {}) // Never resolves
+      () => new Promise(() => {}), // Never resolves
     );
 
     render(
-      <RelatedNotesWidget noteId="test-note" onNoteClick={mockOnNoteClick} />
+      <RelatedNotesWidget noteId="test-note" onNoteClick={mockOnNoteClick} />,
     );
     expect(screen.getByText("関連ノート")).toBeInTheDocument();
   });
@@ -54,7 +54,7 @@ describe("RelatedNotesWidget", () => {
     });
 
     render(
-      <RelatedNotesWidget noteId="test-note" onNoteClick={mockOnNoteClick} />
+      <RelatedNotesWidget noteId="test-note" onNoteClick={mockOnNoteClick} />,
     );
 
     await waitFor(() => {
@@ -64,7 +64,7 @@ describe("RelatedNotesWidget", () => {
     });
 
     expect(global.fetch).toHaveBeenCalledWith(
-      "/api/notes/test-note/related?limit=5"
+      "/api/notes/test-note/related?limit=5",
     );
   });
 
@@ -75,7 +75,7 @@ describe("RelatedNotesWidget", () => {
     });
 
     render(
-      <RelatedNotesWidget noteId="test-note" onNoteClick={mockOnNoteClick} />
+      <RelatedNotesWidget noteId="test-note" onNoteClick={mockOnNoteClick} />,
     );
 
     await waitFor(() => {
@@ -90,7 +90,7 @@ describe("RelatedNotesWidget", () => {
     });
 
     render(
-      <RelatedNotesWidget noteId="test-note" onNoteClick={mockOnNoteClick} />
+      <RelatedNotesWidget noteId="test-note" onNoteClick={mockOnNoteClick} />,
     );
 
     await waitFor(() => {
@@ -107,17 +107,15 @@ describe("RelatedNotesWidget", () => {
     });
 
     render(
-      <RelatedNotesWidget noteId="test-note" onNoteClick={mockOnNoteClick} />
+      <RelatedNotesWidget noteId="test-note" onNoteClick={mockOnNoteClick} />,
     );
 
     await waitFor(() => {
       expect(
-        screen.getByText("関連ノートが見つかりません")
+        screen.getByText("関連ノートが見つかりません"),
       ).toBeInTheDocument();
       expect(
-        screen.getByText(
-          "タグやリンクを追加すると、関連ノートが提案されます"
-        )
+        screen.getByText("タグやリンクを追加すると、関連ノートが提案されます"),
       ).toBeInTheDocument();
     });
   });
@@ -129,12 +127,12 @@ describe("RelatedNotesWidget", () => {
     });
 
     render(
-      <RelatedNotesWidget noteId="test-note" onNoteClick={mockOnNoteClick} />
+      <RelatedNotesWidget noteId="test-note" onNoteClick={mockOnNoteClick} />,
     );
 
     await waitFor(() => {
       expect(
-        screen.getByText("関連ノートの取得に失敗しました")
+        screen.getByText("関連ノートの取得に失敗しました"),
       ).toBeInTheDocument();
     });
   });
@@ -150,12 +148,12 @@ describe("RelatedNotesWidget", () => {
         noteId="test-note"
         onNoteClick={mockOnNoteClick}
         limit={10}
-      />
+      />,
     );
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
-        "/api/notes/test-note/related?limit=10"
+        "/api/notes/test-note/related?limit=10",
       );
     });
   });
@@ -172,22 +170,22 @@ describe("RelatedNotesWidget", () => {
     });
 
     const { rerender } = render(
-      <RelatedNotesWidget noteId="note-1" onNoteClick={mockOnNoteClick} />
+      <RelatedNotesWidget noteId="note-1" onNoteClick={mockOnNoteClick} />,
     );
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
-        "/api/notes/note-1/related?limit=5"
+        "/api/notes/note-1/related?limit=5",
       );
     });
 
     rerender(
-      <RelatedNotesWidget noteId="note-2" onNoteClick={mockOnNoteClick} />
+      <RelatedNotesWidget noteId="note-2" onNoteClick={mockOnNoteClick} />,
     );
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
-        "/api/notes/note-2/related?limit=5"
+        "/api/notes/note-2/related?limit=5",
       );
     });
 
@@ -205,12 +203,12 @@ describe("RelatedNotesWidget", () => {
         noteId="test-note"
         onNoteClick={mockOnNoteClick}
         limit={5}
-      />
+      />,
     );
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
-        "/api/notes/test-note/related?limit=5"
+        "/api/notes/test-note/related?limit=5",
       );
     });
 
@@ -219,12 +217,12 @@ describe("RelatedNotesWidget", () => {
         noteId="test-note"
         onNoteClick={mockOnNoteClick}
         limit={10}
-      />
+      />,
     );
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
-        "/api/notes/test-note/related?limit=10"
+        "/api/notes/test-note/related?limit=10",
       );
     });
 

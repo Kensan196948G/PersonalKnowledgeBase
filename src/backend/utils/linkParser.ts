@@ -73,10 +73,10 @@ export function extractLinks(content: string): ParsedLink[] {
  */
 export function stripHtml(html: string): string {
   // HTMLタグを除去
-  const stripped = html.replace(/<[^>]*>/g, ' ');
+  const stripped = html.replace(/<[^>]*>/g, " ");
 
   // 複数の空白を1つにまとめ
-  const normalized = stripped.replace(/\s+/g, ' ').trim();
+  const normalized = stripped.replace(/\s+/g, " ").trim();
 
   return normalized;
 }
@@ -93,7 +93,10 @@ export function stripHtml(html: string): string {
  * @param noteId ノートID
  * @param content ノートのコンテンツ
  */
-export async function syncNoteLinks(noteId: string, content: string): Promise<void> {
+export async function syncNoteLinks(
+  noteId: string,
+  content: string,
+): Promise<void> {
   try {
     // 1. コンテンツからリンクを抽出
     const parsedLinks = extractLinks(content);
@@ -117,7 +120,7 @@ export async function syncNoteLinks(noteId: string, content: string): Promise<vo
         targetNote = await prisma.note.create({
           data: {
             title: link.targetTitle,
-            content: '',
+            content: "",
             isPinned: false,
             isFavorite: false,
             isArchived: false,
@@ -137,7 +140,10 @@ export async function syncNoteLinks(noteId: string, content: string): Promise<vo
         });
       } catch (error) {
         // 重複エラーの場合はスキップ
-        if (error instanceof Error && error.message.includes('Unique constraint')) {
+        if (
+          error instanceof Error &&
+          error.message.includes("Unique constraint")
+        ) {
           console.log(`Duplicate link skipped: ${noteId} -> ${targetNote.id}`);
           continue;
         }
@@ -147,7 +153,7 @@ export async function syncNoteLinks(noteId: string, content: string): Promise<vo
 
     console.log(`Synced ${parsedLinks.length} links for note ${noteId}`);
   } catch (error) {
-    console.error('Error syncing note links:', error);
+    console.error("Error syncing note links:", error);
     throw error;
   }
 }
@@ -158,7 +164,9 @@ export async function syncNoteLinks(noteId: string, content: string): Promise<vo
  * @param noteId ノートID
  * @returns リンク切れのリンク一覧
  */
-export async function findBrokenLinks(noteId: string): Promise<{ linkId: string; targetTitle: string }[]> {
+export async function findBrokenLinks(
+  noteId: string,
+): Promise<{ linkId: string; targetTitle: string }[]> {
   const links = await prisma.noteLink.findMany({
     where: { sourceNoteId: noteId },
     include: {
@@ -174,8 +182,8 @@ export async function findBrokenLinks(noteId: string): Promise<{ linkId: string;
 
   // コンテンツが空の場合はリンク切れと判定
   const brokenLinks = links
-    .filter(link => link.targetNote.content === '')
-    .map(link => ({
+    .filter((link) => link.targetNote.content === "")
+    .map((link) => ({
       linkId: link.id,
       targetTitle: link.targetNote.title,
     }));
@@ -202,15 +210,40 @@ export function extractKeywords(text: string): string[] {
   const words = normalized.split(/[\s、。，．！？!?,.:;]+/);
   // 4. ストップワード除去（英語のみ、日本語は将来対応）
   const stopwords = [
-    'the', 'a', 'an', 'and', 'or', 'but', 'is', 'are', 'was', 'were',
-    'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'from', 'as',
-    'this', 'that', 'these', 'those', 'it', 'its', 'be', 'been', 'have', 'has',
+    "the",
+    "a",
+    "an",
+    "and",
+    "or",
+    "but",
+    "is",
+    "are",
+    "was",
+    "were",
+    "in",
+    "on",
+    "at",
+    "to",
+    "for",
+    "of",
+    "with",
+    "by",
+    "from",
+    "as",
+    "this",
+    "that",
+    "these",
+    "those",
+    "it",
+    "its",
+    "be",
+    "been",
+    "have",
+    "has",
   ];
 
   // 5. フィルタリング（長さ2文字以上、ストップワード除外）
-  const filtered = words.filter(
-    w => w.length > 1 && !stopwords.includes(w)
-  );
+  const filtered = words.filter((w) => w.length > 1 && !stopwords.includes(w));
 
   // 6. 重複除去
   const unique = Array.from(new Set(filtered));

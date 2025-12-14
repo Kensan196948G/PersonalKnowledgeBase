@@ -29,7 +29,7 @@ describe("BacklinkPanel", () => {
 
   it("renders loading state initially", () => {
     (global.fetch as any).mockImplementation(
-      () => new Promise(() => {}) // Never resolves
+      () => new Promise(() => {}), // Never resolves
     );
 
     render(<BacklinkPanel noteId="test-note" onNoteClick={mockOnNoteClick} />);
@@ -49,9 +49,7 @@ describe("BacklinkPanel", () => {
       expect(screen.getByText("Related Note 2")).toBeInTheDocument();
     });
 
-    expect(global.fetch).toHaveBeenCalledWith(
-      "/api/notes/test-note/backlinks"
-    );
+    expect(global.fetch).toHaveBeenCalledWith("/api/notes/test-note/backlinks");
   });
 
   it("displays count of backlinks in header", async () => {
@@ -77,7 +75,7 @@ describe("BacklinkPanel", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText("このノートへのリンクはありません")
+        screen.getByText("このノートへのリンクはありません"),
       ).toBeInTheDocument();
     });
   });
@@ -92,7 +90,7 @@ describe("BacklinkPanel", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText("バックリンクの取得に失敗しました")
+        screen.getByText("バックリンクの取得に失敗しました"),
       ).toBeInTheDocument();
     });
   });
@@ -107,10 +105,10 @@ describe("BacklinkPanel", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText("This is the context around the link...")
+        screen.getByText("This is the context around the link..."),
       ).toBeInTheDocument();
       expect(
-        screen.getByText("Another context with link reference...")
+        screen.getByText("Another context with link reference..."),
       ).toBeInTheDocument();
     });
   });
@@ -127,7 +125,7 @@ describe("BacklinkPanel", () => {
     });
 
     const { rerender } = render(
-      <BacklinkPanel noteId="note-1" onNoteClick={mockOnNoteClick} />
+      <BacklinkPanel noteId="note-1" onNoteClick={mockOnNoteClick} />,
     );
 
     await waitFor(() => {

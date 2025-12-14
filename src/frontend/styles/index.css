@@ -1,5 +1,5 @@
 /* Tippy.js styles for NoteLink autocomplete */
-@import 'tippy.js/dist/tippy.css';
+@import "tippy.js/dist/tippy.css";
 
 @tailwind base;
 @tailwind components;

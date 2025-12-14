@@ -11,7 +11,12 @@ interface MainLayoutProps {
  * メインレイアウトコンポーネント
  * サイドバー（ノート一覧）とエディタの2ペイン構成（右サイドバーオプション）
  */
-export function MainLayout({ sidebar, editor, header, rightSidebar }: MainLayoutProps) {
+export function MainLayout({
+  sidebar,
+  editor,
+  header,
+  rightSidebar,
+}: MainLayoutProps) {
   const [sidebarWidth, setSidebarWidth] = useState(320);
   const [isResizing, setIsResizing] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -43,7 +48,10 @@ export function MainLayout({ sidebar, editor, header, rightSidebar }: MainLayout
         }
       } else if (isRightResizing) {
         const newWidth = window.innerWidth - e.clientX;
-        if (newWidth >= minRightSidebarWidth && newWidth <= maxRightSidebarWidth) {
+        if (
+          newWidth >= minRightSidebarWidth &&
+          newWidth <= maxRightSidebarWidth
+        ) {
           setRightSidebarWidth(newWidth);
         }
       }

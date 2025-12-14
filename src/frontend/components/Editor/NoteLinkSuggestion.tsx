@@ -7,18 +7,18 @@
  * - 既存ノートと新規作成候補を表示
  */
 
-import {
-  forwardRef,
-  useEffect,
-  useImperativeHandle,
-  useState,
-} from 'react';
-import Fuse from 'fuse.js';
-import { NoteSuggestionItem } from './extensions/NoteLinkExtension';
+import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
+import Fuse from "fuse.js";
+import { NoteSuggestionItem } from "./extensions/NoteLinkExtension";
 
 export interface NoteLinkSuggestionProps {
   items: NoteSuggestionItem[];
-  command: (item: { id: string; label: string; noteId?: string; exists: boolean }) => void;
+  command: (item: {
+    id: string;
+    label: string;
+    noteId?: string;
+    exists: boolean;
+  }) => void;
   fetchNotes: () => Promise<NoteSuggestionItem[]>;
   query?: string;
 }
@@ -45,7 +45,7 @@ export const NoteLinkSuggestion = forwardRef<
         const notes = await props.fetchNotes();
         setAllNotes(notes);
       } catch (error) {
-        console.error('Failed to fetch notes for suggestion:', error);
+        console.error("Failed to fetch notes for suggestion:", error);
         setAllNotes([]);
       }
     };
@@ -55,7 +55,7 @@ export const NoteLinkSuggestion = forwardRef<
 
   // Fuse.jsであいまい検索
   useEffect(() => {
-    const query = props.query?.trim() || '';
+    const query = props.query?.trim() || "";
 
     if (query.length === 0) {
       // クエリが空の場合は最新のノートを表示
@@ -65,7 +65,7 @@ export const NoteLinkSuggestion = forwardRef<
     }
 
     const fuse = new Fuse(allNotes, {
-      keys: ['title'],
+      keys: ["title"],
       threshold: 0.3, // 0.0 = 完全一致, 1.0 = すべてマッチ
       includeScore: true,
       minMatchCharLength: 1,
@@ -106,7 +106,9 @@ export const NoteLinkSuggestion = forwardRef<
   };
 
   const upHandler = () => {
-    setSelectedIndex((selectedIndex + filteredItems.length - 1) % filteredItems.length);
+    setSelectedIndex(
+      (selectedIndex + filteredItems.length - 1) % filteredItems.length,
+    );
   };
 
   const downHandler = () => {
@@ -119,17 +121,17 @@ export const NoteLinkSuggestion = forwardRef<
 
   useImperativeHandle(ref, () => ({
     onKeyDown: ({ event }: { event: KeyboardEvent }) => {
-      if (event.key === 'ArrowUp') {
+      if (event.key === "ArrowUp") {
         upHandler();
         return true;
       }
 
-      if (event.key === 'ArrowDown') {
+      if (event.key === "ArrowDown") {
         downHandler();
         return true;
       }
 
-      if (event.key === 'Enter') {
+      if (event.key === "Enter") {
         enterHandler();
         return true;
       }
@@ -141,7 +143,9 @@ export const NoteLinkSuggestion = forwardRef<
   if (filteredItems.length === 0) {
     return (
       <div className="bg-white border border-gray-300 rounded-lg shadow-lg p-2 min-w-[200px]">
-        <div className="text-sm text-gray-500 px-2 py-1">ノートが見つかりません</div>
+        <div className="text-sm text-gray-500 px-2 py-1">
+          ノートが見つかりません
+        </div>
       </div>
     );
   }
@@ -154,8 +158,8 @@ export const NoteLinkSuggestion = forwardRef<
           onClick={() => selectItem(index)}
           className={`w-full text-left px-3 py-2 rounded text-sm transition-colors ${
             index === selectedIndex
-              ? 'bg-blue-100 text-blue-900'
-              : 'hover:bg-gray-100 text-gray-900'
+              ? "bg-blue-100 text-blue-900"
+              : "hover:bg-gray-100 text-gray-900"
           }`}
         >
           <div className="flex items-center gap-2">
@@ -175,4 +179,4 @@ export const NoteLinkSuggestion = forwardRef<
   );
 });
 
-NoteLinkSuggestion.displayName = 'NoteLinkSuggestion';
+NoteLinkSuggestion.displayName = "NoteLinkSuggestion";

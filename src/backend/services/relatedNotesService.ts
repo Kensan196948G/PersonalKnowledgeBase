@@ -15,7 +15,7 @@ export interface RelationReasons {
   /** 共通タグ数 */
   commonTags: number;
   /** リンク関係 ('bidirectional' | 'incoming' | 'outgoing' | null) */
-  linkRelation: 'bidirectional' | 'incoming' | 'outgoing' | null;
+  linkRelation: "bidirectional" | "incoming" | "outgoing" | null;
   /** 同一フォルダか */
   sameFolder: boolean;
   /** キーワード類似度（共通キーワード数） */
@@ -77,13 +77,9 @@ const SCORING_WEIGHTS = {
  */
 export async function getRelatedNotes(
   noteId: string,
-  options: RelatedNotesOptions = {}
+  options: RelatedNotesOptions = {},
 ): Promise<RelatedNote[]> {
-  const {
-    limit = 10,
-    threshold = 1.0,
-    excludeLinked = false,
-  } = options;
+  const { limit = 10, threshold = 1.0, excludeLinked = false } = options;
 
   try {
     // 1. 対象ノートの情報取得
@@ -110,7 +106,7 @@ export async function getRelatedNotes(
     });
 
     if (!targetNote) {
-      throw new Error('Note not found');
+      throw new Error("Note not found");
     }
 
     // 2. 候補ノート取得（自分自身とアーカイブ済みを除外）
@@ -141,7 +137,7 @@ export async function getRelatedNotes(
 
     // 3. ターゲットノートのキーワード抽出（事前計算）
     const targetKeywords = extractKeywords(
-      targetNote.title + ' ' + targetNote.content
+      targetNote.title + " " + targetNote.content,
     );
 
     // 4. 各候補の関連度スコア計算
@@ -157,30 +153,30 @@ export async function getRelatedNotes(
       };
 
       // 4-1. 共通タグ
-      const targetTagIds = targetNote.tags.map(nt => nt.tagId);
-      const candidateTagIds = candidate.tags.map(nt => nt.tagId);
-      const commonTagIds = targetTagIds.filter(tagId =>
-        candidateTagIds.includes(tagId)
+      const targetTagIds = targetNote.tags.map((nt) => nt.tagId);
+      const candidateTagIds = candidate.tags.map((nt) => nt.tagId);
+      const commonTagIds = targetTagIds.filter((tagId) =>
+        candidateTagIds.includes(tagId),
       );
       reasons.commonTags = commonTagIds.length;
       score += commonTagIds.length * SCORING_WEIGHTS.COMMON_TAGS;
 
       // 4-2. リンク関係
       const hasOutgoingLink = targetNote.outgoingLinks.some(
-        link => link.targetNoteId === candidate.id
+        (link) => link.targetNoteId === candidate.id,
       );
       const hasIncomingLink = targetNote.incomingLinks.some(
-        link => link.sourceNoteId === candidate.id
+        (link) => link.sourceNoteId === candidate.id,
       );
 
       if (hasOutgoingLink && hasIncomingLink) {
-        reasons.linkRelation = 'bidirectional';
+        reasons.linkRelation = "bidirectional";
         score += SCORING_WEIGHTS.BIDIRECTIONAL_LINK;
       } else if (hasOutgoingLink) {
-        reasons.linkRelation = 'outgoing';
+        reasons.linkRelation = "outgoing";
         score += SCORING_WEIGHTS.UNIDIRECTIONAL_LINK;
       } else if (hasIncomingLink) {
-        reasons.linkRelation = 'incoming';
+        reasons.linkRelation = "incoming";
         score += SCORING_WEIGHTS.UNIDIRECTIONAL_LINK;
       }
 
@@ -190,20 +186,17 @@ export async function getRelatedNotes(
       }
 
       // 4-3. 同一フォルダ
-      if (
-        candidate.folderId &&
-        candidate.folderId === targetNote.folderId
-      ) {
+      if (candidate.folderId && candidate.folderId === targetNote.folderId) {
         reasons.sameFolder = true;
         score += SCORING_WEIGHTS.SAME_FOLDER;
       }
 
       // 4-4. キーワード類似度
       const candidateKeywords = extractKeywords(
-        candidate.title + ' ' + candidate.content
+        candidate.title + " " + candidate.content,
       );
-      const commonKeywords = targetKeywords.filter(keyword =>
-        candidateKeywords.includes(keyword)
+      const commonKeywords = targetKeywords.filter((keyword) =>
+        candidateKeywords.includes(keyword),
       );
       reasons.keywordSimilarity = commonKeywords.length;
       score += commonKeywords.length * SCORING_WEIGHTS.KEYWORD_SIMILARITY;
@@ -231,7 +224,7 @@ export async function getRelatedNotes(
 
     return relatedNotes;
   } catch (error) {
-    console.error('Error getting related notes:', error);
+    console.error("Error getting related notes:", error);
     throw error;
   }
 }
@@ -243,14 +236,16 @@ export async function getRelatedNotes(
  *
  * @returns リンク切れノートの配列
  */
-export async function findRedLinkNotes(): Promise<Array<{
-  id: string;
-  title: string;
-  incomingLinksCount: number;
-}>> {
+export async function findRedLinkNotes(): Promise<
+  Array<{
+    id: string;
+    title: string;
+    incomingLinksCount: number;
+  }>
+> {
   const redLinkNotes = await prisma.note.findMany({
     where: {
-      content: '',
+      content: "",
     },
     include: {
       incomingLinks: {
@@ -261,7 +256,7 @@ export async function findRedLinkNotes(): Promise<Array<{
     },
   });
 
-  return redLinkNotes.map(note => ({
+  return redLinkNotes.map((note) => ({
     id: note.id,
     title: note.title,
     incomingLinksCount: note.incomingLinks.length,

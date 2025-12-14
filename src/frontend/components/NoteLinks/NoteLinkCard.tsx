@@ -112,9 +112,7 @@ export function NoteLinkCard({
             {formatRelativeTime(updatedAt)}
           </span>
         )}
-        {reason && (
-          <span className="text-blue-600 font-medium">{reason}</span>
-        )}
+        {reason && <span className="text-blue-600 font-medium">{reason}</span>}
       </div>
     </div>
   );

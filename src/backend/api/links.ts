@@ -64,7 +64,7 @@ router.post("/", async (req: Request, res: Response) => {
       targetNote = await prisma.note.create({
         data: {
           title: targetTitle.trim(),
-          content: '',
+          content: "",
           isPinned: false,
           isFavorite: false,
           isArchived: false,
@@ -138,7 +138,7 @@ router.post("/", async (req: Request, res: Response) => {
 router.get("/:noteId", async (req: Request, res: Response) => {
   try {
     const { noteId } = req.params;
-    const { includeContext = 'false', limit = '100' } = req.query;
+    const { includeContext = "false", limit = "100" } = req.query;
 
     // UUIDバリデーション
     const uuidRegex =
@@ -178,14 +178,15 @@ router.get("/:noteId", async (req: Request, res: Response) => {
           },
         },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       take: limitNum,
     });
 
     // コンテキストを含めない場合は除外
-    const data = includeContext === 'true'
-      ? links
-      : links.map(({ context, ...rest }) => rest);
+    const data =
+      includeContext === "true"
+        ? links
+        : links.map(({ context, ...rest }) => rest);
 
     res.json({
       success: true,
@@ -214,7 +215,11 @@ router.get("/:noteId", async (req: Request, res: Response) => {
 router.get("/backlinks/:noteId", async (req: Request, res: Response) => {
   try {
     const { noteId } = req.params;
-    const { includeContext = 'true', limit = '50', excludeArchived = 'true' } = req.query;
+    const {
+      includeContext = "true",
+      limit = "50",
+      excludeArchived = "true",
+    } = req.query;
 
     // UUIDバリデーション
     const uuidRegex =
@@ -239,7 +244,7 @@ router.get("/backlinks/:noteId", async (req: Request, res: Response) => {
     }
 
     const limitNum = Math.min(parseInt(limit as string) || 50, 500);
-    const shouldExcludeArchived = excludeArchived === 'true';
+    const shouldExcludeArchived = excludeArchived === "true";
 
     // バックリンク取得
     const backlinks = await prisma.noteLink.findMany({
@@ -263,14 +268,15 @@ router.get("/backlinks/:noteId", async (req: Request, res: Response) => {
           },
         },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       take: limitNum,
     });
 
     // コンテキストを含めない場合は除外
-    const data = includeContext === 'true'
-      ? backlinks
-      : backlinks.map(({ context, ...rest }) => rest);
+    const data =
+      includeContext === "true"
+        ? backlinks
+        : backlinks.map(({ context, ...rest }) => rest);
 
     res.json({
       success: true,
@@ -409,7 +415,11 @@ router.put("/:id", async (req: Request, res: Response) => {
 router.get("/related/:noteId", async (req: Request, res: Response) => {
   try {
     const { noteId } = req.params;
-    const { limit = '10', threshold = '1.0', excludeLinked = 'false' } = req.query;
+    const {
+      limit = "10",
+      threshold = "1.0",
+      excludeLinked = "false",
+    } = req.query;
 
     // UUIDバリデーション
     const uuidRegex =
@@ -435,7 +445,7 @@ router.get("/related/:noteId", async (req: Request, res: Response) => {
 
     const limitNum = Math.min(parseInt(limit as string) || 10, 100);
     const thresholdNum = parseFloat(threshold as string) || 1.0;
-    const shouldExcludeLinked = excludeLinked === 'true';
+    const shouldExcludeLinked = excludeLinked === "true";
 
     // 関連ノート取得
     const relatedNotes = await getRelatedNotes(noteId, {
