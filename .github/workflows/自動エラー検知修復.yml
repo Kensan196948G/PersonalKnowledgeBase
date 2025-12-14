@@ -60,6 +60,8 @@ jobs:
 
       - name: 自動エラー検知・修復ループ
         id: repair_loop
+        env:
+          DATABASE_URL: file:./test.db
         run: |
           #!/bin/bash
           set -e

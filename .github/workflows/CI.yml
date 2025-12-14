@@ -69,6 +69,8 @@ jobs:
 
       - name: テスト実行
         run: npm test -- --passWithNoTests --coverage
+        env:
+          DATABASE_URL: file:./test.db
 
       - name: カバレッジレポート
         if: always()
