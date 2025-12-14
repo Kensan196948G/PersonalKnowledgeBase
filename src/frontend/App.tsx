@@ -281,6 +281,7 @@ function App() {
             <div className="h-full flex flex-col p-6">
               {/* タイトル入力 */}
               <input
+                data-testid="note-title-input"
                 type="text"
                 value={editorTitle}
                 onChange={handleTitleChange}
@@ -418,6 +419,7 @@ function App() {
                 左のリストからノートを選択するか、新しいノートを作成してください
               </p>
               <button
+                data-testid="create-note-center-button"
                 onClick={handleNewNote}
                 className="
                   px-6 py-3

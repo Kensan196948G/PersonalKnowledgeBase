@@ -13,28 +13,69 @@ import { test, expect, Page } from '@playwright/test';
 
 // テストヘルパー関数
 const createNote = async (page: Page, title: string, content: string = '') => {
-  // 新規ノート作成ボタンをクリック（適切なセレクタに調整）
-  await page.click('button:has-text("新規ノート")');
+  // 1. data-testidを使って確実に新規ノートボタンをクリック
+  const headerButton = page.locator('[data-testid="new-note-button"]');
+  const centerButton = page.locator('[data-testid="create-note-center-button"]');
 
-  // タイトル入力
-  await page.fill('input[placeholder*="タイトル"], input[name="title"]', title);
+  // ヘッダーボタンが表示されているか確認
+  const isHeaderVisible = await headerButton.isVisible().catch(() => false);
 
-  // コンテンツがある場合はエディタに入力
-  if (content) {
-    // TipTapエディタのコンテンツエリアを取得
-    const editor = page.locator('.ProseMirror').first();
-    await editor.click();
-    await editor.fill(content);
+  if (isHeaderVisible) {
+    await headerButton.click();
+  } else {
+    await centerButton.click();
   }
 
-  // オートセーブされるまで少し待機
+  // 2. エディタエリアが表示されるまで待機（ノート作成API完了の確認）
+  await page.waitForSelector('[data-testid="note-title-input"]', {
+    timeout: 10000,
+  });
+
+  // 3. タイトル入力（data-testidで確実に特定）
+  const titleInput = page.locator('[data-testid="note-title-input"]');
+  await titleInput.waitFor({ state: 'visible', timeout: 5000 });
+  await titleInput.fill(title);
+
+  // タイトル保存のデバウンス待機
+  await page.waitForTimeout(1500);
+
+  // 4. コンテンツ入力
+  if (content) {
+    const editor = page.locator('.ProseMirror').first();
+    await editor.waitFor({ state: 'visible', timeout: 5000 });
+    await editor.click();
+
+    // TipTapエディタへの入力（pressSequentiallyで順次入力）
+    await editor.pressSequentially(content, { delay: 50 });
+
+    // コンテンツ保存のデバウンス待機
+    await page.waitForTimeout(1500);
+  }
+
+  // 5. 保存完了を確認（少し待機）
   await page.waitForTimeout(1000);
 };
 
 const openNote = async (page: Page, title: string) => {
-  // ノート一覧から指定のノートを開く
-  await page.click(`text="${title}"`);
-  await page.waitForTimeout(500);
+  // ノート一覧から指定のノートを開く（より具体的なセレクタ）
+  const noteItem = page
+    .locator('.note-list, [class*="note-card"], main')
+    .locator(`text="${title}"`)
+    .first();
+
+  // ノートが表示されるまで待機
+  await noteItem.waitFor({ state: 'visible', timeout: 10000 });
+
+  // クリック
+  await noteItem.click();
+
+  // エディタが表示されるまで待機
+  await page.waitForSelector('[data-testid="note-title-input"]', {
+    timeout: 5000,
+  });
+
+  // コンテンツロード待機
+  await page.waitForTimeout(1000);
 };
 
 const getEditorContent = (page: Page) => {
