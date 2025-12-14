@@ -60,13 +60,22 @@ export function CustomSortExample() {
  * 例3: 選択時に詳細を取得
  * ノート選択時にAPIから詳細データを取得する例
  */
+interface NoteDetail {
+  id: string;
+  title: string;
+  content: string;
+  [key: string]: unknown;
+}
+
 export function FetchDetailExample() {
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
-  const [noteDetail, setNoteDetail] = useState<any>(null);
+  const [noteDetail, setNoteDetail] = useState<NoteDetail | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const handleNoteSelect = async (noteId: string) => {
+  const handleNoteSelect = async (noteId: string | null) => {
     setSelectedNoteId(noteId);
+    if (!noteId) return;
+
     setLoading(true);
 
     try {
@@ -135,7 +144,7 @@ export function DeleteNotificationExample() {
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
   const [notification] = useState<string | null>(null);
 
-  const handleNoteSelect = (noteId: string) => {
+  const handleNoteSelect = (noteId: string | null) => {
     setSelectedNoteId(noteId);
   };
 

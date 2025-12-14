@@ -29,7 +29,7 @@ export default defineConfig({
   // グローバル設定
   use: {
     // ベースURL（開発サーバー）
-    baseURL: 'http://localhost:5173',
+    baseURL: 'http://192.168.0.187:5173',
 
     // 失敗時のトレース
     trace: 'on-first-retry',
@@ -67,7 +67,7 @@ export default defineConfig({
   // 開発サーバーの起動設定
   webServer: {
     command: 'npm run dev',
-    url: 'http://localhost:5173',
+    url: 'http://192.168.0.187:5173',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000, // 2分
     stdout: 'ignore',

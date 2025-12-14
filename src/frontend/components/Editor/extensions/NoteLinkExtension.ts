@@ -16,6 +16,7 @@ import { NoteLinkSuggestion } from "../NoteLinkSuggestion";
 
 export interface NoteLinkOptions {
   HTMLAttributes: Record<string, unknown>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   renderLabel: (props: { options: NoteLinkOptions; node: any }) => string;
   suggestion: Omit<SuggestionOptions, "editor">;
 }
@@ -233,7 +234,9 @@ export function getSuggestionRenderer(
   let component: ReactRenderer | null = null;
   let popup: TippyInstance[] | null = null;
 
+   
   return {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onStart: (props: any) => {
       component = new ReactRenderer(NoteLinkSuggestion, {
         props: {
@@ -258,6 +261,7 @@ export function getSuggestionRenderer(
       });
     },
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onUpdate(props: any) {
       component?.updateProps({
         ...props,
@@ -273,12 +277,14 @@ export function getSuggestionRenderer(
       });
     },
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onKeyDown(props: any) {
       if (props.event.key === "Escape") {
         popup?.[0]?.hide();
         return true;
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return (component?.ref as any)?.onKeyDown?.(props) ?? false;
     },
 

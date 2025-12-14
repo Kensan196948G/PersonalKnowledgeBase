@@ -134,8 +134,14 @@ export function extractTextFromTipTap(content: string | object): string {
     // 文字列の場合はJSONパース
     const json = typeof content === "string" ? JSON.parse(content) : content;
 
+    interface TipTapNode {
+      type?: string;
+      text?: string;
+      content?: TipTapNode[];
+    }
+
     // TipTap JSONの構造を再帰的に走査してテキストを抽出
-    const extractText = (node: any): string => {
+    const extractText = (node: TipTapNode): string => {
       if (!node) return "";
 
       // テキストノードの場合
@@ -153,7 +159,7 @@ export function extractTextFromTipTap(content: string | object): string {
 
     const text = extractText(json);
     return text.trim();
-  } catch (error) {
+  } catch {
     // JSONパースエラーの場合、元の文字列をそのまま返す
     return typeof content === "string" ? content : String(content);
   }

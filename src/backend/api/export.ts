@@ -427,7 +427,7 @@ router.get("/markdown/:noteId", async (req: Request, res: Response) => {
         typeof note.content === "string"
           ? JSON.parse(note.content)
           : note.content;
-    } catch (error) {
+    } catch {
       return res
         .status(500)
         .json({ success: false, error: "Failed to parse note content" });

@@ -186,7 +186,7 @@ router.get("/:noteId", async (req: Request, res: Response) => {
     const data =
       includeContext === "true"
         ? links
-        : links.map(({ context, ...rest }) => rest);
+        : links.map(({ context: _context, ...rest }) => rest);
 
     res.json({
       success: true,
@@ -276,7 +276,7 @@ router.get("/backlinks/:noteId", async (req: Request, res: Response) => {
     const data =
       includeContext === "true"
         ? backlinks
-        : backlinks.map(({ context, ...rest }) => rest);
+        : backlinks.map(({ context: _context, ...rest }) => rest);
 
     res.json({
       success: true,
@@ -378,6 +378,7 @@ router.put("/:id", async (req: Request, res: Response) => {
     }
 
     // 更新データ構築
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updateData: any = {};
     if (linkText !== undefined) updateData.linkText = linkText;
     if (context !== undefined) updateData.context = context;

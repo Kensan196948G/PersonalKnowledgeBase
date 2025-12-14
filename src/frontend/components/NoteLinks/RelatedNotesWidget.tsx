@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo, useCallback, useMemo } from "react";
 import { NoteLinkCard } from "./NoteLinkCard";
 
 export interface RelatedNote {
@@ -20,11 +20,22 @@ export interface RelatedNotesWidgetProps {
   className?: string;
 }
 
+// キャッシュ設定
+const CACHE_DURATION_MS = 5 * 60 * 1000; // 5分間有効
+const CACHE_KEY_PREFIX = 'related-notes-cache-';
+
+interface CachedData {
+  data: RelatedNote[];
+  timestamp: number;
+}
+
 /**
- * 関連ノートウィジェットコンポーネント
+ * 関連ノートウィジェットコンポーネント（最適化版）
  * 現在のノートと関連性の高いノートを自動提案
+ * - React.memo でメモ化
+ * - localStorage キャッシング（5分間有効）
  */
-export function RelatedNotesWidget({
+export const RelatedNotesWidget = memo(function RelatedNotesWidget({
   noteId,
   onNoteClick,
   limit = 5,
@@ -34,6 +45,12 @@ export function RelatedNotesWidget({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isCollapsed, setIsCollapsed] = useState(false);
+
+  // キャッシュキー生成（メモ化）
+  const cacheKey = useMemo(
+    () => `${CACHE_KEY_PREFIX}${noteId}-${limit}`,
+    [noteId, limit]
+  );
 
   useEffect(() => {
     const fetchRelatedNotes = async () => {
@@ -47,6 +64,29 @@ export function RelatedNotesWidget({
         setLoading(true);
         setError(null);
 
+        // キャッシュチェック
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+          try {
+            const cachedData: CachedData = JSON.parse(cached);
+            const isExpired = Date.now() - cachedData.timestamp > CACHE_DURATION_MS;
+
+            if (!isExpired) {
+              // キャッシュが有効
+              setRelatedNotes(cachedData.data);
+              setLoading(false);
+              return;
+            } else {
+              // キャッシュ期限切れ - 削除
+              localStorage.removeItem(cacheKey);
+            }
+          } catch {
+            // キャッシュパースエラー - 削除
+            localStorage.removeItem(cacheKey);
+          }
+        }
+
+        // APIリクエスト
         const response = await fetch(
           `/api/links/related/${noteId}?limit=${limit}`,
         );
@@ -55,7 +95,21 @@ export function RelatedNotesWidget({
         }
 
         const data = await response.json();
-        setRelatedNotes(data.relatedNotes || []);
+        const notes = data.relatedNotes || [];
+
+        setRelatedNotes(notes);
+
+        // キャッシュに保存
+        try {
+          const cacheData: CachedData = {
+            data: notes,
+            timestamp: Date.now(),
+          };
+          localStorage.setItem(cacheKey, JSON.stringify(cacheData));
+        } catch (e) {
+          // localStorage容量エラーは無視
+          console.warn('Failed to cache related notes:', e);
+        }
       } catch (err) {
         console.error("Failed to fetch related notes:", err);
         setError(err instanceof Error ? err.message : "エラーが発生しました");
@@ -65,14 +119,14 @@ export function RelatedNotesWidget({
     };
 
     fetchRelatedNotes();
-  }, [noteId, limit]);
+  }, [noteId, limit, cacheKey]);
 
-  const toggleCollapse = () => {
-    setIsCollapsed(!isCollapsed);
-  };
+  const toggleCollapse = useCallback(() => {
+    setIsCollapsed((prev) => !prev);
+  }, []);
 
   return (
-    <div className={`bg-white rounded-lg border border-gray-200 ${className}`}>
+    <div className={`bg-white rounded-lg border border-gray-200 ${className}`} data-testid="related-notes-widget">
       {/* ヘッダー */}
       <div
         className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
@@ -169,17 +223,23 @@ export function RelatedNotesWidget({
 
           {/* 関連ノート一覧 */}
           {!loading && !error && relatedNotes.length > 0 && (
-            <div className="space-y-2">
+            <div className="space-y-2" data-testid="related-notes-list">
               {relatedNotes.map((note) => (
-                <NoteLinkCard
-                  key={note.noteId}
-                  noteId={note.noteId}
-                  noteTitle={note.noteTitle}
-                  score={note.score}
-                  reason={note.reason}
-                  updatedAt={note.updatedAt}
-                  onClick={onNoteClick}
-                />
+                <div key={note.noteId} data-testid={`related-note-item-${note.noteId}`}>
+                  <NoteLinkCard
+                    noteId={note.noteId}
+                    noteTitle={note.noteTitle}
+                    score={note.score}
+                    reason={note.reason}
+                    updatedAt={note.updatedAt}
+                    onClick={onNoteClick}
+                  />
+                  {note.score !== undefined && (
+                    <span data-testid={`related-note-score-${note.noteId}`} style={{ display: 'none' }}>
+                      {note.score}
+                    </span>
+                  )}
+                </div>
               ))}
             </div>
           )}
@@ -210,6 +270,6 @@ export function RelatedNotesWidget({
       )}
     </div>
   );
-}
+});
 
 export default RelatedNotesWidget;

@@ -93,6 +93,12 @@ attachments/
 _archive/
 
 # -------------------------------------------
+# AI/LLM Tools
+# -------------------------------------------
+.ollama/
+.postgres-data/
+
+# -------------------------------------------
 # Lock files (optional)
 # -------------------------------------------
 # package-lock.json
@@ -101,3 +107,4 @@ _archive/
 # Playwright
 playwright-report/
 test-results/
+.local/

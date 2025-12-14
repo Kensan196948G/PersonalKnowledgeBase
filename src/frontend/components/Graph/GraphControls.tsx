@@ -12,7 +12,7 @@ export function GraphControls({
   filter,
 }: GraphControlsProps) {
   return (
-    <div className="absolute top-4 right-4 bg-white rounded-lg shadow-lg p-4 space-y-4 z-10">
+    <div className="absolute top-4 right-4 bg-white rounded-lg shadow-lg p-4 space-y-4 z-10" data-testid="graph-controls">
       {/* ズームコントロール */}
       <div className="space-y-2">
         <div className="text-xs font-medium text-gray-700 mb-2">ズーム</div>
@@ -21,6 +21,7 @@ export function GraphControls({
             onClick={onZoomIn}
             className="px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-sm"
             title="拡大"
+            data-testid="graph-zoom-in"
           >
             <svg
               className="w-4 h-4 mx-auto"
@@ -40,6 +41,7 @@ export function GraphControls({
             onClick={onZoomOut}
             className="px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-sm"
             title="縮小"
+            data-testid="graph-zoom-out"
           >
             <svg
               className="w-4 h-4 mx-auto"
@@ -59,6 +61,7 @@ export function GraphControls({
             onClick={onReset}
             className="px-3 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors text-sm"
             title="リセット"
+            data-testid="graph-reset"
           >
             <svg
               className="w-4 h-4 mx-auto"

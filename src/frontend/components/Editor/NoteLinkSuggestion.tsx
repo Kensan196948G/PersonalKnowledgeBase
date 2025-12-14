@@ -34,6 +34,7 @@ export const NoteLinkSuggestion = forwardRef<
   NoteLinkSuggestionRef,
   NoteLinkSuggestionProps
 >((props, ref) => {
+  const { fetchNotes, query, command } = props;
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [allNotes, setAllNotes] = useState<NoteSuggestionItem[]>([]);
   const [filteredItems, setFilteredItems] = useState<NoteSuggestionItem[]>([]);
@@ -42,7 +43,7 @@ export const NoteLinkSuggestion = forwardRef<
   useEffect(() => {
     const loadNotes = async () => {
       try {
-        const notes = await props.fetchNotes();
+        const notes = await fetchNotes();
         setAllNotes(notes);
       } catch (error) {
         console.error("Failed to fetch notes for suggestion:", error);
@@ -51,13 +52,13 @@ export const NoteLinkSuggestion = forwardRef<
     };
 
     loadNotes();
-  }, [props.fetchNotes]);
+  }, [fetchNotes]);
 
   // Fuse.jsであいまい検索
   useEffect(() => {
-    const query = props.query?.trim() || "";
+    const queryStr = query?.trim() || "";
 
-    if (query.length === 0) {
+    if (queryStr.length === 0) {
       // クエリが空の場合は最新のノートを表示
       setFilteredItems(allNotes.slice(0, 5));
       setSelectedIndex(0);
@@ -71,15 +72,15 @@ export const NoteLinkSuggestion = forwardRef<
       minMatchCharLength: 1,
     });
 
-    const results = fuse.search(query);
+    const results = fuse.search(queryStr);
     const items = results.map((result) => result.item).slice(0, 5);
 
     // 検索結果が0件の場合は新規作成候補を表示
     if (items.length === 0) {
       setFilteredItems([
         {
-          id: `new-${query}`,
-          title: query,
+          id: `new-${queryStr}`,
+          title: queryStr,
           exists: false,
         },
       ]);
@@ -88,7 +89,7 @@ export const NoteLinkSuggestion = forwardRef<
     }
 
     setSelectedIndex(0);
-  }, [props.query, allNotes]);
+  }, [query, allNotes]);
 
   const selectItem = (index: number) => {
     const item = filteredItems[index];
@@ -97,7 +98,7 @@ export const NoteLinkSuggestion = forwardRef<
       return;
     }
 
-    props.command({
+    command({
       id: item.id,
       label: item.title,
       noteId: item.exists ? item.id : undefined,

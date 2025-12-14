@@ -32,6 +32,10 @@ model Note {
   outgoingLinks NoteLink[] @relation("OutgoingLinks")
   incomingLinks NoteLink[] @relation("IncomingLinks")
 
+  // Phase 4: AI連携機能リレーション（準備中）
+  // aiSummaries      AiSummary[]
+  // aiTagSuggestions AiTagSuggestion[]
+
   // インデックス
   @@index([title])
   @@index([createdAt])
@@ -127,3 +131,110 @@ model NoteLink {
   @@index([sourceNoteId, targetNoteId])
   @@unique([sourceNoteId, targetNoteId, linkText])
 }
+
+// =====================================
+// Phase 4: AI連携機能用テーブル（準備中）
+// =====================================
+//
+// Phase 4実装時にコメントを解除してマイグレーション実行
+// 詳細: docs/09_開発フェーズ（Development）/Phase4_Database_Schema.md
+//
+// // AI要約履歴
+// model AiSummary {
+//   id            String   @id @default(uuid())
+//   noteId        String
+//   summary       String   // 生成された要約テキスト
+//   level         String   // "short" | "medium" | "long"
+//   tokenCount    Int      // 出力トークン数
+//   model         String   // 使用したモデル ("llama3.2:1b" | "llama3.2:3b")
+//   processingTime Int?    // 処理時間（ミリ秒）
+//   createdAt     DateTime @default(now())
+//
+//   note          Note     @relation(fields: [noteId], references: [id], onDelete: Cascade)
+//
+//   @@index([noteId])
+//   @@index([createdAt])
+//   @@index([level])
+// }
+//
+// // AIタグ提案履歴
+// model AiTagSuggestion {
+//   id            String   @id @default(uuid())
+//   noteId        String
+//   tagName       String   // 提案されたタグ名
+//   confidence    Float    // 信頼度スコア（0-1）
+//   reason        String?  // 提案理由
+//   isAccepted    Boolean  @default(false)  // ユーザーが採用したか
+//   isExisting    Boolean  @default(false)  // 既存タグか新規タグか
+//   createdAt     DateTime @default(now())
+//
+//   note          Note     @relation(fields: [noteId], references: [id], onDelete: Cascade)
+//
+//   @@index([noteId])
+//   @@index([isAccepted])
+//   @@index([tagName])
+// }
+//
+// // AI文章校正履歴
+// model AiProofreadHistory {
+//   id            String   @id @default(uuid())
+//   originalText  String   // 元のテキスト
+//   correctedText String   // 校正後のテキスト
+//   issuesFound   Int      // 発見された問題の数
+//   issuesData    String   // 問題の詳細（JSON形式）
+//   language      String   // "ja" | "en"
+//   checkTypes    String   // チェック種別（JSON配列）
+//   model         String   // 使用したモデル
+//   processingTime Int?    // 処理時間（ミリ秒）
+//   createdAt     DateTime @default(now())
+//
+//   @@index([createdAt])
+//   @@index([language])
+// }
+//
+// // AI文章展開履歴
+// model AiExpansionHistory {
+//   id            String   @id @default(uuid())
+//   originalText  String   // 元のテキスト
+//   expandedText  String   // 展開後のテキスト
+//   direction     String   // "elaborate" | "brainstorm" | "outline"
+//   tokenCount    Int      // 出力トークン数
+//   model         String   // 使用したモデル
+//   processingTime Int?    // 処理時間（ミリ秒）
+//   createdAt     DateTime @default(now())
+//
+//   @@index([createdAt])
+//   @@index([direction])
+// }
+//
+// // AI設定
+// model AiSettings {
+//   id              String   @id @default(uuid())
+//   userId          String   @default("default")  // 将来のマルチユーザー対応
+//   defaultModel    String   @default("llama3.2:1b")
+//   temperature     Float    @default(0.3)
+//   enableCache     Boolean  @default(true)
+//   cacheTTL        Int      @default(3600)  // キャッシュ有効期限（秒）
+//   autoTagging     Boolean  @default(false)  // 自動タグ提案
+//   autoSummary     Boolean  @default(false)  // 自動要約生成
+//   updatedAt       DateTime @updatedAt
+//
+//   @@unique([userId])
+// }
+//
+// // AI処理メトリクス
+// model AiMetrics {
+//   id              String   @id @default(uuid())
+//   operation       String   // "summarize" | "tag-suggest" | "proofread" | "expand"
+//   model           String   // 使用したモデル
+//   inputTokens     Int      // 入力トークン数
+//   outputTokens    Int      // 出力トークン数
+//   processingTime  Int      // 処理時間（ミリ秒）
+//   success         Boolean  // 成功/失敗
+//   errorCode       String?  // エラーコード
+//   timestamp       DateTime @default(now())
+//
+//   @@index([operation])
+//   @@index([timestamp])
+//   @@index([success])
+// }
