@@ -198,10 +198,15 @@ claude mcp list
 - `docs/09_開発フェーズ（Development）/Phase3_Implementation_Roadmap.md` - 詳細ロードマップ
 - `docs/09_開発フェーズ（Development）/Phase3_GitHub_Issues_Template.md` - Issue/PRテンプレート
 
-### Phase 4: AI連携
+### Phase 4: AI連携（ロードマップ作成済み）
 - [ ] ベクトル検索
 - [ ] 類似ノート検索
 - [ ] AI要約・質問応答
+
+**Phase 4 実装ドキュメント**:
+- `docs/09_開発フェーズ（Development）/Phase4_Executive_Summary.md` - 要約版（まずこれを読む）
+- `docs/09_開発フェーズ（Development）/Phase4_Quick_Start_Guide.md` - クイックスタート
+- `docs/09_開発フェーズ（Development）/Phase4_Implementation_Roadmap.md` - 詳細ロードマップ
 
 ---
 
