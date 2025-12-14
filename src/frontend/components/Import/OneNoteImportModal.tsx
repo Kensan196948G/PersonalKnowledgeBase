@@ -10,7 +10,7 @@ export function OneNoteImportModal({ isOpen, onClose, onSuccess }: OneNoteImport
   const [file, setFile] = useState<File | null>(null);
   const [importing, setImporting] = useState(false);
   const [addImportTag, setAddImportTag] = useState(true);
-  const [importType, setImportType] = useState<'html' | 'docx' | 'pdf' | 'onepkg'>('html');
+  const [importType, setImportType] = useState<'html' | 'docx' | 'pdf' | 'onepkg' | 'mht'>('html');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!isOpen) return null;
@@ -28,7 +28,7 @@ export function OneNoteImportModal({ isOpen, onClose, onSuccess }: OneNoteImport
     }
   };
 
-  const handleTypeChange = (newType: 'html' | 'docx' | 'pdf' | 'onepkg') => {
+  const handleTypeChange = (newType: 'html' | 'docx' | 'pdf' | 'onepkg' | 'mht') => {
     setImportType(newType);
     setFile(null); // Clear file when changing type
   };
@@ -39,10 +39,18 @@ export function OneNoteImportModal({ isOpen, onClose, onSuccess }: OneNoteImport
     setImporting(true);
     try {
       const formData = new FormData();
-      formData.append('htmlFile', file);
+
+      // 形式に応じたフィールド名を使用
+      const fieldName = importType === 'html' ? 'htmlFile' :
+                       importType === 'docx' ? 'docxFile' :
+                       importType === 'pdf' ? 'pdfFile' :
+                       importType === 'mht' ? 'mhtFile' :
+                       'onepkgFile';
+
+      formData.append(fieldName, file);
       formData.append('options', JSON.stringify({ addImportTag }));
 
-      const endpoint = `/api/import/${importType}`;
+      const endpoint = `/api/import/${importType === 'html' ? 'onenote' : importType}`;
       const response = await fetch(endpoint, {
         method: 'POST',
         body: formData,
@@ -92,7 +100,7 @@ export function OneNoteImportModal({ isOpen, onClose, onSuccess }: OneNoteImport
                     type="radio"
                     value="html"
                     checked={importType === 'html'}
-                    onChange={e => handleTypeChange(e.target.value as 'html' | 'docx' | 'pdf' | 'onepkg')}
+                    onChange={e => handleTypeChange(e.target.value as 'html' | 'docx' | 'pdf' | 'onepkg' | 'mht')}
                     className="text-blue-600"
                   />
                   <span className="text-sm">HTML</span>
@@ -102,7 +110,7 @@ export function OneNoteImportModal({ isOpen, onClose, onSuccess }: OneNoteImport
                     type="radio"
                     value="docx"
                     checked={importType === 'docx'}
-                    onChange={e => handleTypeChange(e.target.value as 'html' | 'docx' | 'pdf' | 'onepkg')}
+                    onChange={e => handleTypeChange(e.target.value as 'html' | 'docx' | 'pdf' | 'onepkg' | 'mht')}
                     className="text-blue-600"
                   />
                   <span className="text-sm">DOCX</span>
@@ -112,7 +120,7 @@ export function OneNoteImportModal({ isOpen, onClose, onSuccess }: OneNoteImport
                     type="radio"
                     value="pdf"
                     checked={importType === 'pdf'}
-                    onChange={e => handleTypeChange(e.target.value as 'html' | 'docx' | 'pdf' | 'onepkg')}
+                    onChange={e => handleTypeChange(e.target.value as 'html' | 'docx' | 'pdf' | 'onepkg' | 'mht')}
                     className="text-blue-600"
                   />
                   <span className="text-sm">PDF</span>
@@ -122,10 +130,20 @@ export function OneNoteImportModal({ isOpen, onClose, onSuccess }: OneNoteImport
                     type="radio"
                     value="onepkg"
                     checked={importType === 'onepkg'}
-                    onChange={e => handleTypeChange(e.target.value as 'html' | 'docx' | 'pdf' | 'onepkg')}
+                    onChange={e => handleTypeChange(e.target.value as 'html' | 'docx' | 'pdf' | 'onepkg' | 'mht')}
                     className="text-blue-600"
                   />
                   <span className="text-sm">ONEPKG</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    value="mht"
+                    checked={importType === 'mht'}
+                    onChange={e => handleTypeChange(e.target.value as 'html' | 'docx' | 'pdf' | 'onepkg' | 'mht')}
+                    className="text-blue-600"
+                  />
+                  <span className="text-sm">MHT</span>
                 </label>
               </div>
             </div>
@@ -144,6 +162,7 @@ export function OneNoteImportModal({ isOpen, onClose, onSuccess }: OneNoteImport
                   importType === 'html' ? '.html,.htm' :
                   importType === 'docx' ? '.docx' :
                   importType === 'pdf' ? '.pdf' :
+                  importType === 'mht' ? '.mht,.mhtml' :
                   '.onepkg'
                 }
                 onChange={handleFileChange}
@@ -198,6 +217,7 @@ export function OneNoteImportModal({ isOpen, onClose, onSuccess }: OneNoteImport
                 {importType === 'docx' && 'OneNoteで「ファイル」→「エクスポート」→「Word文書 (.docx)」を選択してエクスポートしたファイルをアップロードしてください。'}
                 {importType === 'pdf' && 'OneNoteで「ファイル」→「エクスポート」→「PDF (.pdf)」を選択してエクスポートしたファイルをアップロードしてください。'}
                 {importType === 'onepkg' && 'OneNoteで「ファイル」→「エクスポート」→「OneNoteパッケージ (.onepkg)」を選択してエクスポートしたファイルをアップロードしてください。'}
+                {importType === 'mht' && 'OneNoteで「ファイル」→「エクスポート」→「単一ファイルWebページ (.mht/.mhtml)」を選択してエクスポートしたファイルをアップロードしてください。'}
               </p>
             </div>
           </div>
