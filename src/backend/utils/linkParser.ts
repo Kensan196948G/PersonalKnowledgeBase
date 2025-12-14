@@ -199,8 +199,7 @@ export function extractKeywords(text: string): string[] {
   const normalized = stripped.toLowerCase();
 
   // 3. 単語分割（簡易：スペースと記号で分割）
-  const words = normalized.split(/[\s、。，．！？\!\?\,\.\;\:]+/);
-
+  const words = normalized.split(/[\s、。，．！？!?,.:;]+/);
   // 4. ストップワード除去（英語のみ、日本語は将来対応）
   const stopwords = [
     'the', 'a', 'an', 'and', 'or', 'but', 'is', 'are', 'was', 'were',
