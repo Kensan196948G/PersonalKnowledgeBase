@@ -20,7 +20,7 @@ describe('DOCX/PDF Import API Tests', () => {
     } catch (e) {
       // already exists
     }
-  });
+  }, 10000); // 10秒のタイムアウト
 
   afterAll(async () => {
     // テスト用データクリーンアップ
@@ -48,7 +48,7 @@ describe('DOCX/PDF Import API Tests', () => {
     }
 
     await prisma.$disconnect();
-  });
+  }, 10000); // 10秒のタイムアウト
 
   describe('DOCX Import Configuration', () => {
     it('should have correct DOCX file size limit (20MB)', () => {

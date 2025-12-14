@@ -204,13 +204,11 @@ router.get("/html/:noteId", async (req: Request, res: Response) => {
     res.send(fullHtml);
   } catch (error) {
     console.error("HTML export error:", error);
-    res
-      .status(500)
-      .json({
-        success: false,
-        error: "Failed to generate HTML",
-        message: error instanceof Error ? error.message : "Unknown error",
-      });
+    res.status(500).json({
+      success: false,
+      error: "Failed to generate HTML",
+      message: error instanceof Error ? error.message : "Unknown error",
+    });
   }
 });
 
@@ -293,32 +291,26 @@ router.get("/pdf/:noteId", async (req: Request, res: Response) => {
 
     if (error instanceof Error) {
       if (error.message.includes("timeout")) {
-        return res
-          .status(504)
-          .json({
-            success: false,
-            error: "PDF generation timeout",
-            message: "PDF生成がタイムアウトしました",
-          });
+        return res.status(504).json({
+          success: false,
+          error: "PDF generation timeout",
+          message: "PDF生成がタイムアウトしました",
+        });
       }
       if (error.message.includes("Failed to launch")) {
-        return res
-          .status(500)
-          .json({
-            success: false,
-            error: "Puppeteer launch failed",
-            message: "PDFエンジンの起動に失敗しました",
-          });
+        return res.status(500).json({
+          success: false,
+          error: "Puppeteer launch failed",
+          message: "PDFエンジンの起動に失敗しました",
+        });
       }
     }
 
-    res
-      .status(500)
-      .json({
-        success: false,
-        error: "Failed to generate PDF",
-        message: error instanceof Error ? error.message : "Unknown error",
-      });
+    res.status(500).json({
+      success: false,
+      error: "Failed to generate PDF",
+      message: error instanceof Error ? error.message : "Unknown error",
+    });
   }
 });
 
@@ -402,12 +394,10 @@ isArchived: ${note.isArchived}
     res.send(zipBuffer);
   } catch (error) {
     console.error("Markdown bulk export error:", error);
-    res
-      .status(500)
-      .json({
-        success: false,
-        error: "Failed to export all notes as Markdown",
-      });
+    res.status(500).json({
+      success: false,
+      error: "Failed to export all notes as Markdown",
+    });
   }
 });
 
