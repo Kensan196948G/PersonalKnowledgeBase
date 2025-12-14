@@ -87,6 +87,20 @@ const uploadPdf = multer({
   },
 });
 
+// Multer設定（MHT/MHTML用）
+const uploadMht = multer({
+  dest: TEMP_UPLOAD_DIR,
+  limits: { fileSize: 20 * 1024 * 1024 }, // 20MB
+  fileFilter: (_req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (ext === ".mht" || ext === ".mhtml") {
+      cb(null, true);
+    } else {
+      cb(new Error("Only MHT/MHTML files are allowed"));
+    }
+  },
+});
+
 /**
  * POST /api/import/onenote
  * OneNote HTMLファイルをインポート
@@ -394,6 +408,52 @@ router.post(
 );
 
 /**
+ * quoted-printableデコード（UTF-8マルチバイト対応）
+ */
+function decodeQuotedPrintable(buffer: Buffer): string {
+  let text = buffer.toString('binary');
+
+  // ソフト改行を削除（=\r\n または =\n）
+  text = text.replace(/=\r?\n/g, '');
+
+  // =XX形式をバイト値に変換
+  const bytes: number[] = [];
+  let i = 0;
+  while (i < text.length) {
+    if (text[i] === '=' && i + 2 < text.length) {
+      const hex = text.substring(i + 1, i + 3);
+      if (/^[0-9A-F]{2}$/i.test(hex)) {
+        bytes.push(parseInt(hex, 16));
+        i += 3;
+        continue;
+      }
+    }
+    bytes.push(text.charCodeAt(i) & 0xFF);
+    i++;
+  }
+
+  return Buffer.from(bytes).toString('utf-8');
+}
+
+/**
+ * MHTファイルからHTMLコンテンツを抽出（文字コード対応強化版）
+ */
+function extractHtmlFromMht(buffer: Buffer): string {
+  // MHTファイル全体をquoted-printableデコード
+  const decoded = decodeQuotedPrintable(buffer);
+
+  console.log('MHT decoded (first 500 chars):', decoded.substring(0, 500));
+
+  // HTMLタグを抽出
+  const htmlMatch = decoded.match(/<html[\s\S]*<\/html>/i);
+  if (htmlMatch) {
+    return htmlMatch[0];
+  }
+
+  throw new Error("No HTML content found in MHT file");
+}
+
+/**
  * OneNote HTML クリーンアップ関数
  * OneNote特有のMicrosoft Officeスタイルを除去
  */
@@ -667,6 +727,158 @@ router.post(
       res.status(500).json({
         success: false,
         error: "Failed to import PDF file",
+        message: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  },
+);
+
+/**
+ * POST /api/import/mht
+ * MHT/MHTML形式ファイルをインポート
+ *
+ * multipart/form-data:
+ * - mhtFile: File (OneNoteからエクスポートしたMHT/MHTMLファイル)
+ * - options: JSON ({ addImportTag: boolean })
+ */
+router.post(
+  "/mht",
+  uploadMht.single("mhtFile"),
+  async (req: Request, res: Response) => {
+    try {
+      // ディレクトリ確保
+      await ensureTempDir();
+
+      if (!req.file) {
+        return res.status(400).json({
+          success: false,
+          error: "No file uploaded",
+        });
+      }
+
+      // MHTファイル読み込み（バイナリで）
+      const buffer = await fs.readFile(req.file.path);
+
+      // MHTファイルからHTMLを抽出（文字コード自動検出込み）
+      const htmlContent = extractHtmlFromMht(buffer);
+
+      // デバッグ: HTMLの最初の2000文字をログ出力
+      console.log('MHT extracted HTML preview:', htmlContent.substring(0, 2000));
+
+      // JSDOM でパース
+      const dom = new JSDOM(htmlContent);
+      const document = dom.window.document;
+
+      // タイトル抽出（h1、title タグ、または最初のテキスト）
+      const h1 = document.querySelector("h1");
+      const titleTag = document.querySelector("title");
+
+      // 最初の大きなテキスト（段落やdiv）を探す
+      const firstParagraph = document.querySelector("p, div");
+      const firstText = firstParagraph?.textContent?.trim().substring(0, 100);
+
+      console.log('Raw h1:', h1?.innerHTML);
+      console.log('Raw title tag:', titleTag?.innerHTML);
+      console.log('First text:', firstText);
+
+      const title =
+        h1?.textContent?.trim() ||
+        titleTag?.textContent?.trim() ||
+        firstText ||
+        "インポートされたノート";
+
+      console.log('MHT extracted title:', title);
+
+      // OneNote特有のスタイルをクリーンアップ
+      const bodyHtml = cleanOneNoteHtml(document.body.innerHTML);
+
+      console.log('MHT cleaned body HTML length:', bodyHtml.length);
+      console.log('MHT cleaned body preview:', bodyHtml.substring(0, 500));
+
+      // HTML → TipTap JSON変換
+      console.log('Converting HTML to TipTap JSON...');
+      const tiptapJson = generateJSON(bodyHtml, [
+        StarterKit,
+        Link,
+        TaskList,
+        TaskItem,
+      ]);
+
+      const jsonString = JSON.stringify(tiptapJson);
+      console.log('TipTap JSON size:', jsonString.length, 'bytes');
+      console.log('TipTap JSON preview:', jsonString.substring(0, 500));
+
+      // ノート作成
+      console.log('Creating note in database...');
+      const note = await prisma.note.create({
+        data: {
+          title: title.trim(),
+          content: jsonString,
+        },
+      });
+      console.log('Note created successfully, ID:', note.id);
+
+      // オプション処理
+      const options = req.body.options ? JSON.parse(req.body.options) : {};
+
+      if (options.addImportTag) {
+        // "MHT Import"タグを作成/取得
+        let tag = await prisma.tag.findUnique({
+          where: { name: "MHT Import" },
+        });
+        if (!tag) {
+          tag = await prisma.tag.create({
+            data: { name: "MHT Import", color: "#4A90E2" },
+          });
+        }
+        await prisma.noteTag.create({
+          data: { noteId: note.id, tagId: tag.id },
+        });
+      }
+
+      // 一時ファイル削除
+      await fs.unlink(req.file.path);
+
+      res.status(201).json({
+        success: true,
+        data: {
+          noteId: note.id,
+          title: note.title,
+          warnings: [],
+          info: {
+            format: "MHT/MHTML",
+          },
+        },
+      });
+    } catch (error) {
+      // エラー時、アップロードされたファイルを削除
+      if (req.file) {
+        try {
+          await fs.unlink(req.file.path);
+        } catch (unlinkError) {
+          console.error("Failed to delete uploaded file:", unlinkError);
+        }
+      }
+
+      console.error("MHT import error:", error);
+
+      // Multerのエラーハンドリング
+      if (error instanceof multer.MulterError) {
+        if (error.code === "LIMIT_FILE_SIZE") {
+          return res.status(400).json({
+            success: false,
+            error: "File size exceeds the limit of 20MB",
+          });
+        }
+        return res.status(400).json({
+          success: false,
+          error: error.message,
+        });
+      }
+
+      res.status(500).json({
+        success: false,
+        error: "Failed to import MHT file",
         message: error instanceof Error ? error.message : "Unknown error",
       });
     }

@@ -13,9 +13,10 @@ import { useUIStore } from "./stores/uiStore";
 import { useTagStore } from "./stores/tagStore";
 import { useFolderStore } from "./stores/folderStore";
 import type { Folder } from "./types/folder";
+import { tiptapJsonToHtml } from "./utils/tiptap";
 
 function App() {
-  const { selectedNote, createNote, updateNote, fetchNoteById } = useNotes();
+  const { selectedNote, createNote, updateNote, fetchNoteById, selectNote } = useNotes();
   const { isSaving, setSaving } = useUIStore();
   const { toggleTagSelection } = useTagStore();
   const { selectFolder } = useFolderStore();
@@ -36,14 +37,31 @@ function App() {
   const titleSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const folderSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // ノート選択時にエディタを更新
-  const handleNoteSelect = (noteId: string | null) => {
-    if (noteId && selectedNote) {
+  // ノート選択時にストアを更新（API取得を含む）
+  const handleNoteSelect = async (noteId: string | null) => {
+    console.log('handleNoteSelect called, noteId:', noteId);
+    await selectNote(noteId);
+  };
+
+  // selectedNoteが変更されたときにエディタを更新
+  useEffect(() => {
+    console.log('selectedNote changed:', selectedNote);
+    if (selectedNote) {
+      console.log('Setting editor content, title:', selectedNote.title);
+      console.log('Content type:', typeof selectedNote.content, 'length:', selectedNote.content.length);
       setEditorTitle(selectedNote.title);
-      setEditorContent(selectedNote.content);
+      // TipTap JSON文字列をHTMLに変換
+      try {
+        const htmlContent = tiptapJsonToHtml(selectedNote.content);
+        console.log('Converted HTML length:', htmlContent.length);
+        console.log('HTML preview:', htmlContent.substring(0, 200));
+        setEditorContent(htmlContent);
+      } catch (error) {
+        console.error('Failed to convert TipTap JSON to HTML:', error);
+      }
       setEditorFolderId(selectedNote.folderId);
     }
-  };
+  }, [selectedNote]);
 
   // 新規ノート作成
   const handleNewNote = async () => {
