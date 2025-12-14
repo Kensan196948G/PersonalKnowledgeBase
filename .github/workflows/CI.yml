@@ -67,6 +67,11 @@ jobs:
       - name: Prisma クライアント生成
         run: npx prisma generate
 
+      - name: テストDB初期化
+        run: npx prisma db push --accept-data-loss
+        env:
+          DATABASE_URL: file:./test.db
+
       - name: テスト実行
         run: npm test -- --passWithNoTests --coverage
         env:

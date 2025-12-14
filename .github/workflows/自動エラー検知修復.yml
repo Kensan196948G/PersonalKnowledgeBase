@@ -58,6 +58,11 @@ jobs:
       - name: Prisma クライアント生成
         run: npx prisma generate
 
+      - name: テストDB初期化
+        run: npx prisma db push --accept-data-loss
+        env:
+          DATABASE_URL: file:./test.db
+
       - name: 自動エラー検知・修復ループ
         id: repair_loop
         env:
