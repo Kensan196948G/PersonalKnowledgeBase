@@ -6,6 +6,8 @@ import Placeholder from "@tiptap/extension-placeholder";
 import TaskList from "@tiptap/extension-task-list";
 import TaskItem from "@tiptap/extension-task-item";
 import { useCallback } from "react";
+import { NoteLink, getSuggestionRenderer, NoteSuggestionItem } from "../components/Editor/extensions/NoteLinkExtension";
+import { useNoteStore } from "../stores/noteStore";
 
 export interface UseEditorOptions {
   /** 初期コンテンツ（HTML形式） */
@@ -35,6 +37,17 @@ export function useEditor({
   placeholder = "ここにメモを入力...",
   editable = true,
 }: UseEditorOptions = {}): UseEditorReturn {
+  const notes = useNoteStore((state) => state.notes);
+
+  // ノート一覧を取得してSuggestionに渡す
+  const fetchNotesForSuggestion = useCallback(async (): Promise<NoteSuggestionItem[]> => {
+    return notes.map((note) => ({
+      id: note.id,
+      title: note.title,
+      exists: true,
+    }));
+  }, [notes]);
+
   const editor = useTipTapEditor({
     extensions: [
       StarterKit.configure({
@@ -59,6 +72,15 @@ export function useEditor({
       TaskList,
       TaskItem.configure({
         nested: true,
+      }),
+      NoteLink.configure({
+        suggestion: {
+          items: async () => {
+            const allNotes = await fetchNotesForSuggestion();
+            return allNotes;
+          },
+          render: () => getSuggestionRenderer(fetchNotesForSuggestion),
+        },
       }),
     ],
     content,

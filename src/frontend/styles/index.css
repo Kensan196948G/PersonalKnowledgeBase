@@ -1,3 +1,6 @@
+/* Tippy.js styles for NoteLink autocomplete */
+@import 'tippy.js/dist/tippy.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -92,4 +95,27 @@ ul[data-type="taskList"] li > label {
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+/* NoteLink スタイル */
+a[data-type="noteLink"] {
+  @apply no-underline font-medium;
+}
+
+/* 青リンク（存在するノート） */
+a[data-type="noteLink"][data-exists="true"] {
+  @apply text-blue-600;
+}
+
+a[data-type="noteLink"][data-exists="true"]:hover {
+  @apply text-blue-800 underline;
+}
+
+/* 赤リンク（未作成ノート） */
+a[data-type="noteLink"][data-exists="false"] {
+  @apply text-red-600;
+}
+
+a[data-type="noteLink"][data-exists="false"]:hover {
+  @apply text-red-800 underline;
 }

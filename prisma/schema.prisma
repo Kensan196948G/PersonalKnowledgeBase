@@ -27,6 +27,10 @@ model Note {
   folderId  String?
   attachments Attachment[]
 
+  // Phase 3: ノート間リンク
+  outgoingLinks NoteLink[] @relation("OutgoingLinks")
+  incomingLinks NoteLink[] @relation("IncomingLinks")
+
   // インデックス
   @@index([title])
   @@index([createdAt])
@@ -101,4 +105,24 @@ model Template {
 
   @@index([name])
   @@index([category])
+}
+
+// Phase 3: ノート間リンク
+model NoteLink {
+  id           String   @id @default(uuid())
+  sourceNoteId String   // リンク元ノートID
+  targetNoteId String   // リンク先ノートID
+  linkText     String   // [[ノート名]] の「ノート名」部分
+  context      String?  // リンク周辺コンテキスト（前後50文字）
+  createdAt    DateTime @default(now())
+
+  // リレーション
+  sourceNote   Note     @relation("OutgoingLinks", fields: [sourceNoteId], references: [id], onDelete: Cascade)
+  targetNote   Note     @relation("IncomingLinks", fields: [targetNoteId], references: [id], onDelete: Cascade)
+
+  // インデックス
+  @@index([sourceNoteId])
+  @@index([targetNoteId])
+  @@index([sourceNoteId, targetNoteId])
+  @@unique([sourceNoteId, targetNoteId, linkText])
 }

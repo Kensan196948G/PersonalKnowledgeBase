@@ -4,43 +4,60 @@ interface MainLayoutProps {
   sidebar: React.ReactNode;
   editor: React.ReactNode;
   header?: React.ReactNode;
+  rightSidebar?: React.ReactNode;
 }
 
 /**
  * メインレイアウトコンポーネント
- * サイドバー（ノート一覧）とエディタの2ペイン構成
+ * サイドバー（ノート一覧）とエディタの2ペイン構成（右サイドバーオプション）
  */
-export function MainLayout({ sidebar, editor, header }: MainLayoutProps) {
+export function MainLayout({ sidebar, editor, header, rightSidebar }: MainLayoutProps) {
   const [sidebarWidth, setSidebarWidth] = useState(320);
   const [isResizing, setIsResizing] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [rightSidebarWidth, setRightSidebarWidth] = useState(300);
+  const [isRightResizing, setIsRightResizing] = useState(false);
+  const [isRightSidebarCollapsed, setIsRightSidebarCollapsed] = useState(false);
 
   const minSidebarWidth = 240;
   const maxSidebarWidth = 500;
+  const minRightSidebarWidth = 250;
+  const maxRightSidebarWidth = 450;
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     setIsResizing(true);
   }, []);
 
+  const handleRightMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsRightResizing(true);
+  }, []);
+
   const handleMouseMove = useCallback(
     (e: MouseEvent) => {
-      if (!isResizing) return;
-
-      const newWidth = e.clientX;
-      if (newWidth >= minSidebarWidth && newWidth <= maxSidebarWidth) {
-        setSidebarWidth(newWidth);
+      if (isResizing) {
+        const newWidth = e.clientX;
+        if (newWidth >= minSidebarWidth && newWidth <= maxSidebarWidth) {
+          setSidebarWidth(newWidth);
+        }
+      } else if (isRightResizing) {
+        const newWidth = window.innerWidth - e.clientX;
+        if (newWidth >= minRightSidebarWidth && newWidth <= maxRightSidebarWidth) {
+          setRightSidebarWidth(newWidth);
+        }
       }
     },
-    [isResizing],
+    [isResizing, isRightResizing],
   );
 
   const handleMouseUp = useCallback(() => {
     setIsResizing(false);
+    setIsRightResizing(false);
   }, []);
 
   useEffect(() => {
-    if (isResizing) {
+    if (isResizing || isRightResizing) {
       document.addEventListener("mousemove", handleMouseMove);
       document.addEventListener("mouseup", handleMouseUp);
       document.body.style.cursor = "col-resize";
@@ -58,7 +75,7 @@ export function MainLayout({ sidebar, editor, header }: MainLayoutProps) {
       document.body.style.cursor = "";
       document.body.style.userSelect = "";
     };
-  }, [isResizing, handleMouseMove, handleMouseUp]);
+  }, [isResizing, isRightResizing, handleMouseMove, handleMouseUp]);
 
   // キーボードショートカット: Cmd/Ctrl + \ でサイドバートグル
   useEffect(() => {
@@ -149,6 +166,73 @@ export function MainLayout({ sidebar, editor, header }: MainLayoutProps) {
 
         {/* エディタ */}
         <main className="flex-1 overflow-hidden bg-white">{editor}</main>
+
+        {/* 右サイドバーリサイズハンドル */}
+        {rightSidebar && !isRightSidebarCollapsed && (
+          <div
+            className={`
+              w-1 flex-shrink-0 cursor-col-resize hover:bg-blue-400
+              transition-colors duration-150
+              ${isRightResizing ? "bg-blue-500" : "bg-transparent hover:bg-blue-300"}
+            `}
+            onMouseDown={handleRightMouseDown}
+          />
+        )}
+
+        {/* 右サイドバー */}
+        {rightSidebar && (
+          <>
+            <aside
+              className={`
+                flex-shrink-0 bg-gray-50 border-l border-gray-200 overflow-hidden
+                transition-all duration-200 ease-in-out
+                ${isRightSidebarCollapsed ? "w-0" : ""}
+              `}
+              style={{ width: isRightSidebarCollapsed ? 0 : rightSidebarWidth }}
+            >
+              <div
+                className="h-full overflow-y-auto"
+                style={{ width: rightSidebarWidth }}
+              >
+                {rightSidebar}
+              </div>
+            </aside>
+
+            {/* 右サイドバートグルボタン */}
+            <button
+              onClick={() => setIsRightSidebarCollapsed((prev) => !prev)}
+              className={`
+                absolute z-10 p-1.5 bg-white border border-gray-300 rounded-l-md
+                hover:bg-gray-100 transition-colors shadow-sm
+                ${isRightSidebarCollapsed ? "right-0" : ""}
+              `}
+              style={{
+                right: isRightSidebarCollapsed ? 0 : rightSidebarWidth - 4,
+                top: "50%",
+                transform: "translateY(-50%)",
+              }}
+              title={
+                isRightSidebarCollapsed
+                  ? "関連ノートを開く"
+                  : "関連ノートを閉じる"
+              }
+            >
+              <svg
+                className={`w-4 h-4 text-gray-600 transition-transform ${isRightSidebarCollapsed ? "rotate-180" : ""}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </button>
+          </>
+        )}
       </div>
     </div>
   );
