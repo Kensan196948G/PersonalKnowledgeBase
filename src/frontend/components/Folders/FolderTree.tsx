@@ -49,6 +49,11 @@ function FolderTreeItem({
   const hasChildren = folder.children && folder.children.length > 0;
   const indentWidth = level * 16; // 16px per level
 
+  // デバッグ：children配列の状態をログ出力
+  console.log(
+    `[FolderTreeItem] ${folder.name}: hasChildren=${hasChildren}, children=${folder.children?.length || 0}`,
+  );
+
   const handleToggleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (hasChildren) {
