@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ノート内容デバッグビューアー</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        .input-group {
+            margin: 20px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #555;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        button.secondary {
+            background: #2196F3;
+        }
+        button.secondary:hover {
+            background: #0b7dda;
+        }
+        #result {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-left: 4px solid #4CAF50;
+            border-radius: 4px;
+            display: none;
+        }
+        #result.error {
+            border-left-color: #f44336;
+            background: #ffebee;
+        }
+        .note-info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .note-info h3 {
+            margin-top: 0;
+            color: #1976d2;
+        }
+        .note-content {
+            background: white;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            max-height: 500px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            line-height: 1.6;
+        }
+        .json-view {
+            background: #263238;
+            color: #aed581;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .quick-select {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        .quick-select button {
+            padding: 6px 12px;
+            font-size: 14px;
+            background: #607d8b;
+        }
+        .quick-select button:hover {
+            background: #455a64;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 ノート内容デバッグビューアー</h1>
+
+        <div class="input-group">
+            <label for="noteTitle">ノートタイトル:</label>
+            <input type="text" id="noteTitle" placeholder="例: 2025年⑫13" value="2025年⑫13">
+            <div class="quick-select">
+                <button onclick="setTitle('2025年①01')">2025年①01</button>
+                <button onclick="setTitle('2025年⑫12')">2025年⑫12</button>
+                <button onclick="setTitle('2025年⑫13')">2025年⑫13</button>
+                <button onclick="setTitle('2025年⑫14')">2025年⑫14</button>
+                <button onclick="setTitle('2025年⑫15')">2025年⑫15</button>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label for="apiUrl">API URL:</label>
+            <input type="text" id="apiUrl" value="http://192.168.0.187:3000">
+        </div>
+
+        <button onclick="fetchNote()">ノートを取得</button>
+        <button class="secondary" onclick="fetchAllNotes()">全ノート一覧取得</button>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        function setTitle(title) {
+            document.getElementById('noteTitle').value = title;
+        }
+
+        async function fetchNote() {
+            const title = document.getElementById('noteTitle').value;
+            const apiUrl = document.getElementById('apiUrl').value;
+            const resultDiv = document.getElementById('result');
+
+            resultDiv.style.display = 'block';
+            resultDiv.className = '';
+            resultDiv.innerHTML = '<p>🔄 読み込み中...</p>';
+
+            try {
+                // ノートを検索
+                const response = await fetch(`${apiUrl}/api/notes?search=${encodeURIComponent(title)}`);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                const notes = data.data || [];
+
+                if (notes.length === 0) {
+                    resultDiv.className = 'error';
+                    resultDiv.innerHTML = `
+                        <h3>❌ ノートが見つかりませんでした</h3>
+                        <p>タイトル: ${title}</p>
+                    `;
+                    return;
+                }
+
+                const note = notes.find(n => n.title === title) || notes[0];
+
+                // ノート詳細を表示
+                const content = JSON.parse(note.content);
+                const textContent = content.content?.map((block, i) => {
+                    if (block.content && block.content[0] && block.content[0].text) {
+                        return block.content[0].text;
+                    }
+                    return '';
+                }).join('\n\n') || '(内容なし)';
+
+                resultDiv.innerHTML = `
+                    <div class="note-info">
+                        <h3>📄 ノート情報</h3>
+                        <p><strong>タイトル:</strong> ${note.title}</p>
+                        <p><strong>ID:</strong> ${note.id}</p>
+                        <p><strong>作成日時:</strong> ${new Date(note.createdAt).toLocaleString('ja-JP')}</p>
+                        <p><strong>更新日時:</strong> ${new Date(note.updatedAt).toLocaleString('ja-JP')}</p>
+                        <p><strong>フォルダ:</strong> ${note.folder?.name || 'なし'}</p>
+                        <p><strong>内容サイズ:</strong> ${note.content.length} 文字</p>
+                        <p><strong>ブロック数:</strong> ${content.content?.length || 0}</p>
+                    </div>
+
+                    <h3>📝 テキスト内容</h3>
+                    <div class="note-content">${textContent}</div>
+
+                    <h3>🔧 JSON構造</h3>
+                    <div class="json-view">${JSON.stringify(content, null, 2)}</div>
+                `;
+
+            } catch (error) {
+                resultDiv.className = 'error';
+                resultDiv.innerHTML = `
+                    <h3>❌ エラーが発生しました</h3>
+                    <p>${error.message}</p>
+                    <pre>${error.stack}</pre>
+                `;
+            }
+        }
+
+        async function fetchAllNotes() {
+            const apiUrl = document.getElementById('apiUrl').value;
+            const resultDiv = document.getElementById('result');
+
+            resultDiv.style.display = 'block';
+            resultDiv.className = '';
+            resultDiv.innerHTML = '<p>🔄 読み込み中...</p>';
+
+            try {
+                const response = await fetch(`${apiUrl}/api/notes`);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                const notes = data.data || [];
+
+                resultDiv.innerHTML = `
+                    <h3>📊 全ノート一覧（${notes.length}件）</h3>
+                    <div style="max-height: 400px; overflow-y: auto;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: #f5f5f5;">
+                                    <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">#</th>
+                                    <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">タイトル</th>
+                                    <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">フォルダ</th>
+                                    <th style="padding: 8px; border: 1px solid #ddd; text-align: right;">サイズ</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${notes.map((note, i) => `
+                                    <tr>
+                                        <td style="padding: 8px; border: 1px solid #ddd;">${i + 1}</td>
+                                        <td style="padding: 8px; border: 1px solid #ddd;">
+                                            <a href="#" onclick="document.getElementById('noteTitle').value='${note.title.replace(/'/g, "\\'")}'; fetchNote(); return false;">
+                                                ${note.title}
+                                            </a>
+                                        </td>
+                                        <td style="padding: 8px; border: 1px solid #ddd;">${note.folder?.name || '-'}</td>
+                                        <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">${note.content?.length || 0}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+
+            } catch (error) {
+                resultDiv.className = 'error';
+                resultDiv.innerHTML = `
+                    <h3>❌ エラーが発生しました</h3>
+                    <p>${error.message}</p>
+                `;
+            }
+        }
+
+        // エンターキーで検索
+        document.getElementById('noteTitle').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                fetchNote();
+            }
+        });
+    </script>
+</body>
+</html>
