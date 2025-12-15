@@ -67,11 +67,15 @@ function App() {
 
   // selectedNoteが変更されたときにエディタを更新
   useEffect(() => {
-    console.log("selectedNote changed:", selectedNote);
+    console.log(
+      "[App] selectedNote changed:",
+      selectedNote?.id,
+      selectedNote?.title,
+    );
     if (selectedNote) {
-      console.log("Setting editor content, title:", selectedNote.title);
+      console.log("[App] Setting editor content, title:", selectedNote.title);
       console.log(
-        "Content type:",
+        "[App] Content type:",
         typeof selectedNote.content,
         "length:",
         selectedNote.content.length,
@@ -80,13 +84,19 @@ function App() {
       // TipTap JSON文字列をHTMLに変換
       try {
         const htmlContent = tiptapJsonToHtml(selectedNote.content);
-        console.log("Converted HTML length:", htmlContent.length);
-        console.log("HTML preview:", htmlContent.substring(0, 200));
+        console.log("[App] Converted HTML length:", htmlContent.length);
+        console.log("[App] HTML preview:", htmlContent.substring(0, 200));
         setEditorContent(htmlContent);
+        console.log("[App] editorContent state updated");
       } catch (error) {
-        console.error("Failed to convert TipTap JSON to HTML:", error);
+        console.error("[App] Failed to convert TipTap JSON to HTML:", error);
       }
       setEditorFolderId(selectedNote.folderId);
+    } else {
+      console.log("[App] No note selected, clearing editor");
+      setEditorTitle("");
+      setEditorContent("");
+      setEditorFolderId(null);
     }
   }, [selectedNote]);
 

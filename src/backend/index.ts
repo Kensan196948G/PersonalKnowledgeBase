@@ -11,6 +11,7 @@ import exportRouter from "./api/export.js";
 import importRouter from "./api/import.js";
 import linksRouter from "./api/links.js";
 import aiSummarizeRouter from "./api/ai/summarize.js";
+import devRouter from "./api/dev.js";
 
 // 環境変数読み込み
 config();
@@ -57,6 +58,7 @@ app.use("/api/export", exportRouter);
 app.use("/api/import", importRouter);
 app.use("/api/links", linksRouter);
 app.use("/api/ai", aiSummarizeRouter);
+app.use("/api/dev", devRouter);
 
 // ヘルスチェック
 app.get("/api/health", async (_req, res) => {

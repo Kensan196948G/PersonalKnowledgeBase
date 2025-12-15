@@ -30,6 +30,7 @@ interface FolderStore {
   collapseFolder: (folderId: string) => void;
   expandAll: () => void;
   collapseAll: () => void;
+  autoExpandInitialFolders: () => void;
   clearError: () => void;
 
   // セレクター（computed values）
@@ -48,22 +49,33 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
  * そのまま返すだけで良い
  */
 function buildFolderTree(folders: Folder[]): Folder[] {
-  console.log("[FolderStore] buildFolderTree called with", folders.length, "folders");
+  console.log(
+    "[FolderStore] buildFolderTree called with",
+    folders.length,
+    "folders",
+  );
 
   // APIレスポンスが既にツリー構造を持っている場合はそのまま返す
   if (folders.length > 0 && folders[0].children !== undefined) {
     // ルートフォルダ（parentId === null）のみをフィルタ
     const rootFolders = folders.filter((f) => f.parentId === null);
-    console.log("[FolderStore] Using pre-built tree structure, root folders:", rootFolders.length);
+    console.log(
+      "[FolderStore] Using pre-built tree structure, root folders:",
+      rootFolders.length,
+    );
 
     // デバッグ：各ルートフォルダの子の数を表示
-    rootFolders.forEach(root => {
-      console.log(`[FolderStore]   ${root.name}: ${root.children?.length || 0} children`);
+    rootFolders.forEach((root) => {
+      console.log(
+        `[FolderStore]   ${root.name}: ${root.children?.length || 0} children`,
+      );
 
       // 孫フォルダ（children of children）も確認
       if (root.children && root.children.length > 0) {
-        root.children.forEach(child => {
-          console.log(`[FolderStore]     └─ ${child.name}: ${child.children?.length || 0} grandchildren`);
+        root.children.forEach((child) => {
+          console.log(
+            `[FolderStore]     └─ ${child.name}: ${child.children?.length || 0} grandchildren`,
+          );
         });
       }
     });
@@ -350,6 +362,40 @@ export const useFolderStore = create<FolderStore>()(
         // 全て折りたたみ
         collapseAll: () => {
           set({ expandedFolders: new Set() });
+        },
+
+        // 初期フォルダの自動展開（OneNote > 2025年）
+        autoExpandInitialFolders: () => {
+          const { folders } = get();
+          const newExpandedFolders = new Set<string>();
+
+          // OneNoteフォルダを探して展開
+          const oneNoteFolder = folders.find(
+            (f) => f.name === "OneNote" && f.parentId === null,
+          );
+          if (oneNoteFolder) {
+            console.log(
+              "[FolderStore] Auto-expanding OneNote:",
+              oneNoteFolder.id,
+            );
+            newExpandedFolders.add(oneNoteFolder.id);
+
+            // OneNoteの子フォルダから「2025年」を探して展開
+            const year2025Folder = folders.find(
+              (f) => f.name === "2025年" && f.parentId === oneNoteFolder.id,
+            );
+            if (year2025Folder) {
+              console.log(
+                "[FolderStore] Auto-expanding 2025年:",
+                year2025Folder.id,
+              );
+              newExpandedFolders.add(year2025Folder.id);
+            }
+          }
+
+          if (newExpandedFolders.size > 0) {
+            set({ expandedFolders: newExpandedFolders });
+          }
         },
 
         // エラークリア

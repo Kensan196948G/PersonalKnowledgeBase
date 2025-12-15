@@ -23,6 +23,8 @@ interface FolderTreeItemProps {
   level: number;
   isSelected: boolean;
   isExpanded: boolean;
+  expandedFolders: Set<string>; // 全展開状態を渡す
+  selectedFolderId: string | null; // 全選択状態を渡す
   onToggleExpand: (folderId: string) => void;
   onSelect: (folderId: string) => void;
   onEdit?: (folder: Folder) => void;
@@ -36,6 +38,8 @@ function FolderTreeItem({
   level,
   isSelected,
   isExpanded,
+  expandedFolders,
+  selectedFolderId,
   onToggleExpand,
   onSelect,
   onEdit,
@@ -281,21 +285,28 @@ function FolderTreeItem({
       {/* 子フォルダ（再帰的にレンダリング） */}
       {hasChildren && isExpanded && (
         <div>
-          {folder.children!.map((childFolder) => (
-            <FolderTreeItem
-              key={childFolder.id}
-              folder={childFolder}
-              level={level + 1}
-              isSelected={false} // 子フォルダの選択状態は親コンポーネントで管理
-              isExpanded={false} // 子フォルダの展開状態は親コンポーネントで管理
-              onToggleExpand={onToggleExpand}
-              onSelect={onSelect}
-              onEdit={onEdit}
-              onDelete={onDelete}
-              onCreate={onCreate}
-              onImport={onImport}
-            />
-          ))}
+          {folder.children!.map((childFolder) => {
+            const childIsSelected = selectedFolderId === childFolder.id;
+            const childIsExpanded = expandedFolders.has(childFolder.id);
+
+            return (
+              <FolderTreeItem
+                key={childFolder.id}
+                folder={childFolder}
+                level={level + 1}
+                isSelected={childIsSelected}
+                isExpanded={childIsExpanded}
+                expandedFolders={expandedFolders}
+                selectedFolderId={selectedFolderId}
+                onToggleExpand={onToggleExpand}
+                onSelect={onSelect}
+                onEdit={onEdit}
+                onDelete={onDelete}
+                onCreate={onCreate}
+                onImport={onImport}
+              />
+            );
+          })}
         </div>
       )}
     </>
@@ -320,6 +331,7 @@ export function FolderTree({
     toggleFolderExpand,
     expandAll,
     collapseAll,
+    autoExpandInitialFolders,
     getFolderTree,
     selectedFolderId,
     expandedFolders,
@@ -329,10 +341,15 @@ export function FolderTree({
 
   const [showAllFolders, setShowAllFolders] = useState(false);
 
-  // 初回マウント時にフォルダ一覧を取得
+  // 初回マウント時にフォルダ一覧を取得し、初期フォルダを自動展開
   useEffect(() => {
-    fetchFolders();
-  }, [fetchFolders]);
+    const initializeFolders = async () => {
+      await fetchFolders();
+      // フォルダ取得後、OneNoteと2025年を自動展開
+      autoExpandInitialFolders();
+    };
+    initializeFolders();
+  }, [fetchFolders, autoExpandInitialFolders]);
 
   const folderTree = getFolderTree();
 
@@ -378,6 +395,8 @@ export function FolderTree({
           level={level}
           isSelected={isSelected}
           isExpanded={isExpanded}
+          expandedFolders={expandedFolders}
+          selectedFolderId={selectedFolderId}
           onToggleExpand={toggleFolderExpand}
           onSelect={handleFolderClick}
           onEdit={onFolderEdit}

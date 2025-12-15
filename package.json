@@ -34,7 +34,8 @@
     "db:seed:links": "tsx prisma/seed-links.ts",
     "db:check": "tsx scripts/check-db.ts",
     "db:test:links": "tsx scripts/test-links.ts",
-    "db:verify": "tsx scripts/verify-schema.ts"
+    "db:verify": "tsx scripts/verify-schema.ts",
+    "reset-frontend": "open scripts/reset-frontend.html?auto=true || xdg-open scripts/reset-frontend.html?auto=true || start scripts/reset-frontend.html?auto=true"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",

@@ -5,7 +5,7 @@ import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
 import TaskList from "@tiptap/extension-task-list";
 import TaskItem from "@tiptap/extension-task-item";
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import {
   NoteLink,
   getSuggestionRenderer,
@@ -95,6 +95,45 @@ export function useEditor({
       onChange?.(editor.getHTML());
     },
   });
+
+  // contentプロパティが変更されたときにエディタの内容を更新
+  useEffect(() => {
+    if (!editor) {
+      return;
+    }
+
+    // 現在のエディタのHTML内容を取得
+    const currentContent = editor.getHTML();
+
+    // 正規化：空のコンテンツを統一
+    const normalizeContent = (html: string) => {
+      if (!html || html === "<p></p>" || html.trim() === "") {
+        return "";
+      }
+      return html;
+    };
+
+    const normalizedContent = normalizeContent(content);
+    const normalizedCurrent = normalizeContent(currentContent);
+
+    // contentが変更されていて、かつ現在のエディタ内容と異なる場合のみ更新
+    // これにより、ユーザーが編集中に外部からの更新で上書きされるのを防ぐ
+    if (normalizedContent !== normalizedCurrent) {
+      console.log("[useEditor] Content changed, updating editor");
+      console.log("[useEditor] New content length:", normalizedContent.length);
+      console.log(
+        "[useEditor] Current content length:",
+        normalizedCurrent.length,
+      );
+      console.log(
+        "[useEditor] New content preview:",
+        normalizedContent.substring(0, 100),
+      );
+
+      // エディタの内容を更新（履歴を追加せず、選択位置も保持しない）
+      editor.commands.setContent(content, false);
+    }
+  }, [editor, content]);
 
   // ツールバーボタンのアクティブ状態を取得
   const isActive = useCallback(

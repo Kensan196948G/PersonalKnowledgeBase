@@ -35,6 +35,9 @@ export function TipTapEditor({
   editable = true,
   className = "",
 }: TipTapEditorProps) {
+  console.log("[TipTapEditor] Rendered with content length:", content.length);
+  console.log("[TipTapEditor] Content preview:", content.substring(0, 100));
+
   const { editor, isActive } = useEditor({
     content,
     onChange,
