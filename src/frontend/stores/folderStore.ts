@@ -44,14 +44,34 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
 
 /**
  * フォルダツリーを構築する補助関数
+ * 注意：APIレスポンスは既にツリー構造（children配列を含む）なので、
+ * そのまま返すだけで良い
  */
 function buildFolderTree(folders: Folder[]): Folder[] {
+  console.log("[FolderStore] buildFolderTree called with", folders.length, "folders");
+
+  // APIレスポンスが既にツリー構造を持っている場合はそのまま返す
+  if (folders.length > 0 && folders[0].children !== undefined) {
+    // ルートフォルダ（parentId === null）のみをフィルタ
+    const rootFolders = folders.filter((f) => f.parentId === null);
+    console.log("[FolderStore] Using pre-built tree structure, root folders:", rootFolders.length);
+
+    // デバッグ：各ルートフォルダの子の数を表示
+    rootFolders.forEach(root => {
+      console.log(`[FolderStore]   ${root.name}: ${root.children?.length || 0} children`);
+    });
+
+    return rootFolders;
+  }
+
+  // フォールバック：フラットリストの場合のみツリー構築
+  console.log("[FolderStore] Building tree from flat list");
   const folderMap = new Map<string, Folder>();
   const rootFolders: Folder[] = [];
 
   // 全フォルダをMapに登録
   folders.forEach((folder) => {
-    folderMap.set(folder.id, { ...folder, children: [] });
+    folderMap.set(folder.id, { ...folder, children: folder.children || [] });
   });
 
   // 親子関係を構築
