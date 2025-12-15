@@ -349,6 +349,7 @@ function App() {
               {/* エディタ */}
               <div className="flex-1 overflow-auto">
                 <TipTapEditor
+                  key={selectedNote?.id || "empty"}
                   content={editorContent}
                   onChange={handleEditorChange}
                   placeholder="ここにメモを入力してください..."
