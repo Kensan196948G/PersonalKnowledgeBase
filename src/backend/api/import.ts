@@ -804,7 +804,12 @@ router.post(
         // テキストを日付ごとに分割
         const sections = detectDateSections(text);
 
-        console.log(`Detected ${sections.length} date sections`);
+        console.log(`[PDF Split] Detected ${sections.length} date sections`);
+        sections.forEach((section, idx) => {
+          console.log(
+            `[PDF Split] Section ${idx + 1}: "${section.title}" (${section.content.length} chars)`,
+          );
+        });
 
         // 各セクションをノートとして作成
         const createdNotes: Array<{
@@ -826,14 +831,29 @@ router.post(
             })),
           };
 
-          // ノート作成
+          // 日付文字列からDateオブジェクトを生成
+          const parsedDate = parseDateString(section.title);
+
+          // 日付パターンを含むタイトルの場合、folderIdが未指定なら「日記」フォルダを使用
+          let targetFolderId = folderId;
+          if (!folderId && containsDatePattern(section.title)) {
+            targetFolderId = DIARY_FOLDER_ID;
+          }
+
+          // ノート作成（日付をcreatedAt/updatedAtに設定）
           const note = await prisma.note.create({
             data: {
               title: section.title.trim().substring(0, 200),
               content: JSON.stringify(tiptapJson),
-              folderId: folderId,
+              folderId: targetFolderId,
+              createdAt: parsedDate || undefined,
+              updatedAt: parsedDate || undefined,
             },
           });
+
+          console.log(
+            `[PDF Split] Created note: ${note.title} (${note.id}) with date: ${parsedDate?.toISOString() || "no date"}`,
+          );
 
           createdNotes.push({
             noteId: note.id,
@@ -1186,12 +1206,18 @@ async function processSingleFile(
         TaskItem,
       ]);
 
+      // 日付パターンを含むタイトルの場合、folderIdが未指定なら「日記」フォルダを使用
+      let targetFolderId = folderId || null;
+      if (!folderId && containsDatePattern(title)) {
+        targetFolderId = DIARY_FOLDER_ID;
+      }
+
       // ノート作成（単一）
       const note = await prisma.note.create({
         data: {
           title: title.trim().substring(0, 200),
           content: JSON.stringify(tiptapJson),
-          folderId: folderId || null,
+          folderId: targetFolderId,
         },
       });
       noteIds.push(note.id);
@@ -1227,12 +1253,18 @@ async function processSingleFile(
         TaskItem,
       ]);
 
+      // 日付パターンを含むタイトルの場合、folderIdが未指定なら「日記」フォルダを使用
+      let targetFolderId = folderId || null;
+      if (!folderId && containsDatePattern(title)) {
+        targetFolderId = DIARY_FOLDER_ID;
+      }
+
       // ノート作成（単一）
       const note = await prisma.note.create({
         data: {
           title: title.trim().substring(0, 200),
           content: JSON.stringify(tiptapJson),
-          folderId: folderId || null,
+          folderId: targetFolderId,
         },
       });
       noteIds.push(note.id);
@@ -1254,12 +1286,18 @@ async function processSingleFile(
         TaskItem,
       ]);
 
+      // 日付パターンを含むタイトルの場合、folderIdが未指定なら「日記」フォルダを使用
+      let targetFolderId = folderId || null;
+      if (!folderId && containsDatePattern(title)) {
+        targetFolderId = DIARY_FOLDER_ID;
+      }
+
       // ノート作成（単一）
       const note = await prisma.note.create({
         data: {
           title: title.trim().substring(0, 200),
           content: JSON.stringify(tiptapJson),
-          folderId: folderId || null,
+          folderId: targetFolderId,
         },
       });
       noteIds.push(note.id);
@@ -1281,6 +1319,10 @@ async function processSingleFile(
       if (options?.splitByDate) {
         const sections = detectDateSections(text);
 
+        console.log(
+          `[PDF Split Batch] Detected ${sections.length} date sections for ${originalName}`,
+        );
+
         // 分割されたセクションごとにノート作成
         for (const section of sections) {
           const paragraphs = section.content
@@ -1301,13 +1343,28 @@ async function processSingleFile(
               ? `${baseTitle} - ${section.title}`
               : baseTitle;
 
+          // 日付文字列からDateオブジェクトを生成
+          const parsedDate = parseDateString(section.title);
+
+          // 日付パターンを含むタイトルの場合、folderIdが未指定なら「日記」フォルダを使用
+          let targetFolderId = folderId || null;
+          if (!folderId && containsDatePattern(sectionTitle)) {
+            targetFolderId = DIARY_FOLDER_ID;
+          }
+
           const note = await prisma.note.create({
             data: {
               title: sectionTitle.trim().substring(0, 200),
               content: JSON.stringify(sectionTiptapJson),
-              folderId: folderId || null,
+              folderId: targetFolderId,
+              createdAt: parsedDate || undefined,
+              updatedAt: parsedDate || undefined,
             },
           });
+
+          console.log(
+            `[PDF Split Batch] Created note: ${note.title} with date: ${parsedDate?.toISOString() || "no date"}`,
+          );
 
           noteIds.push(note.id);
           titles.push(note.title);
@@ -1323,11 +1380,17 @@ async function processSingleFile(
           })),
         };
 
+        // 日付パターンを含むタイトルの場合、folderIdが未指定なら「日記」フォルダを使用
+        let targetFolderId = folderId || null;
+        if (!folderId && containsDatePattern(baseTitle)) {
+          targetFolderId = DIARY_FOLDER_ID;
+        }
+
         const note = await prisma.note.create({
           data: {
             title: baseTitle.trim().substring(0, 200),
             content: JSON.stringify(tiptapJson),
-            folderId: folderId || null,
+            folderId: targetFolderId,
           },
         });
 
@@ -1466,6 +1529,98 @@ interface DateSection {
 }
 
 /**
+ * 日記フォルダID
+ */
+const DIARY_FOLDER_ID = "af9da5f7-b1b8-4a57-b61f-d6aa0c431135";
+
+/**
+ * タイトルに日付パターンが含まれているかをチェック
+ *
+ * 対応する日付パターン:
+ * - YYYY年M月D日 (例: 2025年1月1日)
+ * - M月D日 (例: 1月1日)
+ * - YYYY/M/D (例: 2025/1/1)
+ * - YYYY-M-D (例: 2025-1-1)
+ *
+ * @param title ノートタイトル
+ * @returns 日付パターンが含まれている場合true
+ */
+function containsDatePattern(title: string): boolean {
+  const datePatterns = [
+    /\d{4}年\d{1,2}月\d{1,2}日/, // YYYY年M月D日
+    /(?<!\d)\d{1,2}月\d{1,2}日/, // M月D日
+    /\d{4}\/\d{1,2}\/\d{1,2}/, // YYYY/M/D
+    /\d{4}-\d{1,2}-\d{1,2}/, // YYYY-M-D
+  ];
+
+  return datePatterns.some((pattern) => pattern.test(title));
+}
+
+/**
+ * 日付文字列をDateオブジェクトにパース
+ *
+ * 対応する日付パターン:
+ * - YYYY年M月D日 (例: 2025年1月1日)
+ * - M月D日 (例: 1月1日) → 現在の年を補完
+ * - YYYY/M/D (例: 2025/1/1)
+ * - YYYY-M-D (例: 2025-1-1)
+ *
+ * @param dateStr 日付文字列
+ * @returns Dateオブジェクト、パース失敗時はnull
+ */
+function parseDateString(dateStr: string): Date | null {
+  // YYYY年M月D日 パターン
+  let match = dateStr.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
+  if (match) {
+    const year = parseInt(match[1], 10);
+    const month = parseInt(match[2], 10) - 1; // Dateオブジェクトは0-11
+    const day = parseInt(match[3], 10);
+    const date = new Date(year, month, day);
+    if (!isNaN(date.getTime())) {
+      return date;
+    }
+  }
+
+  // M月D日 パターン（現在の年を補完）
+  match = dateStr.match(/(?<!\d)(\d{1,2})月(\d{1,2})日/);
+  if (match) {
+    const currentYear = new Date().getFullYear();
+    const month = parseInt(match[1], 10) - 1;
+    const day = parseInt(match[2], 10);
+    const date = new Date(currentYear, month, day);
+    if (!isNaN(date.getTime())) {
+      return date;
+    }
+  }
+
+  // YYYY/M/D パターン
+  match = dateStr.match(/(\d{4})\/(\d{1,2})\/(\d{1,2})/);
+  if (match) {
+    const year = parseInt(match[1], 10);
+    const month = parseInt(match[2], 10) - 1;
+    const day = parseInt(match[3], 10);
+    const date = new Date(year, month, day);
+    if (!isNaN(date.getTime())) {
+      return date;
+    }
+  }
+
+  // YYYY-M-D パターン
+  match = dateStr.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (match) {
+    const year = parseInt(match[1], 10);
+    const month = parseInt(match[2], 10) - 1;
+    const day = parseInt(match[3], 10);
+    const date = new Date(year, month, day);
+    if (!isNaN(date.getTime())) {
+      return date;
+    }
+  }
+
+  return null;
+}
+
+/**
  * テキストから日付パターンを検出し、セクションに分割
  *
  * 対応する日付パターン:
@@ -1509,6 +1664,10 @@ function detectDateSections(text: string): DateSection[] {
     }
   }
 
+  console.log(
+    `[detectDateSections] Found ${dateMatches.length} raw date matches`,
+  );
+
   // ページ区切り位置も収集
   const pageBreaks: number[] = [];
   pageBreakPattern.lastIndex = 0;
@@ -1516,6 +1675,10 @@ function detectDateSections(text: string): DateSection[] {
   while ((pageMatch = pageBreakPattern.exec(text)) !== null) {
     pageBreaks.push(pageMatch.index);
   }
+
+  console.log(
+    `[detectDateSections] Found ${pageBreaks.length} page break patterns`,
+  );
 
   // 日付を位置順にソート
   dateMatches.sort((a, b) => a.index - b.index);
@@ -1563,8 +1726,18 @@ function detectDateSections(text: string): DateSection[] {
     }
   }
 
+  console.log(
+    `[detectDateSections] After deduplication: ${uniqueMatches.length} unique date matches`,
+  );
+  uniqueMatches.forEach((m, idx) => {
+    console.log(`[detectDateSections]   ${idx + 1}. "${m.text}" at ${m.index}`);
+  });
+
   // 日付が見つからない場合は、テキスト全体を1つのセクションとして返す
   if (uniqueMatches.length === 0) {
+    console.log(
+      "[detectDateSections] No dates found, returning single section",
+    );
     return [
       {
         title: "インポートされたノート",
@@ -1627,6 +1800,10 @@ function detectDateSections(text: string): DateSection[] {
       endIndex: endIndex,
     });
   }
+
+  console.log(
+    `[detectDateSections] Created ${sections.length} sections from ${uniqueMatches.length} date matches`,
+  );
 
   return sections;
 }

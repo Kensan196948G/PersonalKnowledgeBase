@@ -30,6 +30,19 @@ export function NoteCard({
   const [isDeleting, setIsDeleting] = useState(false);
 
   /**
+   * 日時フォーマット（YYYY/MM/DD HH:MM形式）
+   */
+  const formatDateTime = (dateString: string): string => {
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    return `${year}/${month}/${day} ${hours}:${minutes}`;
+  };
+
+  /**
    * 日時フォーマット（相対時間表示）
    */
   const formatRelativeTime = (dateString: string): string => {
@@ -51,6 +64,13 @@ export function NoteCard({
       month: "short",
       day: "numeric",
     });
+  };
+
+  /**
+   * 作成日時と更新日時が異なるかチェック
+   */
+  const isDifferentDate = (created: string, updated: string): boolean => {
+    return new Date(created).getTime() !== new Date(updated).getTime();
   };
 
   // コンテンツプレビュー: TipTap JSONから純粋なテキストを抽出
@@ -209,10 +229,52 @@ export function NoteCard({
       {/* フッター部分：メタ情報 */}
       <div className="flex items-center justify-between text-xs text-gray-500">
         <div className="flex items-center gap-3">
-          {/* 更新日時 */}
-          <span title={new Date(note.updatedAt).toLocaleString("ja-JP")}>
-            {formatRelativeTime(note.updatedAt)}
-          </span>
+          {/* 日時情報 */}
+          <div className="flex flex-col gap-0.5">
+            {/* 作成日時 */}
+            <span
+              className="flex items-center"
+              title={`作成: ${formatDateTime(note.createdAt)}`}
+            >
+              <svg
+                className="w-3 h-3 mr-1"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+              {formatRelativeTime(note.createdAt)}
+            </span>
+
+            {/* 更新日時（作成日時と異なる場合のみ表示） */}
+            {isDifferentDate(note.createdAt, note.updatedAt) && (
+              <span
+                className="flex items-center text-blue-600"
+                title={`更新: ${formatDateTime(note.updatedAt)}`}
+              >
+                <svg
+                  className="w-3 h-3 mr-1"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  />
+                </svg>
+                {formatRelativeTime(note.updatedAt)}
+              </span>
+            )}
+          </div>
 
           {/* フォルダ */}
           {note.folder && (
