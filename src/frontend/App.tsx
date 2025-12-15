@@ -52,7 +52,10 @@ function App() {
   // ノート選択時にストアを更新（API取得を含む）
   const handleNoteSelect = async (noteId: string | null) => {
     console.log("handleNoteSelect called, noteId:", noteId);
-    await selectNote(noteId);
+    if (noteId) {
+      await fetchNoteById(noteId);
+    }
+    selectNote(noteId);
   };
 
   // selectedNoteが変更されたときにエディタを更新

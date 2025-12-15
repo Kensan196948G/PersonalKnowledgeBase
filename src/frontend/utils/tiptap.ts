@@ -13,6 +13,11 @@ import Image from "@tiptap/extension-image";
  * TipTap JSON文字列をHTMLに変換
  */
 export function tiptapJsonToHtml(jsonString: string): string {
+  // 空文字列の場合は空のHTMLを返す
+  if (!jsonString || jsonString.trim() === "") {
+    return "";
+  }
+
   try {
     // JSON文字列をパース
     const json = JSON.parse(jsonString);

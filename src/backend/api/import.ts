@@ -777,7 +777,11 @@ router.post(
 
       // 最初の大きなテキスト（段落やdiv）を探す
       const firstParagraph = document.querySelector("p, div");
-      const firstText = firstParagraph?.textContent?.trim().substring(0, 100);
+      const firstText = firstParagraph?.textContent
+        ?.trim()
+        .split("\n")[0]
+        .trim()
+        .substring(0, 100);
 
       console.log("Raw h1:", h1?.innerHTML);
       console.log("Raw title tag:", titleTag?.innerHTML);
