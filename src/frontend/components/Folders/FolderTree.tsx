@@ -11,6 +11,8 @@ export interface FolderTreeProps {
   onFolderDelete?: (folderId: string) => void;
   /** 新規フォルダ作成時のコールバック */
   onCreateFolder?: (parentId?: string | null) => void;
+  /** インポート時のコールバック */
+  onImport?: (folderId: string) => void;
 }
 
 /**
@@ -26,6 +28,7 @@ interface FolderTreeItemProps {
   onEdit?: (folder: Folder) => void;
   onDelete?: (folderId: string) => void;
   onCreate?: (parentId: string) => void;
+  onImport?: (folderId: string) => void;
 }
 
 function FolderTreeItem({
@@ -38,6 +41,7 @@ function FolderTreeItem({
   onEdit,
   onDelete,
   onCreate,
+  onImport,
 }: FolderTreeItemProps) {
   const [showActions, setShowActions] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -80,6 +84,11 @@ function FolderTreeItem({
   const handleCreateSubfolder = (e: React.MouseEvent) => {
     e.stopPropagation();
     onCreate?.(folder.id);
+  };
+
+  const handleImport = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onImport?.(folder.id);
   };
 
   return (
@@ -173,6 +182,29 @@ function FolderTreeItem({
               </button>
             )}
 
+            {/* インポート */}
+            {onImport && (
+              <button
+                onClick={handleImport}
+                className="p-1 rounded text-gray-400 hover:text-purple-600 hover:bg-purple-50"
+                title="このフォルダにインポート"
+              >
+                <svg
+                  className="w-3 h-3"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                  />
+                </svg>
+              </button>
+            )}
+
             {/* 編集 */}
             {onEdit && (
               <button
@@ -256,6 +288,7 @@ function FolderTreeItem({
               onEdit={onEdit}
               onDelete={onDelete}
               onCreate={onCreate}
+              onImport={onImport}
             />
           ))}
         </div>
@@ -273,6 +306,7 @@ export function FolderTree({
   onFolderEdit,
   onFolderDelete,
   onCreateFolder,
+  onImport,
 }: FolderTreeProps) {
   const {
     fetchFolders,
@@ -344,6 +378,7 @@ export function FolderTree({
           onEdit={onFolderEdit}
           onDelete={handleFolderDelete}
           onCreate={onCreateFolder}
+          onImport={onImport}
         />
       );
     });

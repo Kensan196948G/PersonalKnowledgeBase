@@ -13,7 +13,7 @@ import {
   AIServiceError,
   AIErrorType,
   OLLAMA_MODELS,
-} from '../../types/ai.js';
+} from "../../types/ai.js";
 
 /**
  * Ollama API Client
@@ -35,7 +35,7 @@ export class OllamaClient {
   async generate(
     prompt: string,
     model: string = OLLAMA_MODELS.GENERATE_SMALL,
-    options?: OllamaGenerateRequest['options']
+    options?: OllamaGenerateRequest["options"],
   ): Promise<OllamaGenerateResponse> {
     const request: OllamaGenerateRequest = {
       model,
@@ -48,9 +48,9 @@ export class OllamaClient {
     };
 
     return this.executeRequest<OllamaGenerateResponse>(
-      '/api/generate',
+      "/api/generate",
       request,
-      'text generation'
+      "text generation",
     );
   }
 
@@ -59,7 +59,7 @@ export class OllamaClient {
    */
   async generateEmbedding(
     text: string,
-    model: string = OLLAMA_MODELS.EMBEDDINGS
+    model: string = OLLAMA_MODELS.EMBEDDINGS,
   ): Promise<number[]> {
     const request: OllamaEmbeddingsRequest = {
       model,
@@ -67,9 +67,9 @@ export class OllamaClient {
     };
 
     const response = await this.executeRequest<OllamaEmbeddingsResponse>(
-      '/api/embeddings',
+      "/api/embeddings",
       request,
-      'embedding generation'
+      "embedding generation",
     );
 
     return response.embedding;
@@ -84,7 +84,7 @@ export class OllamaClient {
       const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
 
       const response = await fetch(`${this.config.baseUrl}/api/tags`, {
-        method: 'GET',
+        method: "GET",
         signal: controller.signal,
       });
 
@@ -101,13 +101,13 @@ export class OllamaClient {
   async listModels(): Promise<string[]> {
     try {
       const response = await fetch(`${this.config.baseUrl}/api/tags`, {
-        method: 'GET',
+        method: "GET",
       });
 
       if (!response.ok) {
         throw new AIServiceError(
           AIErrorType.CONNECTION_ERROR,
-          'Failed to fetch model list'
+          "Failed to fetch model list",
         );
       }
 
@@ -119,8 +119,8 @@ export class OllamaClient {
       }
       throw new AIServiceError(
         AIErrorType.CONNECTION_ERROR,
-        'Failed to list models',
-        error
+        "Failed to list models",
+        error,
       );
     }
   }
@@ -131,19 +131,22 @@ export class OllamaClient {
   private async executeRequest<T>(
     endpoint: string,
     body: unknown,
-    operation: string
+    operation: string,
   ): Promise<T> {
     let lastError: Error | null = null;
 
     for (let attempt = 1; attempt <= this.config.retryAttempts; attempt++) {
       try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), this.config.timeout);
+        const timeoutId = setTimeout(
+          () => controller.abort(),
+          this.config.timeout,
+        );
 
         const response = await fetch(`${this.config.baseUrl}${endpoint}`, {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify(body),
           signal: controller.signal,
@@ -166,22 +169,22 @@ export class OllamaClient {
           if (response.status === 404) {
             throw new AIServiceError(
               AIErrorType.MODEL_NOT_FOUND,
-              `Model not found: ${errorMessage}`
+              `Model not found: ${errorMessage}`,
             );
           } else if (response.status === 400) {
             throw new AIServiceError(
               AIErrorType.INVALID_REQUEST,
-              `Invalid request: ${errorMessage}`
+              `Invalid request: ${errorMessage}`,
             );
           } else if (response.status === 429) {
             throw new AIServiceError(
               AIErrorType.RATE_LIMIT_ERROR,
-              `Rate limit exceeded: ${errorMessage}`
+              `Rate limit exceeded: ${errorMessage}`,
             );
           } else {
             throw new AIServiceError(
               AIErrorType.CONNECTION_ERROR,
-              `HTTP ${response.status}: ${errorMessage}`
+              `HTTP ${response.status}: ${errorMessage}`,
             );
           }
         }
@@ -202,10 +205,10 @@ export class OllamaClient {
         }
 
         // Handle timeout
-        if (error instanceof Error && error.name === 'AbortError') {
+        if (error instanceof Error && error.name === "AbortError") {
           lastError = new AIServiceError(
             AIErrorType.TIMEOUT_ERROR,
-            `Request timeout after ${this.config.timeout}ms during ${operation}`
+            `Request timeout after ${this.config.timeout}ms during ${operation}`,
           );
         }
 
@@ -220,7 +223,7 @@ export class OllamaClient {
     throw new AIServiceError(
       AIErrorType.UNKNOWN_ERROR,
       `Failed ${operation} after ${this.config.retryAttempts} attempts`,
-      lastError
+      lastError,
     );
   }
 

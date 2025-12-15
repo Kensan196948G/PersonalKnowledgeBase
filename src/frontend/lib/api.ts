@@ -299,4 +299,43 @@ export const exportApi = {
   json: (noteId: string) => `/api/export/json/${noteId}`,
 };
 
+/**
+ * Import API
+ */
+export const importApi = {
+  /**
+   * バッチインポート（複数ファイル）
+   * @param files - インポートするファイル配列
+   * @param folderId - インポート先フォルダID（オプション）
+   * @param addImportTag - インポートタグを追加するか
+   */
+  batch: async (
+    files: File[],
+    folderId?: string | null,
+    addImportTag: boolean = true,
+  ) => {
+    const formData = new FormData();
+
+    // ファイルを追加
+    files.forEach((file) => {
+      formData.append("files", file);
+    });
+
+    // フォルダIDを追加
+    if (folderId) {
+      formData.append("folderId", folderId);
+    }
+
+    // タグオプションを追加
+    formData.append("addImportTag", addImportTag.toString());
+
+    const response = await fetch(`${API_BASE_URL}/import/batch`, {
+      method: "POST",
+      body: formData,
+    });
+
+    return response.json();
+  },
+};
+
 export default api;

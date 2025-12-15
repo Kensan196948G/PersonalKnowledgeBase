@@ -127,7 +127,7 @@ export interface OllamaClientConfig {
  * Default Ollama configuration
  */
 export const DEFAULT_OLLAMA_CONFIG: OllamaClientConfig = {
-  baseUrl: 'http://localhost:11434',
+  baseUrl: "http://localhost:11434",
   timeout: 30000, // 30 seconds
   retryAttempts: 3,
   retryDelay: 1000, // 1 second
@@ -141,12 +141,13 @@ export const DEFAULT_OLLAMA_CONFIG: OllamaClientConfig = {
  * Available Ollama models
  */
 export const OLLAMA_MODELS = {
-  GENERATE_SMALL: 'llama3.2:1b',
-  GENERATE_MEDIUM: 'llama3.2:3b',
-  EMBEDDINGS: 'nomic-embed-text',
+  GENERATE_SMALL: "llama3.2:1b",
+  GENERATE_MEDIUM: "llama3.2:3b",
+  EMBEDDINGS: "nomic-embed-text",
 } as const;
 
-export type OllamaModelType = typeof OLLAMA_MODELS[keyof typeof OLLAMA_MODELS];
+export type OllamaModelType =
+  (typeof OLLAMA_MODELS)[keyof typeof OLLAMA_MODELS];
 
 // ========================================
 // Error Types
@@ -156,12 +157,12 @@ export type OllamaModelType = typeof OLLAMA_MODELS[keyof typeof OLLAMA_MODELS];
  * AI service error types
  */
 export enum AIErrorType {
-  CONNECTION_ERROR = 'CONNECTION_ERROR',
-  TIMEOUT_ERROR = 'TIMEOUT_ERROR',
-  MODEL_NOT_FOUND = 'MODEL_NOT_FOUND',
-  INVALID_REQUEST = 'INVALID_REQUEST',
-  RATE_LIMIT_ERROR = 'RATE_LIMIT_ERROR',
-  UNKNOWN_ERROR = 'UNKNOWN_ERROR',
+  CONNECTION_ERROR = "CONNECTION_ERROR",
+  TIMEOUT_ERROR = "TIMEOUT_ERROR",
+  MODEL_NOT_FOUND = "MODEL_NOT_FOUND",
+  INVALID_REQUEST = "INVALID_REQUEST",
+  RATE_LIMIT_ERROR = "RATE_LIMIT_ERROR",
+  UNKNOWN_ERROR = "UNKNOWN_ERROR",
 }
 
 /**
@@ -171,9 +172,9 @@ export class AIServiceError extends Error {
   constructor(
     public type: AIErrorType,
     message: string,
-    public originalError?: unknown
+    public originalError?: unknown,
   ) {
     super(message);
-    this.name = 'AIServiceError';
+    this.name = "AIServiceError";
   }
 }

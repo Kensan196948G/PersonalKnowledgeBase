@@ -12,6 +12,7 @@ import {
   FolderCreateModal,
 } from "./components/Folders";
 import { SettingsModal } from "./components/Settings";
+import { ImportModal } from "./components/Import";
 import {
   BacklinkPanel,
   RelatedNotesWidget,
@@ -43,6 +44,10 @@ function App() {
 
   // 設定モーダル管理
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+  // インポートモーダル管理
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [importFolderId, setImportFolderId] = useState<string | null>(null);
 
   // デバウンスタイマー用ref
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -204,6 +209,24 @@ function App() {
     setDefaultParentId(null);
   };
 
+  // インポートモーダルを開く
+  const handleOpenImportModal = (folderId: string) => {
+    setImportFolderId(folderId);
+    setIsImportModalOpen(true);
+  };
+
+  // インポートモーダルを閉じる
+  const handleCloseImportModal = () => {
+    setIsImportModalOpen(false);
+    setImportFolderId(null);
+  };
+
+  // インポート完了時のハンドラ
+  const handleImportComplete = () => {
+    // ノート一覧を再取得（useNotesフックで自動的に行われる）
+    console.log("Import completed");
+  };
+
   // クリーンアップ：コンポーネントアンマウント時にタイマーをクリア
   useEffect(() => {
     return () => {
@@ -253,6 +276,7 @@ function App() {
                 onFolderClick={handleFolderClick}
                 onFolderEdit={handleEditFolder}
                 onCreateFolder={handleCreateFolder}
+                onImport={handleOpenImportModal}
               />
             </div>
             {/* ノート一覧 */}
@@ -464,6 +488,14 @@ function App() {
       <SettingsModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
+      />
+
+      {/* インポートモーダル */}
+      <ImportModal
+        isOpen={isImportModalOpen}
+        onClose={handleCloseImportModal}
+        onImportComplete={handleImportComplete}
+        defaultFolderId={importFolderId}
       />
     </>
   );

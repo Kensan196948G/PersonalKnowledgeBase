@@ -3,8 +3,8 @@
  * High-level service for generating and managing embeddings
  */
 
-import { PrismaClient } from '@prisma/client';
-import { ollamaClient, OllamaClient } from './ollamaClient.js';
+import { PrismaClient } from "@prisma/client";
+import { ollamaClient, OllamaClient } from "./ollamaClient.js";
 import {
   EmbeddingVector,
   EmbeddingGenerationOptions,
@@ -13,7 +13,7 @@ import {
   OLLAMA_MODELS,
   AIServiceError,
   AIErrorType,
-} from '../../types/ai.js';
+} from "../../types/ai.js";
 
 /**
  * In-memory cache for embeddings
@@ -38,7 +38,7 @@ export class EmbeddingService {
   constructor(
     prisma: PrismaClient,
     client?: OllamaClient,
-    options?: EmbeddingGenerationOptions
+    options?: EmbeddingGenerationOptions,
   ) {
     this.prisma = prisma;
     this.client = client || ollamaClient;
@@ -56,7 +56,7 @@ export class EmbeddingService {
    */
   async generateEmbedding(
     noteId: string,
-    options?: Partial<EmbeddingGenerationOptions>
+    options?: Partial<EmbeddingGenerationOptions>,
   ): Promise<EmbeddingGenerationResult> {
     const opts = { ...this.defaultOptions, ...options };
     const startTime = Date.now();
@@ -84,7 +84,7 @@ export class EmbeddingService {
       if (!note) {
         throw new AIServiceError(
           AIErrorType.INVALID_REQUEST,
-          `Note not found: ${noteId}`
+          `Note not found: ${noteId}`,
         );
       }
 
@@ -114,7 +114,7 @@ export class EmbeddingService {
       throw new AIServiceError(
         AIErrorType.UNKNOWN_ERROR,
         `Failed to generate embedding for note ${noteId}`,
-        error
+        error,
       );
     }
   }
@@ -124,7 +124,7 @@ export class EmbeddingService {
    */
   async generateEmbeddingsBatch(
     noteIds: string[],
-    options?: Partial<EmbeddingGenerationOptions>
+    options?: Partial<EmbeddingGenerationOptions>,
   ): Promise<BatchEmbeddingResult> {
     const opts = { ...this.defaultOptions, ...options };
     const startTime = Date.now();
@@ -164,7 +164,7 @@ export class EmbeddingService {
    * Generate embeddings for all notes
    */
   async generateAllEmbeddings(
-    options?: Partial<EmbeddingGenerationOptions>
+    options?: Partial<EmbeddingGenerationOptions>,
   ): Promise<BatchEmbeddingResult> {
     const notes = await this.prisma.note.findMany({
       select: { id: true },
@@ -242,8 +242,8 @@ export class EmbeddingService {
   private prepareText(title: string, content: string): string {
     // Remove HTML tags from content (basic approach)
     const cleanContent = content
-      .replace(/<[^>]*>/g, ' ')
-      .replace(/\s+/g, ' ')
+      .replace(/<[^>]*>/g, " ")
+      .replace(/\s+/g, " ")
       .trim();
 
     // Combine title and content
@@ -252,7 +252,7 @@ export class EmbeddingService {
     // Limit text length (Ollama has token limits)
     const maxLength = 8000; // Conservative limit
     if (text.length > maxLength) {
-      return text.substring(0, maxLength) + '...';
+      return text.substring(0, maxLength) + "...";
     }
 
     return text;
@@ -324,7 +324,7 @@ export class EmbeddingService {
  */
 export function createEmbeddingService(
   prisma: PrismaClient,
-  options?: EmbeddingGenerationOptions
+  options?: EmbeddingGenerationOptions,
 ): EmbeddingService {
   return new EmbeddingService(prisma, ollamaClient, options);
 }

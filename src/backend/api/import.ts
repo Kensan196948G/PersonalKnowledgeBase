@@ -15,7 +15,7 @@ import { createRequire } from "module";
 import { detectAndConvert } from "../utils/encoding.js";
 
 const require = createRequire(import.meta.url);
-const PdfParse = require("pdf-parse");
+const { PDFParse: PdfParse } = require("pdf-parse");
 
 const router = Router();
 
@@ -101,12 +101,41 @@ const uploadMht = multer({
   },
 });
 
+// Multer設定（バッチインポート用 - 複数ファイル、複数形式対応）
+const uploadBatch = multer({
+  dest: TEMP_UPLOAD_DIR,
+  limits: {
+    fileSize: 100 * 1024 * 1024, // 各ファイル最大100MB
+    files: 50, // 最大50ファイル
+  },
+  fileFilter: (_req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    const allowedExtensions = [
+      ".html",
+      ".htm",
+      ".mht",
+      ".mhtml",
+      ".docx",
+      ".pdf",
+      ".onepkg",
+    ];
+    if (allowedExtensions.includes(ext)) {
+      cb(null, true);
+    } else {
+      cb(
+        new Error("Only HTML, MHT, MHTML, DOCX, PDF, ONEPKG files are allowed"),
+      );
+    }
+  },
+});
+
 /**
  * POST /api/import/onenote
  * OneNote HTMLファイルをインポート
  *
  * multipart/form-data:
  * - htmlFile: File (OneNoteからエクスポートしたHTMLファイル)
+ * - folderId: string (optional, フォルダID)
  * - options: JSON ({ createFolder: boolean, addImportTag: boolean })
  */
 router.post(
@@ -126,6 +155,9 @@ router.post(
 
       // HTMLファイル読み込み
       const htmlContent = await fs.readFile(req.file.path, "utf-8");
+
+      // メタデータ抽出
+      const metadata = extractMetadata(htmlContent);
 
       // JSDOM でパース
       const dom = new JSDOM(htmlContent);
@@ -151,16 +183,37 @@ router.post(
         TaskItem,
       ]);
 
-      // ノート作成
+      // オプション処理
+      const options = req.body.options ? JSON.parse(req.body.options) : {};
+
+      // フォルダ指定の検証
+      let folderId: string | undefined = undefined;
+      if (req.body.folderId) {
+        folderId = req.body.folderId;
+
+        // フォルダ存在チェック
+        const folder = await prisma.folder.findUnique({
+          where: { id: folderId },
+        });
+        if (!folder) {
+          return res.status(404).json({
+            success: false,
+            error: `Folder with id ${folderId} not found`,
+          });
+        }
+      }
+
+      // ノート作成（メタデータを使用）
       const note = await prisma.note.create({
         data: {
           title: title.trim(),
           content: JSON.stringify(tiptapJson),
+          folderId: folderId,
+          // メタデータから作成日時・更新日時を設定（nullの場合は@default(now())が使用される）
+          createdAt: metadata.createdAt || undefined,
+          updatedAt: metadata.updatedAt || undefined,
         },
       });
-
-      // オプション処理
-      const options = req.body.options ? JSON.parse(req.body.options) : {};
 
       if (options.addImportTag) {
         // "OneNote Import"タグを作成/取得
@@ -454,6 +507,73 @@ function extractHtmlFromMht(buffer: Buffer): string {
 }
 
 /**
+ * メタデータ構造
+ */
+interface DocumentMetadata {
+  createdAt: Date | null;
+  updatedAt: Date | null;
+  author: string | null;
+}
+
+/**
+ * HTMLからメタデータを抽出
+ * OneNoteやその他のドキュメントから作成日時・更新日時・著者情報を取得
+ */
+function extractMetadata(html: string): DocumentMetadata {
+  const dom = new JSDOM(html);
+  const document = dom.window.document;
+
+  let createdAt: Date | null = null;
+  let updatedAt: Date | null = null;
+  let author: string | null = null;
+
+  // <meta name="created" content="..."> を探す
+  const createdMeta = document.querySelector(
+    'meta[name="created"], meta[name="Created"], meta[name="dcterms.created"]',
+  );
+  if (createdMeta) {
+    const content = createdMeta.getAttribute("content");
+    if (content) {
+      const parsed = new Date(content);
+      if (!isNaN(parsed.getTime())) {
+        createdAt = parsed;
+      }
+    }
+  }
+
+  // <meta name="modified" content="..."> を探す
+  const modifiedMeta = document.querySelector(
+    'meta[name="modified"], meta[name="Modified"], meta[name="dcterms.modified"], meta[name="last-modified"]',
+  );
+  if (modifiedMeta) {
+    const content = modifiedMeta.getAttribute("content");
+    if (content) {
+      const parsed = new Date(content);
+      if (!isNaN(parsed.getTime())) {
+        updatedAt = parsed;
+      }
+    }
+  }
+
+  // <meta name="author" content="..."> を探す
+  const authorMeta = document.querySelector(
+    'meta[name="author"], meta[name="Author"], meta[name="dcterms.creator"]',
+  );
+  if (authorMeta) {
+    const content = authorMeta.getAttribute("content");
+    if (content) {
+      author = content.trim();
+    }
+  }
+
+  return {
+    createdAt,
+    updatedAt,
+    author,
+  };
+}
+
+/**
  * OneNote HTML クリーンアップ関数
  * OneNote特有のMicrosoft Officeスタイルを除去
  */
@@ -493,6 +613,7 @@ function extractTitle(html: string): string | null {
  *
  * multipart/form-data:
  * - docxFile: File (Word文書ファイル)
+ * - folderId: string (optional, フォルダID)
  * - options: JSON ({ addImportTag: boolean })
  */
 router.post(
@@ -531,16 +652,34 @@ router.post(
         TaskItem,
       ]);
 
+      // オプション処理
+      const options = req.body.options ? JSON.parse(req.body.options) : {};
+
+      // フォルダ指定の検証
+      let folderId: string | undefined = undefined;
+      if (req.body.folderId) {
+        folderId = req.body.folderId;
+
+        // フォルダ存在チェック
+        const folder = await prisma.folder.findUnique({
+          where: { id: folderId },
+        });
+        if (!folder) {
+          return res.status(404).json({
+            success: false,
+            error: `Folder with id ${folderId} not found`,
+          });
+        }
+      }
+
       // ノート作成
       const note = await prisma.note.create({
         data: {
           title: title.trim(),
           content: JSON.stringify(tiptapJson),
+          folderId: folderId,
         },
       });
-
-      // オプション処理
-      const options = req.body.options ? JSON.parse(req.body.options) : {};
 
       if (options.addImportTag) {
         // "DOCX Import"タグを作成/取得
@@ -609,6 +748,7 @@ router.post(
  *
  * multipart/form-data:
  * - pdfFile: File (PDFファイル)
+ * - folderId: string (optional, フォルダID)
  * - options: JSON ({ addImportTag: boolean })
  */
 router.post(
@@ -629,10 +769,11 @@ router.post(
       // PDFファイル読み込み
       const buffer = await fs.readFile(req.file.path);
 
-      // PDF → テキスト抽出（v1 API）
-      const pdfData = await PdfParse(buffer);
+      // PDF → テキスト抽出（v2 API）
+      const parser = new PdfParse({ data: buffer });
+      const pdfData = await parser.getText();
       let text = pdfData.text;
-      const numPages = pdfData.numpages;
+      const numPages = pdfData.total || 0;
 
       // 文字コード検出と変換（Shift-JIS対応）
       // PDFからのテキストは通常UTF-8だが、念のため検出
@@ -654,16 +795,34 @@ router.post(
         })),
       };
 
+      // オプション処理
+      const options = req.body.options ? JSON.parse(req.body.options) : {};
+
+      // フォルダ指定の検証
+      let folderId: string | undefined = undefined;
+      if (req.body.folderId) {
+        folderId = req.body.folderId;
+
+        // フォルダ存在チェック
+        const folder = await prisma.folder.findUnique({
+          where: { id: folderId },
+        });
+        if (!folder) {
+          return res.status(404).json({
+            success: false,
+            error: `Folder with id ${folderId} not found`,
+          });
+        }
+      }
+
       // ノート作成
       const note = await prisma.note.create({
         data: {
           title: title.trim().substring(0, 200),
           content: JSON.stringify(tiptapJson),
+          folderId: folderId,
         },
       });
-
-      // オプション処理
-      const options = req.body.options ? JSON.parse(req.body.options) : {};
 
       if (options.addImportTag) {
         // "PDF Import"タグを作成/取得
@@ -738,6 +897,7 @@ router.post(
  *
  * multipart/form-data:
  * - mhtFile: File (OneNoteからエクスポートしたMHT/MHTMLファイル)
+ * - folderId: string (optional, フォルダID)
  * - options: JSON ({ addImportTag: boolean })
  */
 router.post(
@@ -760,6 +920,9 @@ router.post(
 
       // MHTファイルからHTMLを抽出（文字コード自動検出込み）
       const htmlContent = extractHtmlFromMht(buffer);
+
+      // メタデータ抽出
+      const metadata = extractMetadata(htmlContent);
 
       // デバッグ: HTMLの最初の2000文字をログ出力
       console.log(
@@ -814,18 +977,39 @@ router.post(
       console.log("TipTap JSON size:", jsonString.length, "bytes");
       console.log("TipTap JSON preview:", jsonString.substring(0, 500));
 
-      // ノート作成
+      // オプション処理
+      const options = req.body.options ? JSON.parse(req.body.options) : {};
+
+      // フォルダ指定の検証
+      let folderId: string | undefined = undefined;
+      if (req.body.folderId) {
+        folderId = req.body.folderId;
+
+        // フォルダ存在チェック
+        const folder = await prisma.folder.findUnique({
+          where: { id: folderId },
+        });
+        if (!folder) {
+          return res.status(404).json({
+            success: false,
+            error: `Folder with id ${folderId} not found`,
+          });
+        }
+      }
+
+      // ノート作成（メタデータを使用）
       console.log("Creating note in database...");
       const note = await prisma.note.create({
         data: {
           title: title.trim(),
           content: jsonString,
+          folderId: folderId,
+          // メタデータから作成日時・更新日時を設定（nullの場合は@default(now())が使用される）
+          createdAt: metadata.createdAt || undefined,
+          updatedAt: metadata.updatedAt || undefined,
         },
       });
       console.log("Note created successfully, ID:", note.id);
-
-      // オプション処理
-      const options = req.body.options ? JSON.parse(req.body.options) : {};
 
       if (options.addImportTag) {
         // "MHT Import"タグを作成/取得
@@ -885,6 +1069,398 @@ router.post(
       res.status(500).json({
         success: false,
         error: "Failed to import MHT file",
+        message: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  },
+);
+
+/**
+ * 単一ファイルのインポート処理（バッチインポート用ヘルパー）
+ * 各ファイル形式に応じて適切な処理を実行
+ */
+async function processSingleFile(
+  filePath: string,
+  originalName: string,
+  folderId?: string,
+): Promise<{ noteId: string; title: string }> {
+  const ext = path.extname(originalName).toLowerCase();
+
+  let title = "";
+  let tiptapJson: any;
+
+  switch (ext) {
+    case ".html":
+    case ".htm": {
+      // HTML処理
+      const htmlContent = await fs.readFile(filePath, "utf-8");
+      const dom = new JSDOM(htmlContent);
+      const document = dom.window.document;
+      const h1 = document.querySelector("h1");
+      const titleTag = document.querySelector("title");
+      title =
+        h1?.textContent ||
+        titleTag?.textContent ||
+        path.basename(originalName, ext);
+      const bodyHtml = cleanOneNoteHtml(document.body.innerHTML);
+      tiptapJson = generateJSON(bodyHtml, [
+        StarterKit,
+        Link,
+        TaskList,
+        TaskItem,
+      ]);
+      break;
+    }
+
+    case ".mht":
+    case ".mhtml": {
+      // MHT処理
+      const buffer = await fs.readFile(filePath);
+      const htmlContent = extractHtmlFromMht(buffer);
+      const dom = new JSDOM(htmlContent);
+      const document = dom.window.document;
+      const h1 = document.querySelector("h1");
+      const titleTag = document.querySelector("title");
+      const firstParagraph = document.querySelector("p, div");
+      const firstText = firstParagraph?.textContent
+        ?.trim()
+        .split("\n")[0]
+        .trim()
+        .substring(0, 100);
+      title =
+        h1?.textContent?.trim() ||
+        titleTag?.textContent?.trim() ||
+        firstText ||
+        path.basename(originalName, ext);
+      const bodyHtml = cleanOneNoteHtml(document.body.innerHTML);
+      tiptapJson = generateJSON(bodyHtml, [
+        StarterKit,
+        Link,
+        TaskList,
+        TaskItem,
+      ]);
+      break;
+    }
+
+    case ".docx": {
+      // DOCX処理
+      const buffer = await fs.readFile(filePath);
+      const result = await mammoth.convertToHtml({ buffer });
+      const html = result.value;
+      title = extractTitle(html) || path.basename(originalName, ".docx");
+      const bodyHtml = cleanOneNoteHtml(html);
+      tiptapJson = generateJSON(bodyHtml, [
+        StarterKit,
+        Link,
+        TaskList,
+        TaskItem,
+      ]);
+      break;
+    }
+
+    case ".pdf": {
+      // PDF処理
+      const buffer = await fs.readFile(filePath);
+      const parser = new PdfParse({ data: buffer });
+      const pdfData = await parser.getText();
+      let text = pdfData.text;
+      text = detectAndConvert(Buffer.from(text));
+      const lines = text.split("\n").filter((l: string) => l.trim());
+      title = lines[0]?.trim() || path.basename(originalName, ".pdf");
+      const paragraphs = text.split("\n\n").filter((p: string) => p.trim());
+      tiptapJson = {
+        type: "doc",
+        content: paragraphs.map((p: string) => ({
+          type: "paragraph",
+          content: [{ type: "text", text: p.trim() }],
+        })),
+      };
+      break;
+    }
+
+    case ".onepkg": {
+      // ONEPKG処理（インポートガイドノート作成）
+      const zip = new AdmZip(filePath);
+      const zipEntries = zip.getEntries();
+      const sections: string[] = [];
+      zipEntries.forEach((entry) => {
+        if (entry.entryName.endsWith(".one")) {
+          sections.push(entry.entryName);
+        }
+      });
+      title = `${path.basename(originalName, ".onepkg")} - インポートガイド`;
+      tiptapJson = {
+        type: "doc",
+        content: [
+          {
+            type: "heading",
+            attrs: { level: 1 },
+            content: [{ type: "text", text: title }],
+          },
+          {
+            type: "paragraph",
+            content: [
+              {
+                type: "text",
+                text: "このノートブックには以下のセクションが含まれています：",
+              },
+            ],
+          },
+          {
+            type: "bulletList",
+            content: sections.map((s) => ({
+              type: "listItem",
+              content: [
+                {
+                  type: "paragraph",
+                  content: [{ type: "text", text: s }],
+                },
+              ],
+            })),
+          },
+          {
+            type: "paragraph",
+            content: [
+              {
+                type: "text",
+                marks: [{ type: "bold" }],
+                text: "各セクションをインポートする方法：",
+              },
+            ],
+          },
+          {
+            type: "orderedList",
+            content: [
+              {
+                type: "listItem",
+                content: [
+                  {
+                    type: "paragraph",
+                    content: [
+                      { type: "text", text: "OneNoteで対象のセクションを開く" },
+                    ],
+                  },
+                ],
+              },
+              {
+                type: "listItem",
+                content: [
+                  {
+                    type: "paragraph",
+                    content: [
+                      {
+                        type: "text",
+                        text: "「ファイル」→「エクスポート」→「Webページ (.html)」を選択",
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                type: "listItem",
+                content: [
+                  {
+                    type: "paragraph",
+                    content: [
+                      {
+                        type: "text",
+                        text: "Personal Knowledge Baseでインポート",
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      };
+      break;
+    }
+
+    default:
+      throw new Error(`Unsupported file type: ${ext}`);
+  }
+
+  // ノート作成
+  const note = await prisma.note.create({
+    data: {
+      title: title.trim().substring(0, 200),
+      content: JSON.stringify(tiptapJson),
+      folderId: folderId || null,
+    },
+  });
+
+  return { noteId: note.id, title: note.title };
+}
+
+/**
+ * POST /api/import/batch
+ * 複数ファイルの一括インポート
+ *
+ * multipart/form-data:
+ * - files: File[] (最大50ファイル、各種形式対応)
+ * - folderId: string (optional, 全ファイル共通のフォルダID)
+ * - options: JSON ({ addImportTag: boolean })
+ */
+router.post(
+  "/batch",
+  uploadBatch.array("files", 50),
+  async (req: Request, res: Response) => {
+    const uploadedFiles: Express.Multer.File[] = [];
+
+    try {
+      // ディレクトリ確保
+      await ensureTempDir();
+
+      if (!req.files || !Array.isArray(req.files) || req.files.length === 0) {
+        return res.status(400).json({
+          success: false,
+          error: "No files uploaded",
+        });
+      }
+
+      uploadedFiles.push(...req.files);
+
+      // オプション処理
+      const options = req.body.options ? JSON.parse(req.body.options) : {};
+
+      // フォルダ指定の検証
+      let folderId: string | undefined = undefined;
+      if (req.body.folderId) {
+        folderId = req.body.folderId;
+
+        // フォルダ存在チェック
+        const folder = await prisma.folder.findUnique({
+          where: { id: folderId },
+        });
+        if (!folder) {
+          return res.status(404).json({
+            success: false,
+            error: `Folder with id ${folderId} not found`,
+          });
+        }
+      }
+
+      // 各ファイルを順次処理
+      const results: Array<{
+        noteId: string | null;
+        title: string;
+        status: "success" | "error";
+        error?: string;
+      }> = [];
+
+      let successCount = 0;
+      let errorCount = 0;
+
+      for (const file of uploadedFiles) {
+        try {
+          console.log(`Processing file: ${file.originalname}`);
+
+          // 単一ファイル処理
+          const result = await processSingleFile(
+            file.path,
+            file.originalname,
+            folderId,
+          );
+
+          // タグ追加（オプション）
+          if (options.addImportTag && result.noteId) {
+            let tag = await prisma.tag.findUnique({
+              where: { name: "Batch Import" },
+            });
+            if (!tag) {
+              tag = await prisma.tag.create({
+                data: { name: "Batch Import", color: "#9C27B0" },
+              });
+            }
+            await prisma.noteTag.create({
+              data: { noteId: result.noteId, tagId: tag.id },
+            });
+          }
+
+          results.push({
+            noteId: result.noteId,
+            title: result.title,
+            status: "success",
+          });
+
+          successCount++;
+
+          // 一時ファイル削除
+          await fs.unlink(file.path);
+        } catch (fileError) {
+          console.error(
+            `Error processing file ${file.originalname}:`,
+            fileError,
+          );
+
+          results.push({
+            noteId: null,
+            title: file.originalname,
+            status: "error",
+            error:
+              fileError instanceof Error ? fileError.message : "Unknown error",
+          });
+
+          errorCount++;
+
+          // エラーが発生してもファイル削除を試みる
+          try {
+            await fs.unlink(file.path);
+          } catch (unlinkError) {
+            console.error(
+              `Failed to delete file ${file.originalname}:`,
+              unlinkError,
+            );
+          }
+        }
+      }
+
+      res.status(201).json({
+        success: true,
+        data: {
+          totalFiles: uploadedFiles.length,
+          successCount,
+          errorCount,
+          notes: results,
+          folderId: folderId,
+        },
+      });
+    } catch (error) {
+      // 全体エラー時、すべてのアップロードファイルを削除
+      for (const file of uploadedFiles) {
+        try {
+          await fs.unlink(file.path);
+        } catch (unlinkError) {
+          console.error("Failed to delete uploaded file:", unlinkError);
+        }
+      }
+
+      console.error("Batch import error:", error);
+
+      // Multerのエラーハンドリング
+      if (error instanceof multer.MulterError) {
+        if (error.code === "LIMIT_FILE_SIZE") {
+          return res.status(400).json({
+            success: false,
+            error: "One or more files exceed the size limit of 100MB",
+          });
+        }
+        if (error.code === "LIMIT_FILE_COUNT") {
+          return res.status(400).json({
+            success: false,
+            error: "Too many files. Maximum 50 files allowed",
+          });
+        }
+        return res.status(400).json({
+          success: false,
+          error: error.message,
+        });
+      }
+
+      res.status(500).json({
+        success: false,
+        error: "Failed to import files",
         message: error instanceof Error ? error.message : "Unknown error",
       });
     }

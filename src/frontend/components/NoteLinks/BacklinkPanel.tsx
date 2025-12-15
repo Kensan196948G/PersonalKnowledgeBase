@@ -34,7 +34,7 @@ export const BacklinkPanel = memo(function BacklinkPanel({
   const [backlinks, setBacklinks] = useState<Backlink[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true); // デフォルトで折りたたみ
 
   useEffect(() => {
     const fetchBacklinks = async () => {

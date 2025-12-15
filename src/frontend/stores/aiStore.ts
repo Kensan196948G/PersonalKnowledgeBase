@@ -63,7 +63,9 @@ interface AiStore {
 
   // エラークリア
   clearAllErrors: () => void;
-  clearError: (errorType: "search" | "summary" | "tag" | "proofread" | "general") => void;
+  clearError: (
+    errorType: "search" | "summary" | "tag" | "proofread" | "general",
+  ) => void;
 }
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
@@ -124,7 +126,9 @@ export const useAiStore = create<AiStore>()(
         } catch (error) {
           set({
             searchError:
-              error instanceof Error ? error.message : "検索中にエラーが発生しました",
+              error instanceof Error
+                ? error.message
+                : "検索中にエラーが発生しました",
             isSearching: false,
             searchResults: [],
           });
