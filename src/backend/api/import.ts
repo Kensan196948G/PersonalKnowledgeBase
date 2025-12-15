@@ -749,7 +749,7 @@ router.post(
  * multipart/form-data:
  * - pdfFile: File (PDFファイル)
  * - folderId: string (optional, フォルダID)
- * - options: JSON ({ addImportTag: boolean })
+ * - options: JSON ({ addImportTag: boolean, splitByDate: boolean })
  */
 router.post(
   "/pdf",
@@ -779,22 +779,6 @@ router.post(
       // PDFからのテキストは通常UTF-8だが、念のため検出
       text = detectAndConvert(Buffer.from(text));
 
-      // タイトル抽出（最初の行または最初の見出し）
-      const lines = text.split("\n").filter((l: string) => l.trim());
-      const title =
-        lines[0]?.trim() || path.basename(req.file.originalname, ".pdf");
-
-      // プレーンテキスト → TipTap JSON変換
-      // 段落ごとに分割してTipTap形式に
-      const paragraphs = text.split("\n\n").filter((p: string) => p.trim());
-      const tiptapJson = {
-        type: "doc",
-        content: paragraphs.map((p: string) => ({
-          type: "paragraph",
-          content: [{ type: "text", text: p.trim() }],
-        })),
-      };
-
       // オプション処理
       const options = req.body.options ? JSON.parse(req.body.options) : {};
 
@@ -814,6 +798,95 @@ router.post(
           });
         }
       }
+
+      // 日付ベース分割が有効な場合
+      if (options.splitByDate) {
+        // テキストを日付ごとに分割
+        const sections = detectDateSections(text);
+
+        console.log(`Detected ${sections.length} date sections`);
+
+        // 各セクションをノートとして作成
+        const createdNotes: Array<{
+          noteId: string;
+          title: string;
+          date: string;
+        }> = [];
+
+        for (const section of sections) {
+          // セクション内容をTipTap JSON形式に変換
+          const paragraphs = section.content
+            .split("\n\n")
+            .filter((p: string) => p.trim());
+          const tiptapJson = {
+            type: "doc",
+            content: paragraphs.map((p: string) => ({
+              type: "paragraph",
+              content: [{ type: "text", text: p.trim() }],
+            })),
+          };
+
+          // ノート作成
+          const note = await prisma.note.create({
+            data: {
+              title: section.title.trim().substring(0, 200),
+              content: JSON.stringify(tiptapJson),
+              folderId: folderId,
+            },
+          });
+
+          createdNotes.push({
+            noteId: note.id,
+            title: note.title,
+            date: section.title,
+          });
+
+          // タグ追加（オプション）
+          if (options.addImportTag) {
+            let tag = await prisma.tag.findUnique({
+              where: { name: "PDF Import" },
+            });
+            if (!tag) {
+              tag = await prisma.tag.create({
+                data: { name: "PDF Import", color: "#D32F2F" },
+              });
+            }
+            await prisma.noteTag.create({
+              data: { noteId: note.id, tagId: tag.id },
+            });
+          }
+        }
+
+        // 一時ファイル削除
+        await fs.unlink(req.file.path);
+
+        return res.status(201).json({
+          success: true,
+          data: {
+            notes: createdNotes,
+            totalSections: sections.length,
+            folderId: folderId,
+          },
+        });
+      }
+
+      // splitByDate が false の場合：既存の動作（1つのノートとして作成）
+
+      // タイトル抽出（最初の行または最初の見出し）
+      const lines = text.split("\n").filter((l: string) => l.trim());
+      const title =
+        lines[0]?.trim() || path.basename(req.file.originalname, ".pdf");
+
+      // プレーンテキスト → TipTap JSON変換
+      // 段落ごとに分割してTipTap形式に
+      const paragraphs = text.split("\n\n").filter((p: string) => p.trim());
+      const tiptapJson = {
+        type: "doc",
+        content: paragraphs.map((p: string) => ({
+          type: "paragraph",
+          content: [{ type: "text", text: p.trim() }],
+        })),
+      };
 
       // ノート作成
       const note = await prisma.note.create({
@@ -1083,11 +1156,14 @@ async function processSingleFile(
   filePath: string,
   originalName: string,
   folderId?: string,
-): Promise<{ noteId: string; title: string }> {
+  options?: { splitByDate?: boolean },
+): Promise<{ noteIds: string[]; titles: string[] }> {
   const ext = path.extname(originalName).toLowerCase();
 
   let title = "";
   let tiptapJson: any;
+  const noteIds: string[] = [];
+  const titles: string[] = [];
 
   switch (ext) {
     case ".html":
@@ -1109,6 +1185,17 @@ async function processSingleFile(
         TaskList,
         TaskItem,
       ]);
+
+      // ノート作成（単一）
+      const note = await prisma.note.create({
+        data: {
+          title: title.trim().substring(0, 200),
+          content: JSON.stringify(tiptapJson),
+          folderId: folderId || null,
+        },
+      });
+      noteIds.push(note.id);
+      titles.push(note.title);
       break;
     }
 
@@ -1139,6 +1226,17 @@ async function processSingleFile(
         TaskList,
         TaskItem,
       ]);
+
+      // ノート作成（単一）
+      const note = await prisma.note.create({
+        data: {
+          title: title.trim().substring(0, 200),
+          content: JSON.stringify(tiptapJson),
+          folderId: folderId || null,
+        },
+      });
+      noteIds.push(note.id);
+      titles.push(note.title);
       break;
     }
 
@@ -1155,6 +1253,17 @@ async function processSingleFile(
         TaskList,
         TaskItem,
       ]);
+
+      // ノート作成（単一）
+      const note = await prisma.note.create({
+        data: {
+          title: title.trim().substring(0, 200),
+          content: JSON.stringify(tiptapJson),
+          folderId: folderId || null,
+        },
+      });
+      noteIds.push(note.id);
+      titles.push(note.title);
       break;
     }
 
@@ -1166,15 +1275,65 @@ async function processSingleFile(
       let text = pdfData.text;
       text = detectAndConvert(Buffer.from(text));
       const lines = text.split("\n").filter((l: string) => l.trim());
-      title = lines[0]?.trim() || path.basename(originalName, ".pdf");
-      const paragraphs = text.split("\n\n").filter((p: string) => p.trim());
-      tiptapJson = {
-        type: "doc",
-        content: paragraphs.map((p: string) => ({
-          type: "paragraph",
-          content: [{ type: "text", text: p.trim() }],
-        })),
-      };
+      const baseTitle = lines[0]?.trim() || path.basename(originalName, ".pdf");
+
+      // 日付分割オプションが有効な場合
+      if (options?.splitByDate) {
+        const sections = detectDateSections(text);
+
+        // 分割されたセクションごとにノート作成
+        for (const section of sections) {
+          const paragraphs = section.content
+            .split("\n\n")
+            .filter((p: string) => p.trim());
+
+          const sectionTiptapJson = {
+            type: "doc",
+            content: paragraphs.map((p: string) => ({
+              type: "paragraph",
+              content: [{ type: "text", text: p.trim() }],
+            })),
+          };
+
+          // 日付からタイトルを生成
+          const sectionTitle =
+            section.title !== "インポートされたノート"
+              ? `${baseTitle} - ${section.title}`
+              : baseTitle;
+
+          const note = await prisma.note.create({
+            data: {
+              title: sectionTitle.trim().substring(0, 200),
+              content: JSON.stringify(sectionTiptapJson),
+              folderId: folderId || null,
+            },
+          });
+
+          noteIds.push(note.id);
+          titles.push(note.title);
+        }
+      } else {
+        // 日付分割なし（従来の処理）
+        const paragraphs = text.split("\n\n").filter((p: string) => p.trim());
+        tiptapJson = {
+          type: "doc",
+          content: paragraphs.map((p: string) => ({
+            type: "paragraph",
+            content: [{ type: "text", text: p.trim() }],
+          })),
+        };
+
+        const note = await prisma.note.create({
+          data: {
+            title: baseTitle.trim().substring(0, 200),
+            content: JSON.stringify(tiptapJson),
+            folderId: folderId || null,
+          },
+        });
+
+        noteIds.push(note.id);
+        titles.push(note.title);
+      }
       break;
     }
 
@@ -1274,6 +1433,18 @@ async function processSingleFile(
           },
         ],
       };
+
+      // ノート作成（単一）
+      const note = await prisma.note.create({
+        data: {
+          title: title.trim().substring(0, 200),
+          content: JSON.stringify(tiptapJson),
+          folderId: folderId || null,
+        },
+      });
+
+      noteIds.push(note.id);
+      titles.push(note.title);
       break;
     }
 
@@ -1281,16 +1452,183 @@ async function processSingleFile(
       throw new Error(`Unsupported file type: ${ext}`);
   }
 
-  // ノート作成
-  const note = await prisma.note.create({
-    data: {
-      title: title.trim().substring(0, 200),
-      content: JSON.stringify(tiptapJson),
-      folderId: folderId || null,
-    },
-  });
+  return { noteIds, titles };
+}
 
-  return { noteId: note.id, title: note.title };
+/**
+ * 日付セクション情報
+ */
+interface DateSection {
+  title: string; // 日付文字列
+  content: string; // セクション内容
+  startIndex: number; // テキスト内の開始位置
+  endIndex: number; // テキスト内の終了位置
+}
+
+/**
+ * テキストから日付パターンを検出し、セクションに分割
+ *
+ * 対応する日付パターン:
+ * - YYYY年M月D日 (例: 2025年1月1日)
+ * - M月D日 (例: 1月1日)
+ * - YYYY/M/D (例: 2025/1/1)
+ * - YYYY-M-D (例: 2025-1-1)
+ *
+ * ページ区切りパターン:
+ * - -- N of M -- (例: -- 1 of 10 --)
+ */
+function detectDateSections(text: string): DateSection[] {
+  const sections: DateSection[] = [];
+
+  // 日付パターンの正規表現
+  const datePatterns = [
+    // YYYY年M月D日 (例: 2025年1月1日、2025年01月01日)
+    /(\d{4})年(\d{1,2})月(\d{1,2})日/g,
+    // M月D日 (例: 1月1日、01月01日)
+    /(?<!\d)(\d{1,2})月(\d{1,2})日/g,
+    // YYYY/M/D (例: 2025/1/1、2025/01/01)
+    /(\d{4})\/(\d{1,2})\/(\d{1,2})/g,
+    // YYYY-M-D (例: 2025-1-1、2025-01-01)
+    /(\d{4})-(\d{1,2})-(\d{1,2})/g,
+  ];
+
+  // ページ区切りパターン (例: -- 1 of 10 --)
+  const pageBreakPattern = /--\s*\d+\s+of\s+\d+\s*--/gi;
+
+  // すべての日付とその位置を収集
+  const dateMatches: Array<{ index: number; text: string }> = [];
+
+  for (const pattern of datePatterns) {
+    pattern.lastIndex = 0; // 正規表現の状態をリセット
+    let match;
+    while ((match = pattern.exec(text)) !== null) {
+      dateMatches.push({
+        index: match.index,
+        text: match[0],
+      });
+    }
+  }
+
+  // ページ区切り位置も収集
+  const pageBreaks: number[] = [];
+  pageBreakPattern.lastIndex = 0;
+  let pageMatch;
+  while ((pageMatch = pageBreakPattern.exec(text)) !== null) {
+    pageBreaks.push(pageMatch.index);
+  }
+
+  // 日付を位置順にソート
+  dateMatches.sort((a, b) => a.index - b.index);
+
+  // 重複する日付マッチを削除（同じ位置または重なっている位置）
+  // 例: "2025年1月1日" は "YYYY年M月D日" と "M月D日" の両方にマッチするため
+  const uniqueMatches: Array<{ index: number; text: string }> = [];
+  for (let i = 0; i < dateMatches.length; i++) {
+    const current = dateMatches[i];
+    const currentEnd = current.index + current.text.length;
+
+    // 既存のマッチと重複していないかチェック
+    const overlaps = uniqueMatches.some((existing) => {
+      const existingEnd = existing.index + existing.text.length;
+      // 重複判定：範囲が重なっている、または5文字以内に近接している
+      return (
+        (current.index >= existing.index && current.index < existingEnd) ||
+        (currentEnd > existing.index && currentEnd <= existingEnd) ||
+        (existing.index >= current.index && existing.index < currentEnd) ||
+        Math.abs(current.index - existing.index) < 5
+      );
+    });
+
+    if (!overlaps) {
+      uniqueMatches.push(current);
+    } else {
+      // 重複している場合、より長い（具体的な）パターンを優先
+      const overlappingIndex = uniqueMatches.findIndex((existing) => {
+        const existingEnd = existing.index + existing.text.length;
+        return (
+          (current.index >= existing.index && current.index < existingEnd) ||
+          (currentEnd > existing.index && currentEnd <= existingEnd) ||
+          (existing.index >= current.index && existing.index < currentEnd) ||
+          Math.abs(current.index - existing.index) < 5
+        );
+      });
+
+      if (overlappingIndex !== -1) {
+        const existing = uniqueMatches[overlappingIndex];
+        // より長いテキストを持つ方を採用
+        if (current.text.length > existing.text.length) {
+          uniqueMatches[overlappingIndex] = current;
+        }
+      }
+    }
+  }
+
+  // 日付が見つからない場合は、テキスト全体を1つのセクションとして返す
+  if (uniqueMatches.length === 0) {
+    return [
+      {
+        title: "インポートされたノート",
+        content: text,
+        startIndex: 0,
+        endIndex: text.length,
+      },
+    ];
+  }
+
+  // 日付ごとにセクション分割
+  for (let i = 0; i < uniqueMatches.length; i++) {
+    const currentDate = uniqueMatches[i];
+    const nextDate = uniqueMatches[i + 1];
+
+    // セクションの開始位置（日付の直後の改行以降）
+    let startIndex = currentDate.index;
+    const lineStart = text.lastIndexOf("\n", startIndex);
+    if (lineStart !== -1) {
+      startIndex = lineStart + 1;
+    }
+
+    // セクションの終了位置を決定
+    let endIndex: number;
+
+    if (nextDate) {
+      // 次の日付の直前まで
+      endIndex = nextDate.index;
+
+      // 次の日付の行の開始まで戻る
+      const nextLineStart = text.lastIndexOf("\n", endIndex);
+      if (nextLineStart !== -1) {
+        endIndex = nextLineStart;
+      }
+    } else {
+      // 最後のセクション：テキストの末尾まで
+      endIndex = text.length;
+    }
+
+    // セクション内にページ区切りがある場合、そこで終了
+    const breakInSection = pageBreaks.find(
+      (breakPos) => breakPos > startIndex && breakPos < endIndex,
+    );
+    if (breakInSection) {
+      endIndex = breakInSection;
+    }
+
+    // セクション内容を抽出
+    const content = text.substring(startIndex, endIndex).trim();
+
+    // 空のセクションはスキップ
+    if (content.length === 0) {
+      continue;
+    }
+
+    sections.push({
+      title: currentDate.text,
+      content: content,
+      startIndex: startIndex,
+      endIndex: endIndex,
+    });
+  }
+
+  return sections;
 }
 
 /**
@@ -1300,7 +1638,9 @@ async function processSingleFile(
  * multipart/form-data:
  * - files: File[] (最大50ファイル、各種形式対応)
  * - folderId: string (optional, 全ファイル共通のフォルダID)
- * - options: JSON ({ addImportTag: boolean })
+ * - options: JSON ({ addImportTag: boolean, splitByDate: boolean })
+ *   - addImportTag: タグ"Batch Import"を自動付与
+ *   - splitByDate: PDFファイルを日付ヘッダーで分割（日付パターン検出）
  */
 router.post(
   "/batch",
@@ -1343,28 +1683,30 @@ router.post(
 
       // 各ファイルを順次処理
       const results: Array<{
-        noteId: string | null;
-        title: string;
+        noteIds: string[];
+        titles: string[];
         status: "success" | "error";
         error?: string;
       }> = [];
 
       let successCount = 0;
       let errorCount = 0;
+      let totalNotesCreated = 0;
 
       for (const file of uploadedFiles) {
         try {
           console.log(`Processing file: ${file.originalname}`);
 
-          // 単一ファイル処理
+          // 単一ファイル処理（splitByDateオプションを渡す）
           const result = await processSingleFile(
             file.path,
             file.originalname,
             folderId,
+            { splitByDate: options.splitByDate },
           );
 
-          // タグ追加（オプション）
-          if (options.addImportTag && result.noteId) {
+          // タグ追加（オプション）- すべてのノートに適用
+          if (options.addImportTag && result.noteIds.length > 0) {
             let tag = await prisma.tag.findUnique({
               where: { name: "Batch Import" },
             });
@@ -1373,18 +1715,22 @@ router.post(
                 data: { name: "Batch Import", color: "#9C27B0" },
               });
             }
-            await prisma.noteTag.create({
-              data: { noteId: result.noteId, tagId: tag.id },
-            });
+            // すべてのノートにタグを追加
+            for (const noteId of result.noteIds) {
+              await prisma.noteTag.create({
+                data: { noteId: noteId, tagId: tag.id },
+              });
+            }
           }
 
           results.push({
-            noteId: result.noteId,
-            title: result.title,
+            noteIds: result.noteIds,
+            titles: result.titles,
             status: "success",
           });
 
           successCount++;
+          totalNotesCreated += result.noteIds.length;
 
           // 一時ファイル削除
           await fs.unlink(file.path);
@@ -1395,8 +1741,8 @@ router.post(
           );
 
           results.push({
-            noteId: null,
-            title: file.originalname,
+            noteIds: [],
+            titles: [file.originalname],
             status: "error",
             error:
               fileError instanceof Error ? fileError.message : "Unknown error",
@@ -1422,6 +1768,7 @@ router.post(
           totalFiles: uploadedFiles.length,
           successCount,
           errorCount,
+          totalNotesCreated,
           notes: results,
           folderId: folderId,
         },
