@@ -277,6 +277,7 @@ export const useFolderStore = create<FolderStore>()(
 
         // フォルダ選択
         selectFolder: (folderId: string | null) => {
+          console.log("[FolderStore] Selecting folder:", folderId);
           set({ selectedFolderId: folderId });
         },
 

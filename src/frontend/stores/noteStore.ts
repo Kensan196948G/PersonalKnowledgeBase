@@ -92,6 +92,11 @@ export const useNoteStore = create<NoteStore>()(
               searchIsFavorite,
             } = get();
 
+            console.log(
+              "[NoteStore] fetchNotes called with folderId:",
+              searchFolderId,
+            );
+
             const params = new URLSearchParams();
             params.append("sortBy", sortBy);
             params.append("order", sortOrder);
@@ -131,6 +136,11 @@ export const useNoteStore = create<NoteStore>()(
             }
 
             const result = await response.json();
+            console.log(
+              "[NoteStore] Fetched",
+              result.data?.length || 0,
+              "notes",
+            );
             set({
               notes: result.data || [],
               isLoading: false,
@@ -146,6 +156,7 @@ export const useNoteStore = create<NoteStore>()(
 
         // 単一ノート取得
         fetchNoteById: async (id: string) => {
+          console.log("noteStore: fetchNoteById called with id:", id);
           set({ isLoading: true, error: null });
           try {
             const response = await fetch(`${API_BASE_URL}/notes/${id}`);
@@ -158,6 +169,13 @@ export const useNoteStore = create<NoteStore>()(
 
             const result = await response.json();
             const note = result.data;
+            console.log(
+              "noteStore: Fetched note:",
+              note.id,
+              note.title,
+              "content length:",
+              note.content?.length,
+            );
 
             // キャッシュ更新: 既存のノートを更新または追加
             set((state) => {
@@ -167,8 +185,13 @@ export const useNoteStore = create<NoteStore>()(
               const newNotes = [...state.notes];
 
               if (existingIndex >= 0) {
+                console.log(
+                  "noteStore: Updating existing note at index:",
+                  existingIndex,
+                );
                 newNotes[existingIndex] = note;
               } else {
+                console.log("noteStore: Adding new note to cache");
                 newNotes.push(note);
               }
 
@@ -181,6 +204,7 @@ export const useNoteStore = create<NoteStore>()(
 
             return note;
           } catch (error) {
+            console.error("noteStore: fetchNoteById error:", error);
             set({
               error: error instanceof Error ? error.message : "Unknown error",
               isLoading: false,
@@ -320,6 +344,7 @@ export const useNoteStore = create<NoteStore>()(
 
         // 高度検索: フォルダフィルタ設定
         setSearchFolder: (folderId: string | null) => {
+          console.log("[NoteStore] setSearchFolder called:", folderId);
           set({ searchFolderId: folderId });
         },
 

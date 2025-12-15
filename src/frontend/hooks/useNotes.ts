@@ -35,10 +35,15 @@ export function useNotes() {
   const { addToast } = useUIStore();
 
   // 選択中のノート（computed）
-  const selectedNote = useMemo(
-    () => getSelectedNote(),
-    [notes, selectedNoteId, getSelectedNote],
-  );
+  const selectedNote = useMemo(() => {
+    console.log(
+      "useNotes: Computing selectedNote, selectedNoteId:",
+      selectedNoteId,
+    );
+    const note = getSelectedNote();
+    console.log("useNotes: Selected note:", note?.id, note?.title);
+    return note;
+  }, [notes, selectedNoteId, getSelectedNote]);
 
   // フィルタ・ソート済みノート（computed）
   const filteredNotes = useMemo(
@@ -137,10 +142,13 @@ export function useNotes() {
   // ノート選択と詳細取得
   const selectAndFetchNote = useCallback(
     async (id: string | null) => {
+      console.log("useNotes: selectAndFetchNote called with id:", id);
       if (id) {
+        console.log("useNotes: Selecting note and fetching details");
         selectNote(id);
         await fetchNoteById(id);
       } else {
+        console.log("useNotes: Deselecting note");
         selectNote(null);
       }
     },

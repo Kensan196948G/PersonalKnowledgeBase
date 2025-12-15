@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ブラウザキャッシュクリアツール - Personal Knowledge Base</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: #666;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .info-box {
+            background: #f3f4f6;
+            border-left: 4px solid #3b82f6;
+            padding: 15px;
+            margin-bottom: 25px;
+            border-radius: 4px;
+        }
+
+        .info-box h2 {
+            color: #1f2937;
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .info-box p {
+            color: #4b5563;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            flex: 1;
+            padding: 14px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-clear {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-clear:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-reload {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-reload:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .status.success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #6ee7b7;
+            display: block;
+        }
+
+        .status.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+            display: block;
+        }
+
+        .storage-info {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .storage-info h3 {
+            color: #374151;
+            font-size: 16px;
+            margin-bottom: 12px;
+        }
+
+        .storage-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: #f9fafb;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .storage-item label {
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        .storage-item span {
+            color: #1f2937;
+            font-family: 'Courier New', monospace;
+        }
+
+        .icon {
+            width: 20px;
+            height: 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .spinning {
+            animation: spin 1s linear infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🗑️ ブラウザキャッシュクリア</h1>
+        <p class="subtitle">Personal Knowledge Base 開発ツール</p>
+
+        <div class="info-box">
+            <h2>このツールについて</h2>
+            <p>
+                開発中にブラウザのLocalStorageやセッションストレージに保存された古いデータをクリアするためのユーティリティです。
+                フォルダ選択やノート表示がうまく動作しない場合にお使いください。
+            </p>
+        </div>
+
+        <div class="button-group">
+            <button class="btn-clear" onclick="clearAllCache()">
+                <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+                すべてクリア
+            </button>
+            <button class="btn-reload" onclick="window.location.reload()">
+                <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+                ページ再読み込み
+            </button>
+        </div>
+
+        <div id="status" class="status"></div>
+
+        <div class="storage-info">
+            <h3>💾 現在のストレージ情報</h3>
+            <div id="storage-details"></div>
+        </div>
+    </div>
+
+    <script>
+        // ページ読み込み時にストレージ情報を表示
+        function displayStorageInfo() {
+            const details = document.getElementById('storage-details');
+            let html = '';
+
+            // LocalStorage項目をカウント
+            const localStorageKeys = Object.keys(localStorage);
+            const zustandKeys = localStorageKeys.filter(key =>
+                key.includes('note-store') ||
+                key.includes('folder-store') ||
+                key.includes('tag-store') ||
+                key.includes('ui-store')
+            );
+
+            html += `
+                <div class="storage-item">
+                    <label>LocalStorage 項目数:</label>
+                    <span>${localStorageKeys.length}件</span>
+                </div>
+                <div class="storage-item">
+                    <label>Zustand ストア:</label>
+                    <span>${zustandKeys.length}件</span>
+                </div>
+            `;
+
+            // 主要なキーを表示
+            if (zustandKeys.length > 0) {
+                html += '<div style="margin-top: 12px; padding: 8px 12px; background: #fef3c7; border-radius: 6px; font-size: 13px; color: #92400e;">';
+                html += '<strong>保存されているストア:</strong><br>';
+                zustandKeys.forEach(key => {
+                    html += `• ${key}<br>`;
+                });
+                html += '</div>';
+            }
+
+            details.innerHTML = html;
+        }
+
+        // すべてのキャッシュをクリア
+        function clearAllCache() {
+            const statusEl = document.getElementById('status');
+
+            try {
+                // LocalStorageをクリア
+                const beforeCount = localStorage.length;
+                localStorage.clear();
+
+                // SessionStorageをクリア
+                sessionStorage.clear();
+
+                // IndexedDBをクリア（あれば）
+                if (window.indexedDB) {
+                    indexedDB.databases().then(databases => {
+                        databases.forEach(db => {
+                            if (db.name) {
+                                indexedDB.deleteDatabase(db.name);
+                            }
+                        });
+                    }).catch(() => {
+                        // IndexedDB.databases() がサポートされていない場合は無視
+                    });
+                }
+
+                statusEl.className = 'status success';
+                statusEl.innerHTML = `
+                    <strong>✅ キャッシュクリア完了！</strong><br>
+                    削除した項目: ${beforeCount}件<br>
+                    LocalStorage、SessionStorage、IndexedDBをすべてクリアしました。<br>
+                    <strong>「ページ再読み込み」をクリックして変更を反映してください。</strong>
+                `;
+
+                // ストレージ情報を更新
+                setTimeout(() => {
+                    displayStorageInfo();
+                }, 100);
+
+            } catch (error) {
+                statusEl.className = 'status error';
+                statusEl.innerHTML = `
+                    <strong>❌ エラーが発生しました</strong><br>
+                    ${error.message}
+                `;
+            }
+        }
+
+        // キーボードショートカット
+        document.addEventListener('keydown', (e) => {
+            // Ctrl+Shift+D でクリア
+            if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+                e.preventDefault();
+                clearAllCache();
+            }
+            // F5 で再読み込み
+            if (e.key === 'F5') {
+                window.location.reload();
+            }
+        });
+
+        // 初回表示
+        displayStorageInfo();
+    </script>
+</body>
+</html>

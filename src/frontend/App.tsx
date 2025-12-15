@@ -22,15 +22,17 @@ import { useNotes } from "./hooks/useNotes";
 import { useUIStore } from "./stores/uiStore";
 import { useTagStore } from "./stores/tagStore";
 import { useFolderStore } from "./stores/folderStore";
+import { useNoteStore } from "./stores/noteStore";
 import type { Folder } from "./types/folder";
 import { tiptapJsonToHtml } from "./utils/tiptap";
 
 function App() {
-  const { selectedNote, createNote, updateNote, fetchNoteById, selectNote } =
+  const { selectedNote, createNote, updateNote, selectNote, fetchNotes } =
     useNotes();
   const { isSaving, setSaving } = useUIStore();
   const { toggleTagSelection } = useTagStore();
   const { selectFolder } = useFolderStore();
+  const { setSearchFolder } = useNoteStore();
   const [editorContent, setEditorContent] = useState("");
   const [editorTitle, setEditorTitle] = useState("");
   const [editorFolderId, setEditorFolderId] = useState<string | null>(null);
@@ -55,13 +57,13 @@ function App() {
   const folderSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // ノート選択時にストアを更新（API取得を含む）
-  const handleNoteSelect = async (noteId: string | null) => {
-    console.log("handleNoteSelect called, noteId:", noteId);
-    if (noteId) {
-      await fetchNoteById(noteId);
-    }
-    selectNote(noteId);
-  };
+  const handleNoteSelect = useCallback(
+    async (noteId: string | null) => {
+      console.log("handleNoteSelect called, noteId:", noteId);
+      await selectNote(noteId);
+    },
+    [selectNote],
+  );
 
   // selectedNoteが変更されたときにエディタを更新
   useEffect(() => {
@@ -184,9 +186,23 @@ function App() {
   );
 
   // フォルダクリックハンドラ（フィルタリング）
-  const handleFolderClick = (folderId: string | null) => {
-    selectFolder(folderId);
-  };
+  const handleFolderClick = useCallback(
+    async (folderId: string | null) => {
+      console.log("[App] Folder clicked:", folderId);
+
+      // フォルダストアを更新（UI表示用）
+      selectFolder(folderId);
+
+      // ノートストアのフォルダフィルタを更新
+      setSearchFolder(folderId);
+
+      // ノート一覧を再取得してフィルタリング
+      await fetchNotes();
+
+      console.log("[App] Notes fetched for folder:", folderId);
+    },
+    [selectFolder, setSearchFolder, fetchNotes],
+  );
 
   // フォルダ作成モーダルを開く
   const handleCreateFolder = (parentId?: string | null) => {
@@ -250,7 +266,7 @@ function App() {
   // タグ変更時のハンドラ（ノートを再取得）
   const handleTagsChanged = async () => {
     if (selectedNote) {
-      await fetchNoteById(selectedNote.id);
+      await selectNote(selectedNote.id);
     }
   };
 

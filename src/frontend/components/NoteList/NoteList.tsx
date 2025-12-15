@@ -82,8 +82,19 @@ export function NoteList({
 
   // 初回ロードとソート/検索変更時にノート取得
   useEffect(() => {
+    console.log("[NoteList] Fetching notes...");
     fetchNotes();
   }, [fetchNotes]);
+
+  // デバッグ: ノート数をログ出力
+  useEffect(() => {
+    console.log("[NoteList] Notes count:", notes.length);
+    console.log("[NoteList] Filtered notes count:", filteredNotes.length);
+    console.log(
+      "[NoteList] Note titles:",
+      filteredNotes.map((n) => n.title),
+    );
+  }, [notes, filteredNotes]);
 
   /**
    * 検索クエリ変更ハンドラ
