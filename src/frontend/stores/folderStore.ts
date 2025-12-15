@@ -59,6 +59,13 @@ function buildFolderTree(folders: Folder[]): Folder[] {
     // デバッグ：各ルートフォルダの子の数を表示
     rootFolders.forEach(root => {
       console.log(`[FolderStore]   ${root.name}: ${root.children?.length || 0} children`);
+
+      // 孫フォルダ（children of children）も確認
+      if (root.children && root.children.length > 0) {
+        root.children.forEach(child => {
+          console.log(`[FolderStore]     └─ ${child.name}: ${child.children?.length || 0} grandchildren`);
+        });
+      }
     });
 
     return rootFolders;
