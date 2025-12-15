@@ -45,6 +45,7 @@ router.get("/", async (req: Request, res: Response) => {
     const sortOrder = order === "asc" ? "asc" : "desc";
 
     // フィルタ条件構築
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const where: any = {};
 
     if (folderId) {
@@ -307,6 +308,7 @@ router.put("/:id", async (req: Request, res: Response) => {
     }
 
     // 更新データ構築（undefined値は除外）
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updateData: any = {};
     if (title !== undefined) updateData.title = title;
     if (content !== undefined) updateData.content = content;

@@ -17,16 +17,26 @@
     ]
   },
   "hooks": {
-    "preToolUse": [
+    "PreToolUse": [
       {
         "matcher": "Edit|Write|Bash",
-        "command": ".claude/hooks/pre-tool-use.sh"
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/pre-tool-use.sh"
+          }
+        ]
       }
     ],
-    "postToolUse": [
+    "PostToolUse": [
       {
         "matcher": "Edit|Write|Bash|Task",
-        "command": ".claude/hooks/post-tool-use.sh"
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/post-tool-use.sh"
+          }
+        ]
       }
     ]
   },

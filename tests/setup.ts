@@ -1,5 +1,14 @@
 // Jest セットアップファイル
 import '@testing-library/jest-dom'
+import { config } from 'dotenv'
+
+// .envファイルから環境変数を読み込む
+config({ path: '.env' })
+
+// DATABASE_URLが設定されていない場合はデフォルト値を設定
+if (!process.env.DATABASE_URL) {
+  process.env.DATABASE_URL = 'file:../data/knowledge.db'
+}
 
 // Vite の import.meta.env をモック
 globalThis.import = {

@@ -37,13 +37,13 @@ export function useNotes() {
   // 選択中のノート（computed）
   const selectedNote = useMemo(
     () => getSelectedNote(),
-    [notes, selectedNoteId],
+    [notes, selectedNoteId, getSelectedNote],
   );
 
   // フィルタ・ソート済みノート（computed）
   const filteredNotes = useMemo(
     () => getFilteredNotes(),
-    [notes, searchQuery, sortBy, sortOrder],
+    [notes, searchQuery, sortBy, sortOrder, getFilteredNotes],
   );
 
   // ノート作成（トースト通知付き）

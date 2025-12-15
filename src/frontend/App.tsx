@@ -12,6 +12,7 @@ import {
   FolderCreateModal,
 } from "./components/Folders";
 import { SettingsModal } from "./components/Settings";
+import { ImportModal } from "./components/Import";
 import {
   BacklinkPanel,
   RelatedNotesWidget,
@@ -44,6 +45,10 @@ function App() {
   // 設定モーダル管理
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
+  // インポートモーダル管理
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [importFolderId, setImportFolderId] = useState<string | null>(null);
+
   // デバウンスタイマー用ref
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const titleSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -52,7 +57,10 @@ function App() {
   // ノート選択時にストアを更新（API取得を含む）
   const handleNoteSelect = async (noteId: string | null) => {
     console.log("handleNoteSelect called, noteId:", noteId);
-    await selectNote(noteId);
+    if (noteId) {
+      await fetchNoteById(noteId);
+    }
+    selectNote(noteId);
   };
 
   // selectedNoteが変更されたときにエディタを更新
@@ -201,6 +209,24 @@ function App() {
     setDefaultParentId(null);
   };
 
+  // インポートモーダルを開く
+  const handleOpenImportModal = (folderId: string) => {
+    setImportFolderId(folderId);
+    setIsImportModalOpen(true);
+  };
+
+  // インポートモーダルを閉じる
+  const handleCloseImportModal = () => {
+    setIsImportModalOpen(false);
+    setImportFolderId(null);
+  };
+
+  // インポート完了時のハンドラ
+  const handleImportComplete = () => {
+    // ノート一覧を再取得（useNotesフックで自動的に行われる）
+    console.log("Import completed");
+  };
+
   // クリーンアップ：コンポーネントアンマウント時にタイマーをクリア
   useEffect(() => {
     return () => {
@@ -250,6 +276,7 @@ function App() {
                 onFolderClick={handleFolderClick}
                 onFolderEdit={handleEditFolder}
                 onCreateFolder={handleCreateFolder}
+                onImport={handleOpenImportModal}
               />
             </div>
             {/* ノート一覧 */}
@@ -281,6 +308,7 @@ function App() {
             <div className="h-full flex flex-col p-6">
               {/* タイトル入力 */}
               <input
+                data-testid="note-title-input"
                 type="text"
                 value={editorTitle}
                 onChange={handleTitleChange}
@@ -418,6 +446,7 @@ function App() {
                 左のリストからノートを選択するか、新しいノートを作成してください
               </p>
               <button
+                data-testid="create-note-center-button"
                 onClick={handleNewNote}
                 className="
                   px-6 py-3
@@ -459,6 +488,14 @@ function App() {
       <SettingsModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
+      />
+
+      {/* インポートモーダル */}
+      <ImportModal
+        isOpen={isImportModalOpen}
+        onClose={handleCloseImportModal}
+        onImportComplete={handleImportComplete}
+        defaultFolderId={importFolderId}
       />
     </>
   );

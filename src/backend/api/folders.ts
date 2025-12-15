@@ -92,6 +92,7 @@ interface FolderTreeNode {
   children: FolderTreeNode[];
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function buildFolderTree(folders: any[]): FolderTreeNode[] {
   const folderMap = new Map<string, FolderTreeNode>();
   const rootFolders: FolderTreeNode[] = [];
@@ -388,6 +389,7 @@ router.put("/:id", async (req: Request, res: Response) => {
     }
 
     // 更新データ構築
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updateData: any = {};
 
     // フォルダ名更新

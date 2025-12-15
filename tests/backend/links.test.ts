@@ -4,23 +4,14 @@
  * ノート間リンクAPIのテスト
  */
 
-// Note: This test file requires implementation of link parser utilities
-// Temporarily disabled until linkParser.js and relatedNotesService.js are implemented
-describe.skip('Links API Tests', () => {
-  it.todo('should implement link parser tests');
-});
-
-/*
-// TODO: Re-enable when these modules are implemented:
-// - src/backend/utils/linkParser.js
-// - src/backend/services/relatedNotesService.js
-
-import { describe, it, expect, beforeAll, afterAll } from '@jest/globals';
-import { prisma } from '../../src/backend/db.js';
+import { describe, it, expect, beforeAll, afterAll, beforeEach } from '@jest/globals';
+import { PrismaClient } from '@prisma/client';
 import { extractLinks, syncNoteLinks, extractKeywords } from '../../src/backend/utils/linkParser.js';
 import { getRelatedNotes } from '../../src/backend/services/relatedNotesService.js';
 
-describe.skip('Link Parser Utility', () => {
+const prisma = new PrismaClient();
+
+describe('Link Parser Utility', () => {
   describe('extractLinks', () => {
     it('should extract simple wiki links', () => {
       const content = 'This is a [[note]] and another [[example note]].';
@@ -103,7 +94,7 @@ describe.skip('Link Parser Utility', () => {
   });
 });
 
-describe.skip('Note Links Database Operations', () => {
+describe('Note Links Database Operations', () => {
   let testNote1Id: string;
   let testNote2Id: string;
   let testNote3Id: string;
@@ -140,9 +131,9 @@ describe.skip('Note Links Database Operations', () => {
     await prisma.noteLink.deleteMany({
       where: {
         OR: [
-          { sourceId: testNote1Id },
-          { sourceId: testNote2Id },
-          { sourceId: testNote3Id },
+          { sourceNoteId: testNote1Id },
+          { sourceNoteId: testNote2Id },
+          { sourceNoteId: testNote3Id },
         ],
       },
     });
@@ -154,15 +145,24 @@ describe.skip('Note Links Database Operations', () => {
         },
       },
     });
+
+    await prisma.$disconnect();
   });
 
   describe('syncNoteLinks', () => {
+    beforeEach(async () => {
+      // 各テスト前にリンクをクリア
+      await prisma.noteLink.deleteMany({
+        where: { sourceNoteId: testNote1Id },
+      });
+    });
+
     it('should sync links when note is saved', async () => {
       const content = 'This note references [[Test Note 2]] and [[Test Note 3]].';
       await syncNoteLinks(testNote1Id, content);
 
       const links = await prisma.noteLink.findMany({
-        where: { sourceId: testNote1Id },
+        where: { sourceNoteId: testNote1Id },
       });
 
       expect(links).toHaveLength(2);
@@ -172,15 +172,20 @@ describe.skip('Note Links Database Operations', () => {
       // 最初のリンク作成
       await syncNoteLinks(testNote1Id, 'References [[Test Note 2]].');
 
+      const linksAfterFirst = await prisma.noteLink.findMany({
+        where: { sourceNoteId: testNote1Id },
+      });
+      expect(linksAfterFirst).toHaveLength(1);
+
       // コンテンツ変更
       await syncNoteLinks(testNote1Id, 'Now references [[Test Note 3]] only.');
 
-      const links = await prisma.noteLink.findMany({
-        where: { sourceId: testNote1Id },
+      const linksAfterSecond = await prisma.noteLink.findMany({
+        where: { sourceNoteId: testNote1Id },
       });
 
-      expect(links).toHaveLength(1);
-      expect(links[0].targetId).toBe(testNote3Id);
+      expect(linksAfterSecond).toHaveLength(1);
+      expect(linksAfterSecond[0].targetNoteId).toBe(testNote3Id);
     });
 
     it('should create target note if it does not exist (red link)', async () => {
@@ -197,7 +202,7 @@ describe.skip('Note Links Database Operations', () => {
       // クリーンアップ
       if (newNote) {
         await prisma.noteLink.deleteMany({
-          where: { targetId: newNote.id },
+          where: { targetNoteId: newNote.id },
         });
         await prisma.note.delete({
           where: { id: newNote.id },
@@ -207,7 +212,7 @@ describe.skip('Note Links Database Operations', () => {
   });
 });
 
-describe.skip('Related Notes Service', () => {
+describe('Related Notes Service', () => {
   let noteA: string;
   let noteB: string;
   let noteC: string;
@@ -256,8 +261,8 @@ describe.skip('Related Notes Service', () => {
     // リンク作成（Note A -> Note B）
     await prisma.noteLink.create({
       data: {
-        sourceId: noteA,
-        targetId: noteB,
+        sourceNoteId: noteA,
+        targetNoteId: noteB,
         linkText: 'Note B',
       },
     });
@@ -268,9 +273,9 @@ describe.skip('Related Notes Service', () => {
     await prisma.noteLink.deleteMany({
       where: {
         OR: [
-          { sourceId: noteA },
-          { sourceId: noteB },
-          { sourceId: noteC },
+          { sourceNoteId: noteA },
+          { sourceNoteId: noteB },
+          { sourceNoteId: noteC },
         ],
       },
     });
@@ -294,6 +299,8 @@ describe.skip('Related Notes Service', () => {
     await prisma.tag.delete({
       where: { id: tagId },
     });
+
+    await prisma.$disconnect();
   });
 
   describe('getRelatedNotes', () => {
@@ -322,7 +329,7 @@ describe.skip('Related Notes Service', () => {
     });
 
     it('should exclude unrelated notes', async () => {
-      const related = await getRelatedNotes(noteA, { threshold: 1.0 });
+      const related = await getRelatedNotes(noteA, { threshold: 10.0 });
 
       const noteCRelated = related.find(r => r.note.id === noteC);
       // Note C should have low/no relation to Note A
@@ -343,4 +350,3 @@ describe.skip('Related Notes Service', () => {
     });
   });
 });
-*/

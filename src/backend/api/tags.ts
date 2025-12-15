@@ -272,6 +272,7 @@ router.put("/:id", async (req: Request, res: Response) => {
     }
 
     // 更新データ構築
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updateData: any = {};
     if (name !== undefined) updateData.name = name.trim();
     if (color !== undefined) updateData.color = color;

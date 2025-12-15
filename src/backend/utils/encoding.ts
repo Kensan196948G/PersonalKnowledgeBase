@@ -77,7 +77,7 @@ export function fixFilename(filename: string): string {
     if (/[あ-ん]/.test(decodedShiftJis)) {
       return decodedShiftJis;
     }
-  } catch (e) {
+  } catch {
     // 失敗したら元のまま
   }
 

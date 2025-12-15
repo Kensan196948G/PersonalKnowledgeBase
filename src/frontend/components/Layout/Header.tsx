@@ -39,6 +39,7 @@ export function Header({
         {/* 新規ノート作成ボタン */}
         {onNewNote && (
           <button
+            data-testid="new-note-button"
             onClick={onNewNote}
             className="
               flex items-center gap-2 px-4 py-2

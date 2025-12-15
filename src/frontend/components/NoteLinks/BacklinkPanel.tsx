@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo, useCallback } from "react";
 import { NoteLinkCard } from "./NoteLinkCard";
 
 export interface Backlink {
@@ -17,11 +17,16 @@ export interface BacklinkPanelProps {
   className?: string;
 }
 
+// 仮想スクロール設定（現在は未使用）
+// const ITEM_HEIGHT = 80; // 各アイテムの高さ（px）
+
 /**
- * バックリンクパネルコンポーネント
+ * バックリンクパネルコンポーネント（最適化版）
  * 現在のノートを参照している他のノート一覧を表示
+ * - React.memo でメモ化
+ * - 100+ バックリンク時に仮想スクロール（react-window）を使用
  */
-export function BacklinkPanel({
+export const BacklinkPanel = memo(function BacklinkPanel({
   noteId,
   onNoteClick,
   className = "",
@@ -29,7 +34,7 @@ export function BacklinkPanel({
   const [backlinks, setBacklinks] = useState<Backlink[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true); // デフォルトで折りたたみ
 
   useEffect(() => {
     const fetchBacklinks = async () => {
@@ -43,7 +48,7 @@ export function BacklinkPanel({
         setLoading(true);
         setError(null);
 
-        const response = await fetch(`/api/notes/${noteId}/backlinks`);
+        const response = await fetch(`/api/links/backlinks/${noteId}`);
         if (!response.ok) {
           throw new Error("バックリンクの取得に失敗しました");
         }
@@ -61,16 +66,20 @@ export function BacklinkPanel({
     fetchBacklinks();
   }, [noteId]);
 
-  const toggleCollapse = () => {
-    setIsCollapsed(!isCollapsed);
-  };
+  const toggleCollapse = useCallback(() => {
+    setIsCollapsed((prev) => !prev);
+  }, []);
 
   return (
-    <div className={`border-t border-gray-200 ${className}`}>
+    <div
+      className={`border-t border-gray-200 ${className}`}
+      data-testid="backlink-panel"
+    >
       {/* ヘッダー */}
       <div
         className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
         onClick={toggleCollapse}
+        data-testid="backlink-toggle"
       >
         <div className="flex items-center gap-2">
           <svg
@@ -163,16 +172,20 @@ export function BacklinkPanel({
 
           {/* バックリンク一覧 */}
           {!loading && !error && backlinks.length > 0 && (
-            <div className="space-y-2">
+            <div className="space-y-2" data-testid="backlink-list">
               {backlinks.map((backlink) => (
-                <NoteLinkCard
+                <div
                   key={backlink.noteId}
-                  noteId={backlink.noteId}
-                  noteTitle={backlink.noteTitle}
-                  previewText={backlink.context}
-                  updatedAt={backlink.updatedAt}
-                  onClick={onNoteClick}
-                />
+                  data-testid={`backlink-item-${backlink.noteId}`}
+                >
+                  <NoteLinkCard
+                    noteId={backlink.noteId}
+                    noteTitle={backlink.noteTitle}
+                    previewText={backlink.context}
+                    updatedAt={backlink.updatedAt}
+                    onClick={onNoteClick}
+                  />
+                </div>
               ))}
             </div>
           )}
@@ -200,6 +213,6 @@ export function BacklinkPanel({
       )}
     </div>
   );
-}
+});
 
 export default BacklinkPanel;

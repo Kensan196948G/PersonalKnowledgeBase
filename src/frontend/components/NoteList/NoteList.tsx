@@ -5,7 +5,7 @@ import { NoteCard } from "./NoteCard";
 
 export interface NoteListProps {
   /** ノート選択時のコールバック */
-  onNoteSelect?: (noteId: string) => void;
+  onNoteSelect?: (noteId: string | null) => void;
   /** 選択中のノートID */
   selectedNoteId?: string | null;
   /** API基底URL */
@@ -125,7 +125,7 @@ export function NoteList({
 
       // 削除したノートが選択中だった場合、選択解除
       if (selectedNoteId === noteId) {
-        onNoteSelect?.(null as any);
+        onNoteSelect?.(null);
       }
     } catch (err) {
       console.error("Error deleting note:", err);
