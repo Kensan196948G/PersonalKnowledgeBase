@@ -33,6 +33,11 @@ export function NoteList({
   initialOrder = "desc",
   onTagClick,
 }: NoteListProps) {
+  // グローバルストアからnotesを取得
+  const globalNotes = useNoteStore((state) => state.notes);
+  const globalIsLoading = useNoteStore((state) => state.isLoading);
+  const globalError = useNoteStore((state) => state.error);
+
   const [notes, setNotes] = useState<NoteListItem[]>([]);
   const [filteredNotes, setFilteredNotes] = useState<NoteListItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -40,6 +45,14 @@ export function NoteList({
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [sortBy, setSortBy] = useState<SortField>(initialSortBy);
   const [sortOrder, setSortOrder] = useState<SortOrder>(initialOrder);
+
+  // グローバルストアのnotesが更新されたらローカル状態に反映
+  useEffect(() => {
+    console.log("[NoteList] Global notes updated, count:", globalNotes.length);
+    setNotes(globalNotes);
+    setLoading(globalIsLoading);
+    setError(globalError);
+  }, [globalNotes, globalIsLoading, globalError]);
 
   /**
    * APIからノート一覧を取得
