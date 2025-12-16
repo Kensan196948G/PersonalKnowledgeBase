@@ -42,7 +42,9 @@ describe.skip("SummaryPanel", () => {
     expect(screen.getByText("短文")).toBeInTheDocument();
     expect(screen.getByText("中文")).toBeInTheDocument();
     expect(screen.getByText("長文")).toBeInTheDocument();
-    expect(screen.getByText("要約スタイルを選択して生成を開始")).toBeInTheDocument();
+    expect(
+      screen.getByText("要約スタイルを選択して生成を開始"),
+    ).toBeInTheDocument();
   });
 
   it("要約スタイルボタンをクリックすると要約生成が呼ばれる", async () => {

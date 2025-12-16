@@ -1,4 +1,4 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect, Page } from "@playwright/test";
 
 /**
  * ノート表示機能 E2Eテスト
@@ -16,7 +16,9 @@ const createNote = async (page: Page, title: string, content?: string) => {
 
   // 新規ノートボタンをクリック
   const headerButton = page.locator('[data-testid="new-note-button"]');
-  const centerButton = page.locator('[data-testid="create-note-center-button"]');
+  const centerButton = page.locator(
+    '[data-testid="create-note-center-button"]',
+  );
 
   const isHeaderVisible = await headerButton.isVisible().catch(() => false);
 
@@ -27,16 +29,18 @@ const createNote = async (page: Page, title: string, content?: string) => {
     if (isCenterVisible) {
       await centerButton.click();
     } else {
-      throw new Error('No new note button found');
+      throw new Error("No new note button found");
     }
   }
 
   // エディタ領域が表示されるまで待機
-  await page.waitForSelector('[data-testid="note-title-input"]', { timeout: 10000 });
+  await page.waitForSelector('[data-testid="note-title-input"]', {
+    timeout: 10000,
+  });
 
   // タイトル入力
   const titleInput = page.locator('[data-testid="note-title-input"]');
-  await titleInput.waitFor({ state: 'visible', timeout: 5000 });
+  await titleInput.waitFor({ state: "visible", timeout: 5000 });
   await titleInput.fill(title);
 
   // 保存待機（デバウンス1秒 + バッファ）
@@ -44,7 +48,7 @@ const createNote = async (page: Page, title: string, content?: string) => {
 
   // コンテンツ入力（オプション）
   if (content) {
-    const editor = page.locator('.tiptap.ProseMirror, .ProseMirror').first();
+    const editor = page.locator(".tiptap.ProseMirror, .ProseMirror").first();
     const editorVisible = await editor.isVisible().catch(() => false);
 
     if (editorVisible) {
@@ -54,7 +58,7 @@ const createNote = async (page: Page, title: string, content?: string) => {
       // 保存待機
       await page.waitForTimeout(2000);
     } else {
-      console.warn('Editor not visible, skipping content input');
+      console.warn("Editor not visible, skipping content input");
     }
   }
 
@@ -65,21 +69,26 @@ const selectNote = async (page: Page, title: string) => {
   console.log(`Selecting note: ${title}`);
 
   // ノート一覧から指定のノートをクリック
-  const noteItem = page.locator(`.note-card, [data-testid="note-card"]`).filter({ hasText: title }).first();
+  const noteItem = page
+    .locator(`.note-card, [data-testid="note-card"]`)
+    .filter({ hasText: title })
+    .first();
 
   const isVisible = await noteItem.isVisible().catch(() => false);
 
   if (!isVisible) {
     // セレクタを広げて再試行
     const fallbackItem = page.locator(`text="${title}"`).first();
-    await fallbackItem.waitFor({ state: 'visible', timeout: 10000 });
+    await fallbackItem.waitFor({ state: "visible", timeout: 10000 });
     await fallbackItem.click();
   } else {
     await noteItem.click();
   }
 
   // エディタ表示待機
-  await page.waitForSelector('[data-testid="note-title-input"]', { timeout: 5000 });
+  await page.waitForSelector('[data-testid="note-title-input"]', {
+    timeout: 5000,
+  });
   await page.waitForTimeout(500);
 
   console.log(`Note selected: ${title}`);
@@ -92,31 +101,31 @@ const getEditorTitle = async (page: Page): Promise<string> => {
 };
 
 const getEditorContent = async (page: Page): Promise<string> => {
-  const editor = page.locator('.tiptap.ProseMirror, .ProseMirror').first();
+  const editor = page.locator(".tiptap.ProseMirror, .ProseMirror").first();
   const isVisible = await editor.isVisible().catch(() => false);
 
   if (isVisible) {
     const content = await editor.textContent();
-    return content?.trim() || '';
+    return content?.trim() || "";
   }
 
-  return '';
+  return "";
 };
 
-test.describe('ノート表示機能', () => {
+test.describe("ノート表示機能", () => {
   test.beforeEach(async ({ page }) => {
     // アプリケーションにアクセス
-    await page.goto('/');
+    await page.goto("/");
 
     // ページロード完了待機
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState("networkidle");
     await page.waitForTimeout(1000);
   });
 
-  test('シナリオ1: ノートクリックで内容が表示される', async ({ page }) => {
+  test("シナリオ1: ノートクリックで内容が表示される", async ({ page }) => {
     // 1. ノートを作成
-    const testTitle = 'テスト表示ノート';
-    const testContent = 'これはテスト内容です。';
+    const testTitle = "テスト表示ノート";
+    const testContent = "これはテスト内容です。";
     await createNote(page, testTitle, testContent);
 
     // 2. ノートを選択解除（他のノートを選ぶか、リストに戻る）
@@ -125,7 +134,7 @@ test.describe('ノート表示機能', () => {
 
     if (!hasAllLink) {
       // 別の方法でエディタをクリアする
-      console.log('Cannot deselect note, skipping deselection');
+      console.log("Cannot deselect note, skipping deselection");
     }
 
     // 3. 作成したノートをクリック
@@ -140,15 +149,15 @@ test.describe('ノート表示機能', () => {
     expect(displayedContent).toContain(testContent);
   });
 
-  test('シナリオ2: タイトルと内容の一致確認', async ({ page }) => {
+  test("シナリオ2: タイトルと内容の一致確認", async ({ page }) => {
     // 1. ノートを作成
-    const title1 = 'ノートA';
-    const content1 = '内容A';
+    const title1 = "ノートA";
+    const content1 = "内容A";
     await createNote(page, title1, content1);
 
     // 2. もう1つノートを作成
-    const title2 = 'ノートB';
-    const content2 = '内容B';
+    const title2 = "ノートB";
+    const content2 = "内容B";
     await createNote(page, title2, content2);
 
     // 3. ノートAを開く
@@ -172,12 +181,12 @@ test.describe('ノート表示機能', () => {
     expect(displayedContent).toContain(content2);
   });
 
-  test('シナリオ3: 複数ノート切り替えで正しく表示される', async ({ page }) => {
+  test("シナリオ3: 複数ノート切り替えで正しく表示される", async ({ page }) => {
     // 1. 3つのノートを作成
     const notes = [
-      { title: 'ノート1', content: '内容1' },
-      { title: 'ノート2', content: '内容2' },
-      { title: 'ノート3', content: '内容3' },
+      { title: "ノート1", content: "内容1" },
+      { title: "ノート2", content: "内容2" },
+      { title: "ノート3", content: "内容3" },
     ];
 
     for (const note of notes) {
@@ -196,7 +205,7 @@ test.describe('ノート表示機能', () => {
     }
   });
 
-  test('シナリオ4: 新規ノート作成直後に表示される', async ({ page }) => {
+  test("シナリオ4: 新規ノート作成直後に表示される", async ({ page }) => {
     // 1. 新規ノートボタンをクリック
     const newNoteButton = page.locator('[data-testid="new-note-button"]');
     const isVisible = await newNoteButton.isVisible().catch(() => false);
@@ -204,12 +213,16 @@ test.describe('ノート表示機能', () => {
     if (isVisible) {
       await newNoteButton.click();
     } else {
-      const centerButton = page.locator('[data-testid="create-note-center-button"]');
+      const centerButton = page.locator(
+        '[data-testid="create-note-center-button"]',
+      );
       await centerButton.click();
     }
 
     // 2. エディタが表示されることを確認
-    await page.waitForSelector('[data-testid="note-title-input"]', { timeout: 10000 });
+    await page.waitForSelector('[data-testid="note-title-input"]', {
+      timeout: 10000,
+    });
 
     // 3. タイトル入力欄が存在し、フォーカスされていることを確認
     const titleInput = page.locator('[data-testid="note-title-input"]');
@@ -220,15 +233,15 @@ test.describe('ノート表示機能', () => {
     expect(defaultTitle).toBeTruthy(); // 何かしらのタイトルが入っている
 
     // 5. エディタが表示されていることを確認
-    const editor = page.locator('.tiptap.ProseMirror, .ProseMirror').first();
+    const editor = page.locator(".tiptap.ProseMirror, .ProseMirror").first();
     const editorVisible = await editor.isVisible().catch(() => false);
 
     expect(editorVisible).toBe(true);
   });
 
-  test('シナリオ5: 空のノートも正しく表示される', async ({ page }) => {
+  test("シナリオ5: 空のノートも正しく表示される", async ({ page }) => {
     // 1. 内容なしのノートを作成
-    const emptyTitle = '空のノート';
+    const emptyTitle = "空のノート";
     await createNote(page, emptyTitle);
 
     // 2. ノートを選択
@@ -240,18 +253,18 @@ test.describe('ノート表示機能', () => {
 
     // 4. エディタが空であることを確認
     const displayedContent = await getEditorContent(page);
-    expect(displayedContent).toBe('');
+    expect(displayedContent).toBe("");
   });
 
-  test('シナリオ6: 長い内容のノートも正しく表示される', async ({ page }) => {
+  test("シナリオ6: 長い内容のノートも正しく表示される", async ({ page }) => {
     // 1. 長い内容のノートを作成
-    const longTitle = '長いノート';
-    const longContent = 'これは長い内容です。\n'.repeat(50);
+    const longTitle = "長いノート";
+    const longContent = "これは長い内容です。\n".repeat(50);
 
     await createNote(page, longTitle);
 
     // エディタに長い内容を入力
-    const editor = page.locator('.tiptap.ProseMirror, .ProseMirror').first();
+    const editor = page.locator(".tiptap.ProseMirror, .ProseMirror").first();
     const editorVisible = await editor.isVisible().catch(() => false);
 
     if (editorVisible) {
@@ -268,13 +281,13 @@ test.describe('ノート表示機能', () => {
     }
   });
 
-  test('シナリオ7: 保存状態インジケーターが表示される', async ({ page }) => {
+  test("シナリオ7: 保存状態インジケーターが表示される", async ({ page }) => {
     // 1. ノートを作成
-    await createNote(page, '保存テストノート', '内容');
+    await createNote(page, "保存テストノート", "内容");
 
     // 2. タイトルを変更
     const titleInput = page.locator('[data-testid="note-title-input"]');
-    await titleInput.fill('更新後のタイトル');
+    await titleInput.fill("更新後のタイトル");
 
     // 3. 保存中インジケーターが表示されることを確認
     const savingIndicator = page.locator('text="保存中"');
@@ -293,16 +306,18 @@ test.describe('ノート表示機能', () => {
     expect(isSaved).toBe(true);
   });
 
-  test('シナリオ8: メタ情報（作成日時・更新日時）が表示される', async ({ page }) => {
+  test("シナリオ8: メタ情報（作成日時・更新日時）が表示される", async ({
+    page,
+  }) => {
     // 1. ノートを作成
-    await createNote(page, 'メタ情報テスト', '内容');
+    await createNote(page, "メタ情報テスト", "内容");
 
     // 2. 作成日時が表示されることを確認
-    const createdAt = page.locator('text=/作成:/');
+    const createdAt = page.locator("text=/作成:/");
     await expect(createdAt).toBeVisible();
 
     // 3. 更新日時が表示されることを確認
-    const updatedAt = page.locator('text=/更新:/');
+    const updatedAt = page.locator("text=/更新:/");
     await expect(updatedAt).toBeVisible();
 
     // 4. 日時フォーマットが正しいことを確認（日本語ロケール）

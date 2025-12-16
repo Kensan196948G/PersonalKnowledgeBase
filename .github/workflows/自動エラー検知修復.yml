@@ -1,6 +1,6 @@
 # ===========================================
 # 自動エラー検知・修復ワークフロー
-# - 1日1回自動実行（毎日午前3時 JST）
+# - 2時間ごとに自動実行
 # - エラー検知 → 自動修復 → 確認を最大15回ループ
 # - 警告は無視、実際のエラーのみ検知・修復
 # ===========================================
@@ -8,20 +8,20 @@
 name: 自動エラー検知修復
 
 on:
-  # 1日1回実行（毎日午前3時 JST = 18:00 UTC前日）
+  # 2時間ごとに実行
   schedule:
-    - cron: '0 18 * * *'
+    - cron: "0 */2 * * *"
   # 手動実行も可能
   workflow_dispatch:
     inputs:
       max_loops:
-        description: '最大ループ回数'
+        description: "最大ループ回数"
         required: false
-        default: '15'
+        default: "15"
         type: string
 
 env:
-  NODE_VERSION: '20'
+  NODE_VERSION: "20"
   MAX_REPAIR_LOOPS: ${{ github.event.inputs.max_loops || '15' }}
 
 jobs:
@@ -44,7 +44,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: "npm"
 
       - name: 依存関係インストール
         run: npm ci

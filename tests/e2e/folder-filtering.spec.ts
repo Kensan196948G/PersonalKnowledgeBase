@@ -1,4 +1,4 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect, Page } from "@playwright/test";
 
 /**
  * フォルダフィルタリング機能 E2Eテスト
@@ -11,8 +11,12 @@ import { test, expect, Page } from '@playwright/test';
  */
 
 // テストヘルパー関数
-const waitForSelector = async (page: Page, selector: string, timeout = 10000) => {
-  await page.waitForSelector(selector, { timeout, state: 'visible' });
+const waitForSelector = async (
+  page: Page,
+  selector: string,
+  timeout = 10000,
+) => {
+  await page.waitForSelector(selector, { timeout, state: "visible" });
 };
 
 const createNote = async (page: Page, title: string) => {
@@ -39,8 +43,10 @@ const selectFolder = async (page: Page, folderName: string) => {
   console.log(`Selecting folder: ${folderName}`);
 
   // フォルダツリーから指定のフォルダを探してクリック
-  const folderItem = page.locator(`[data-folder-name="${folderName}"], text="${folderName}"`).first();
-  await folderItem.waitFor({ state: 'visible', timeout: 10000 });
+  const folderItem = page
+    .locator(`[data-folder-name="${folderName}"], text="${folderName}"`)
+    .first();
+  await folderItem.waitFor({ state: "visible", timeout: 10000 });
   await folderItem.click();
 
   // フィルタリング処理完了待機
@@ -49,14 +55,20 @@ const selectFolder = async (page: Page, folderName: string) => {
   console.log(`Folder selected: ${folderName}`);
 };
 
-const createFolder = async (page: Page, folderName: string, parentName?: string) => {
-  console.log(`Creating folder: ${folderName} under ${parentName || 'root'}`);
+const createFolder = async (
+  page: Page,
+  folderName: string,
+  parentName?: string,
+) => {
+  console.log(`Creating folder: ${folderName} under ${parentName || "root"}`);
 
   // フォルダ作成ボタンをクリック
   // 実装により、右クリックメニューやプラスボタンなどがある可能性があるため複数パターン試行
-  const createButton = page.locator(
-    'button:has-text("新しいフォルダ"), button[aria-label*="フォルダ"], [data-testid="create-folder-button"]'
-  ).first();
+  const createButton = page
+    .locator(
+      'button:has-text("新しいフォルダ"), button[aria-label*="フォルダ"], [data-testid="create-folder-button"]',
+    )
+    .first();
 
   const isVisible = await createButton.isVisible().catch(() => false);
 
@@ -64,20 +76,26 @@ const createFolder = async (page: Page, folderName: string, parentName?: string)
     await createButton.click();
   } else {
     // フォルダツリーエリアを右クリック
-    const folderTree = page.locator('[data-testid="folder-tree"], .folder-tree').first();
-    await folderTree.click({ button: 'right' });
+    const folderTree = page
+      .locator('[data-testid="folder-tree"], .folder-tree')
+      .first();
+    await folderTree.click({ button: "right" });
   }
 
   // モーダルが開くのを待機
   await page.waitForTimeout(500);
 
   // フォルダ名入力
-  const folderInput = page.locator('input[placeholder*="フォルダ名"], input[name="folderName"]').first();
-  await folderInput.waitFor({ state: 'visible', timeout: 5000 });
+  const folderInput = page
+    .locator('input[placeholder*="フォルダ名"], input[name="folderName"]')
+    .first();
+  await folderInput.waitFor({ state: "visible", timeout: 5000 });
   await folderInput.fill(folderName);
 
   // 保存ボタンクリック
-  const saveButton = page.locator('button:has-text("作成"), button:has-text("保存")').first();
+  const saveButton = page
+    .locator('button:has-text("作成"), button:has-text("保存")')
+    .first();
   await saveButton.click();
 
   // モーダルが閉じるまで待機
@@ -86,19 +104,25 @@ const createFolder = async (page: Page, folderName: string, parentName?: string)
   console.log(`Folder created: ${folderName}`);
 };
 
-const assignNoteToFolder = async (page: Page, noteTitle: string, folderName: string) => {
+const assignNoteToFolder = async (
+  page: Page,
+  noteTitle: string,
+  folderName: string,
+) => {
   console.log(`Assigning note "${noteTitle}" to folder "${folderName}"`);
 
   // ノートを開く
   const noteItem = page.locator(`text="${noteTitle}"`).first();
-  await noteItem.waitFor({ state: 'visible', timeout: 10000 });
+  await noteItem.waitFor({ state: "visible", timeout: 10000 });
   await noteItem.click();
 
   // エディタが表示されるまで待機
   await waitForSelector(page, '[data-testid="note-title-input"]');
 
   // フォルダセレクターを開く
-  const folderSelector = page.locator('button:has-text("フォルダ"), [data-testid="folder-selector"]').first();
+  const folderSelector = page
+    .locator('button:has-text("フォルダ"), [data-testid="folder-selector"]')
+    .first();
   await folderSelector.click();
 
   // ドロップダウンからフォルダを選択
@@ -113,7 +137,9 @@ const assignNoteToFolder = async (page: Page, noteTitle: string, folderName: str
 
 const getNoteListItems = async (page: Page) => {
   // ノート一覧のアイテムを取得
-  const noteItems = page.locator('.note-card, [data-testid="note-card"], .note-list-item');
+  const noteItems = page.locator(
+    '.note-card, [data-testid="note-card"], .note-list-item',
+  );
   const count = await noteItems.count();
 
   const notes = [];
@@ -125,28 +151,30 @@ const getNoteListItems = async (page: Page) => {
   return notes;
 };
 
-test.describe('フォルダフィルタリング機能', () => {
+test.describe("フォルダフィルタリング機能", () => {
   test.beforeEach(async ({ page }) => {
     // アプリケーションにアクセス
-    await page.goto('/');
+    await page.goto("/");
 
     // ページロード完了待機
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState("networkidle");
     await page.waitForTimeout(1000);
   });
 
-  test('シナリオ1: フォルダクリックで該当するノートのみ表示される', async ({ page }) => {
-    console.log('=== シナリオ1: フォルダフィルタリングテスト ===');
+  test("シナリオ1: フォルダクリックで該当するノートのみ表示される", async ({
+    page,
+  }) => {
+    console.log("=== シナリオ1: フォルダフィルタリングテスト ===");
 
     // コンソールログを監視
-    page.on('console', (msg) => {
+    page.on("console", (msg) => {
       const text = msg.text();
       if (
-        text.includes('[App]') ||
-        text.includes('[NoteStore]') ||
-        text.includes('[FolderTree]') ||
-        text.includes('[NoteList]') ||
-        text.includes('[API /notes]')
+        text.includes("[App]") ||
+        text.includes("[NoteStore]") ||
+        text.includes("[FolderTree]") ||
+        text.includes("[NoteList]") ||
+        text.includes("[API /notes]")
       ) {
         console.log(`[Browser Console] ${text}`);
       }
@@ -160,9 +188,9 @@ test.describe('フォルダフィルタリング機能', () => {
     expect(initialCount).toBeGreaterThan(0);
 
     // 2. OneNoteフォルダをクリック
-    console.log('Clicking OneNote folder...');
+    console.log("Clicking OneNote folder...");
     const oneNoteFolder = page.locator('text="OneNote"').first();
-    await oneNoteFolder.waitFor({ state: 'visible', timeout: 10000 });
+    await oneNoteFolder.waitFor({ state: "visible", timeout: 10000 });
     await oneNoteFolder.click();
 
     // フィルタリング完了を待つ
@@ -176,7 +204,7 @@ test.describe('フォルダフィルタリング機能', () => {
 
     // OneNoteフォルダには1つのノートしかないはず
     expect(filteredCount).toBe(1);
-    expect(filteredNotes[0]).toContain('2025年⑫16');
+    expect(filteredNotes[0]).toContain("2025年⑫16");
 
     // 4. すべてのノートをクリックしてフィルタ解除
     console.log('Clicking "すべてのノート" to clear filter...');
@@ -191,20 +219,24 @@ test.describe('フォルダフィルタリング機能', () => {
     expect(afterClearCount).toBe(initialCount);
   });
 
-  test('シナリオ2: フォルダツリーのサブフォルダ展開', async ({ page }) => {
+  test("シナリオ2: フォルダツリーのサブフォルダ展開", async ({ page }) => {
     // 1. フォルダ階層を確認
-    const folderTree = page.locator('[data-testid="folder-tree"], .folder-tree').first();
-    await folderTree.waitFor({ state: 'visible', timeout: 5000 });
+    const folderTree = page
+      .locator('[data-testid="folder-tree"], .folder-tree')
+      .first();
+    await folderTree.waitFor({ state: "visible", timeout: 5000 });
 
     // 2. フォルダアイテムが表示されているか確認
-    const folderItems = page.locator('.folder-item, [data-folder-item]');
+    const folderItems = page.locator(".folder-item, [data-folder-item]");
     const folderCount = await folderItems.count();
 
     console.log(`Found ${folderCount} folders`);
 
     // 3. サブフォルダがある場合、展開アイコンをクリック
     if (folderCount > 0) {
-      const expandButton = page.locator('button[aria-label*="展開"], .expand-icon').first();
+      const expandButton = page
+        .locator('button[aria-label*="展開"], .expand-icon')
+        .first();
       const hasExpand = await expandButton.isVisible().catch(() => false);
 
       if (hasExpand) {
@@ -218,10 +250,10 @@ test.describe('フォルダフィルタリング機能', () => {
     }
   });
 
-  test('シナリオ3: フォルダフィルタ解除で全ノート表示', async ({ page }) => {
+  test("シナリオ3: フォルダフィルタ解除で全ノート表示", async ({ page }) => {
     // 1. ノートを複数作成
-    await createNote(page, 'ノート1');
-    await createNote(page, 'ノート2');
+    await createNote(page, "ノート1");
+    await createNote(page, "ノート2");
 
     // 2. 初期状態で全ノート表示
     const initialNotes = await getNoteListItems(page);
@@ -232,7 +264,9 @@ test.describe('フォルダフィルタリング機能', () => {
 
     // 3. フォルダをクリック（フィルタ適用）
     // 実装次第で、「すべてのノート」リンクをクリック
-    const allNotesLink = page.locator('text="すべてのノート", [data-filter="all"]').first();
+    const allNotesLink = page
+      .locator('text="すべてのノート", [data-filter="all"]')
+      .first();
     const hasAllLink = await allNotesLink.isVisible().catch(() => false);
 
     if (hasAllLink) {
@@ -245,13 +279,15 @@ test.describe('フォルダフィルタリング機能', () => {
     }
   });
 
-  test('シナリオ4: フォルダ切り替えでノート一覧が更新される', async ({ page }) => {
-    console.log('=== シナリオ4: フォルダ切り替えテスト ===');
+  test("シナリオ4: フォルダ切り替えでノート一覧が更新される", async ({
+    page,
+  }) => {
+    console.log("=== シナリオ4: フォルダ切り替えテスト ===");
 
     // 1. プロジェクトフォルダをクリック
-    console.log('Clicking プロジェクト folder...');
+    console.log("Clicking プロジェクト folder...");
     const projectFolder = page.locator('text="プロジェクト"').first();
-    await projectFolder.waitFor({ state: 'visible', timeout: 10000 });
+    await projectFolder.waitFor({ state: "visible", timeout: 10000 });
     await projectFolder.click();
     await page.waitForTimeout(2000);
 
@@ -264,7 +300,7 @@ test.describe('フォルダフィルタリング機能', () => {
     expect(projectCount).toBe(8);
 
     // 2. OneNoteフォルダに切り替え
-    console.log('Switching to OneNote folder...');
+    console.log("Switching to OneNote folder...");
     const oneNoteFolder = page.locator('text="OneNote"').first();
     await oneNoteFolder.click();
     await page.waitForTimeout(2000);
@@ -281,7 +317,9 @@ test.describe('フォルダフィルタリング機能', () => {
     expect(projectCount).not.toBe(oneNoteCount);
   });
 
-  test('シナリオ5: 空フォルダクリックで空のノート一覧表示', async ({ page }) => {
+  test("シナリオ5: 空フォルダクリックで空のノート一覧表示", async ({
+    page,
+  }) => {
     // 1. 空のフォルダを作成
     // await createFolder(page, '空フォルダテスト');
 
@@ -293,10 +331,12 @@ test.describe('フォルダフィルタリング機能', () => {
     // expect(notes.length).toBe(0);
 
     // 4. 「ノートがありません」メッセージ確認
-    const emptyMessage = page.locator('text="ノートがありません", text="ノートが見つかりません"');
+    const emptyMessage = page.locator(
+      'text="ノートがありません", text="ノートが見つかりません"',
+    );
     const hasEmpty = await emptyMessage.isVisible().catch(() => false);
 
     // 空フォルダテストは実装依存のため、オプション
-    console.log('Empty folder message visible:', hasEmpty);
+    console.log("Empty folder message visible:", hasEmpty);
   });
 });
