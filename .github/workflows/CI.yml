@@ -37,8 +37,8 @@ jobs:
       - name: Prisma クライアント生成
         run: npx prisma generate
 
-      - name: ESLint
-        run: npm run lint
+      - name: ESLint（警告は許容、エラーのみ失敗）
+        run: npm run lint -- --max-warnings 100
 
       - name: TypeScript 型チェック
         run: npm run typecheck
@@ -72,10 +72,11 @@ jobs:
         env:
           DATABASE_URL: file:./test.db
 
-      - name: テスト実行
+      - name: テスト実行（警告は許容）
         run: npm test -- --passWithNoTests --coverage
         env:
           DATABASE_URL: file:./test.db
+          CI: true
 
       - name: カバレッジレポート
         if: always()

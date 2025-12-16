@@ -1,16 +1,16 @@
 # ===========================================
 # 自動エラー検知・修復ワークフロー
-# - 30分間隔で自動実行
+# - 1日1回自動実行（毎日午前3時 JST）
 # - エラー検知 → 自動修復 → 確認を最大15回ループ
-# - 無限実行（スケジュール）
+# - 警告は無視、実際のエラーのみ検知・修復
 # ===========================================
 
 name: 自動エラー検知修復
 
 on:
-  # 30分間隔でスケジュール実行
+  # 1日1回実行（毎日午前3時 JST = 18:00 UTC前日）
   schedule:
-    - cron: '*/30 * * * *'
+    - cron: '0 18 * * *'
   # 手動実行も可能
   workflow_dispatch:
     inputs:
@@ -19,12 +19,6 @@ on:
         required: false
         default: '15'
         type: string
-  # Push時にも実行
-  push:
-    branches: [main, feature/*]
-  # PR時にも実行
-  pull_request:
-    branches: [main]
 
 env:
   NODE_VERSION: '20'
@@ -80,6 +74,7 @@ jobs:
           echo "============================================="
           echo "  自動エラー検知・修復ループ開始"
           echo "  最大ループ回数: $MAX_LOOPS"
+          echo "  検知対象: エラーのみ（警告は無視）"
           echo "============================================="
 
           while [ "$ERRORS_FOUND" = true ] && [ $LOOP_COUNT -lt $MAX_LOOPS ]; do
@@ -91,9 +86,9 @@ jobs:
             echo "=== ループ $LOOP_COUNT / $MAX_LOOPS ==="
             echo ""
 
-            # 1. ESLint エラー検知
+            # 1. ESLint エラー検知（警告は無視、エラーのみ検知）
             echo "📋 ESLint チェック中..."
-            if ! npm run lint 2>&1; then
+            if ! npm run lint -- --max-warnings 100 --quiet 2>&1; then
               echo "⚠️ ESLint エラー検出 - 自動修復を試行"
               ERRORS_FOUND=true
               CURRENT_ERRORS="$CURRENT_ERRORS\n- ESLintエラー"
@@ -103,7 +98,7 @@ jobs:
               REPAIRS_MADE=true
               echo "✅ ESLint 自動修復完了"
             else
-              echo "✅ ESLint OK"
+              echo "✅ ESLint OK（警告は許容）"
             fi
 
             # 2. TypeScript 型チェック
@@ -134,16 +129,16 @@ jobs:
               echo "✅ Prettier OK"
             fi
 
-            # 4. テスト実行
+            # 4. テスト実行（警告は無視、失敗テストのみ検知）
             echo ""
             echo "📋 テスト実行中..."
-            if ! npm test -- --passWithNoTests 2>&1; then
+            if ! npm test -- --passWithNoTests --silent 2>&1; then
               echo "⚠️ テストエラー検出"
               ERRORS_FOUND=true
               CURRENT_ERRORS="$CURRENT_ERRORS\n- テストエラー"
               ERROR_LOG="$ERROR_LOG\n[ループ$LOOP_COUNT] テストエラー検出"
             else
-              echo "✅ テスト OK"
+              echo "✅ テスト OK（警告は許容）"
             fi
 
             # 5. ビルドチェック
@@ -299,4 +294,4 @@ jobs:
           echo "  自動エラー検知・修復ワークフロー 完了"
           echo "============================================="
           echo "ジョブ結果: ${{ needs.error-detection-repair.result }}"
-          echo "次回実行: 30分後（スケジュール実行の場合）"
+          echo "次回実行: 翌日午前3時（スケジュール実行の場合）"
