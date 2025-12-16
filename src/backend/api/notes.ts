@@ -37,6 +37,14 @@ router.get("/", async (req: Request, res: Response) => {
       toDate,
     } = req.query;
 
+    console.log("[API /notes] Query params:", {
+      folderId,
+      sortBy,
+      order,
+      search,
+      tags,
+    });
+
     // ソートバリデーション
     const validSortFields = ["createdAt", "updatedAt", "title"];
     const sortField = validSortFields.includes(sortBy as string)
@@ -50,6 +58,7 @@ router.get("/", async (req: Request, res: Response) => {
 
     if (folderId) {
       where.folderId = folderId as string;
+      console.log("[API /notes] Filtering by folderId:", folderId);
     }
 
     if (isPinned !== undefined) {
@@ -110,6 +119,8 @@ router.get("/", async (req: Request, res: Response) => {
       }
     }
 
+    console.log("[API /notes] Where clause:", JSON.stringify(where, null, 2));
+
     const notes = await prisma.note.findMany({
       where,
       orderBy: { [sortField]: sortOrder },
@@ -120,6 +131,14 @@ router.get("/", async (req: Request, res: Response) => {
         folder: true,
       },
     });
+
+    console.log("[API /notes] Found", notes.length, "notes");
+    if (folderId) {
+      console.log(
+        "[API /notes] Notes in folder:",
+        notes.map((n) => ({ id: n.id, title: n.title, folderId: n.folderId })),
+      );
+    }
 
     res.json({
       success: true,

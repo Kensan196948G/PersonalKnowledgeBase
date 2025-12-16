@@ -68,6 +68,9 @@ function App() {
   // selectedNoteが変更されたときにエディタを更新
   useEffect(() => {
     console.log(
+      "[App] ========== selectedNote useEffect triggered ==========",
+    );
+    console.log(
       "[App] selectedNote changed:",
       selectedNote?.id,
       selectedNote?.title,
@@ -80,6 +83,10 @@ function App() {
         "length:",
         selectedNote.content.length,
       );
+      console.log(
+        "[App] Content preview:",
+        selectedNote.content.substring(0, 100),
+      );
       setEditorTitle(selectedNote.title);
       // TipTap JSON文字列をHTMLに変換
       try {
@@ -87,9 +94,10 @@ function App() {
         console.log("[App] Converted HTML length:", htmlContent.length);
         console.log("[App] HTML preview:", htmlContent.substring(0, 200));
         setEditorContent(htmlContent);
-        console.log("[App] editorContent state updated");
+        console.log("[App] editorContent state updated to:", htmlContent.length);
       } catch (error) {
         console.error("[App] Failed to convert TipTap JSON to HTML:", error);
+        console.error("[App] Content was:", selectedNote.content);
       }
       setEditorFolderId(selectedNote.folderId);
     } else {
@@ -98,6 +106,7 @@ function App() {
       setEditorContent("");
       setEditorFolderId(null);
     }
+    console.log("[App] ========================================");
   }, [selectedNote]);
 
   // 新規ノート作成
@@ -198,18 +207,23 @@ function App() {
   // フォルダクリックハンドラ（フィルタリング）
   const handleFolderClick = useCallback(
     async (folderId: string | null) => {
-      console.log("[App] Folder clicked:", folderId);
+      console.log("[App] ========== Folder clicked ==========");
+      console.log("[App] folderId:", folderId);
 
       // フォルダストアを更新（UI表示用）
       selectFolder(folderId);
+      console.log("[App] Folder selected in folderStore");
 
       // ノートストアのフォルダフィルタを更新
       setSearchFolder(folderId);
+      console.log("[App] searchFolderId set in noteStore:", folderId);
 
       // ノート一覧を再取得してフィルタリング
+      console.log("[App] Calling fetchNotes...");
       await fetchNotes();
 
-      console.log("[App] Notes fetched for folder:", folderId);
+      console.log("[App] Notes fetched complete");
+      console.log("[App] ========================================");
     },
     [selectFolder, setSearchFolder, fetchNotes],
   );

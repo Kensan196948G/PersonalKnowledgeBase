@@ -66,6 +66,7 @@ function FolderTreeItem({
   };
 
   const handleFolderClick = () => {
+    console.log("[FolderTreeItem] Folder clicked:", folder.id, folder.name);
     onSelect(folder.id);
   };
 
@@ -354,12 +355,16 @@ export function FolderTree({
   const folderTree = getFolderTree();
 
   const handleFolderClick = (folderId: string) => {
+    console.log("[FolderTree] handleFolderClick:", folderId);
     selectFolder(folderId);
+    console.log("[FolderTree] Calling parent onFolderClick with:", folderId);
     onFolderClick?.(folderId);
   };
 
   const handleAllNotesClick = () => {
+    console.log("[FolderTree] All Notes clicked (null filter)");
     selectFolder(null);
+    console.log("[FolderTree] Calling parent onFolderClick with: null");
     onFolderClick?.(null);
   };
 

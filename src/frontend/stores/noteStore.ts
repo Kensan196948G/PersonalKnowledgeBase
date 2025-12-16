@@ -92,10 +92,10 @@ export const useNoteStore = create<NoteStore>()(
               searchIsFavorite,
             } = get();
 
-            console.log(
-              "[NoteStore] fetchNotes called with folderId:",
-              searchFolderId,
-            );
+            console.log("[NoteStore] ========== fetchNotes called ==========");
+            console.log("[NoteStore] searchFolderId:", searchFolderId);
+            console.log("[NoteStore] searchQuery:", searchQuery);
+            console.log("[NoteStore] searchTags:", searchTags);
 
             const params = new URLSearchParams();
             params.append("sortBy", sortBy);
@@ -112,6 +112,9 @@ export const useNoteStore = create<NoteStore>()(
 
             if (searchFolderId) {
               params.append("folderId", searchFolderId);
+              console.log("[NoteStore] Added folderId to params:", searchFolderId);
+            } else {
+              console.log("[NoteStore] No folderId filter (showing all notes)");
             }
 
             if (searchFromDate) {
@@ -130,7 +133,10 @@ export const useNoteStore = create<NoteStore>()(
               params.append("isFavorite", String(searchIsFavorite));
             }
 
-            const response = await fetch(`${API_BASE_URL}/notes?${params}`);
+            const url = `${API_BASE_URL}/notes?${params}`;
+            console.log("[NoteStore] Fetching from URL:", url);
+
+            const response = await fetch(url);
             if (!response.ok) {
               throw new Error(`Failed to fetch notes: ${response.statusText}`);
             }
@@ -141,6 +147,12 @@ export const useNoteStore = create<NoteStore>()(
               result.data?.length || 0,
               "notes",
             );
+            console.log(
+              "[NoteStore] Note titles:",
+              result.data?.map((n: { title: string }) => n.title),
+            );
+            console.log("[NoteStore] ===========================================");
+
             set({
               notes: result.data || [],
               isLoading: false,

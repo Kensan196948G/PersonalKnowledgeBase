@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from "react";
-import type { NoteListItem } from "../../types/note";
 import { SearchBar } from "./SearchBar";
 import { NoteCard } from "./NoteCard";
 import { useNoteStore } from "../../stores/noteStore";
@@ -9,8 +8,6 @@ export interface NoteListProps {
   onNoteSelect?: (noteId: string | null) => void;
   /** 選択中のノートID */
   selectedNoteId?: string | null;
-  /** API基底URL */
-  apiBaseUrl?: string;
   /** 初期ソートフィールド */
   initialSortBy?: "createdAt" | "updatedAt" | "title";
   /** 初期ソート順序 */
@@ -29,76 +26,35 @@ export type SortOrder = "asc" | "desc";
 export function NoteList({
   onNoteSelect,
   selectedNoteId = null,
-  apiBaseUrl = "/api", // Viteプロキシ経由でバックエンドに接続
   initialSortBy = "updatedAt",
   initialOrder = "desc",
   onTagClick,
 }: NoteListProps) {
-  // グローバルストアからnotesを取得
-  const globalNotes = useNoteStore((state) => state.notes);
-  const globalIsLoading = useNoteStore((state) => state.isLoading);
-  const globalError = useNoteStore((state) => state.error);
+  // グローバルストアからnotesを取得（直接使用）
+  const notes = useNoteStore((state) => state.notes);
+  const loading = useNoteStore((state) => state.isLoading);
+  const error = useNoteStore((state) => state.error);
+  const fetchNotesFromStore = useNoteStore((state) => state.fetchNotes);
 
-  const [notes, setNotes] = useState<NoteListItem[]>([]);
-  const [filteredNotes, setFilteredNotes] = useState<NoteListItem[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [sortBy, setSortBy] = useState<SortField>(initialSortBy);
   const [sortOrder, setSortOrder] = useState<SortOrder>(initialOrder);
 
-  // グローバルストアのnotesが更新されたらローカル状態に反映
+  // クライアントサイドでのフィルタリング（検索用）
+  const filteredNotes = notes.filter((note) => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      note.title.toLowerCase().includes(query) ||
+      note.content.toLowerCase().includes(query)
+    );
+  });
+
+  // 初回ロード時にノート取得（グローバルストアから）
   useEffect(() => {
-    console.log("[NoteList] Global notes updated, count:", globalNotes.length);
-    setNotes(globalNotes);
-    setLoading(globalIsLoading);
-    setError(globalError);
-  }, [globalNotes, globalIsLoading, globalError]);
-
-  /**
-   * APIからノート一覧を取得
-   */
-  const fetchNotes = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      // クエリパラメータ構築
-      const params = new URLSearchParams({
-        sortBy,
-        order: sortOrder,
-      });
-
-      if (searchQuery) {
-        params.append("search", searchQuery);
-      }
-
-      const response = await fetch(`${apiBaseUrl}/notes?${params}`);
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch notes: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      const notesList = data.data || data;
-
-      setNotes(notesList);
-      setFilteredNotes(notesList);
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Unknown error occurred";
-      setError(errorMessage);
-      console.error("Error fetching notes:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, [apiBaseUrl, sortBy, sortOrder, searchQuery]);
-
-  // 初回ロードとソート/検索変更時にノート取得
-  useEffect(() => {
-    console.log("[NoteList] Fetching notes...");
-    fetchNotes();
-  }, [fetchNotes]);
+    console.log("[NoteList] Initial fetch from global store");
+    fetchNotesFromStore();
+  }, [fetchNotesFromStore]);
 
   // デバッグ: ノート数をログ出力
   useEffect(() => {
@@ -132,21 +88,12 @@ export function NoteList({
   };
 
   /**
-   * ノート削除ハンドラ
+   * ノート削除ハンドラ（グローバルストア経由）
    */
+  const deleteNoteFromStore = useNoteStore((state) => state.deleteNote);
   const handleDeleteNote = async (noteId: string) => {
     try {
-      const response = await fetch(`${apiBaseUrl}/notes/${noteId}`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to delete note");
-      }
-
-      // ローカルステートから削除
-      setNotes((prev) => prev.filter((note) => note.id !== noteId));
-      setFilteredNotes((prev) => prev.filter((note) => note.id !== noteId));
+      await deleteNoteFromStore(noteId);
 
       // 削除したノートが選択中だった場合、選択解除
       if (selectedNoteId === noteId) {
@@ -215,7 +162,7 @@ export function NoteList({
             <p className="font-semibold">エラーが発生しました</p>
             <p className="text-sm mt-1">{error}</p>
             <button
-              onClick={fetchNotes}
+              onClick={fetchNotesFromStore}
               className="
                 mt-3 px-4 py-2 text-sm font-medium
                 bg-red-600 text-white rounded

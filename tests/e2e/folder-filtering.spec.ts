@@ -136,26 +136,59 @@ test.describe('フォルダフィルタリング機能', () => {
   });
 
   test('シナリオ1: フォルダクリックで該当するノートのみ表示される', async ({ page }) => {
-    // 1. テスト用フォルダ作成（スキップ可能：既存フォルダを使用）
-    // await createFolder(page, 'テストフォルダA');
+    console.log('=== シナリオ1: フォルダフィルタリングテスト ===');
 
-    // 2. ノートを作成
-    await createNote(page, 'フォルダAのノート1');
-    await createNote(page, 'フォルダAのノート2');
-    await createNote(page, 'フォルダなしのノート');
+    // コンソールログを監視
+    page.on('console', (msg) => {
+      const text = msg.text();
+      if (
+        text.includes('[App]') ||
+        text.includes('[NoteStore]') ||
+        text.includes('[FolderTree]') ||
+        text.includes('[NoteList]') ||
+        text.includes('[API /notes]')
+      ) {
+        console.log(`[Browser Console] ${text}`);
+      }
+    });
 
-    // 3. ノートをフォルダに割り当て
-    // （現在の実装では、ノート作成時にフォルダ選択、または作成後に変更）
-    // ここでは簡易版として、ノート一覧にすべて表示されることを確認
+    // 1. 初期状態で全ノート表示を確認
+    await page.waitForSelector('[data-testid="note-card"]', { timeout: 10000 });
+    const initialNotes = await getNoteListItems(page);
+    const initialCount = initialNotes.length;
+    console.log(`Initial notes count: ${initialCount}`);
+    expect(initialCount).toBeGreaterThan(0);
 
-    const allNotes = await getNoteListItems(page);
-    console.log('All notes:', allNotes);
+    // 2. OneNoteフォルダをクリック
+    console.log('Clicking OneNote folder...');
+    const oneNoteFolder = page.locator('text="OneNote"').first();
+    await oneNoteFolder.waitFor({ state: 'visible', timeout: 10000 });
+    await oneNoteFolder.click();
 
-    expect(allNotes.length).toBeGreaterThanOrEqual(3);
+    // フィルタリング完了を待つ
+    await page.waitForTimeout(2000);
 
-    // 4. フォルダをクリックしてフィルタリング
-    // （実装により、特定のフォルダクリックが必要）
-    // このテストは概念実証として、ノート一覧が動的に変わることを確認
+    // 3. フィルタ後のノート数を確認
+    const filteredNotes = await getNoteListItems(page);
+    const filteredCount = filteredNotes.length;
+    console.log(`Filtered notes count (OneNote): ${filteredCount}`);
+    console.log(`Filtered notes:`, filteredNotes);
+
+    // OneNoteフォルダには1つのノートしかないはず
+    expect(filteredCount).toBe(1);
+    expect(filteredNotes[0]).toContain('2025年⑫16');
+
+    // 4. すべてのノートをクリックしてフィルタ解除
+    console.log('Clicking "すべてのノート" to clear filter...');
+    const allNotesButton = page.locator('text="すべてのノート"').first();
+    await allNotesButton.click();
+    await page.waitForTimeout(2000);
+
+    // 5. 全ノートが再表示されることを確認
+    const afterClearNotes = await getNoteListItems(page);
+    const afterClearCount = afterClearNotes.length;
+    console.log(`After clear filter notes count: ${afterClearCount}`);
+    expect(afterClearCount).toBe(initialCount);
   });
 
   test('シナリオ2: フォルダツリーのサブフォルダ展開', async ({ page }) => {
@@ -213,36 +246,39 @@ test.describe('フォルダフィルタリング機能', () => {
   });
 
   test('シナリオ4: フォルダ切り替えでノート一覧が更新される', async ({ page }) => {
-    // 1. 初期状態のノート数を記録
-    const initialNotes = await getNoteListItems(page);
-    console.log('Initial notes:', initialNotes);
+    console.log('=== シナリオ4: フォルダ切り替えテスト ===');
 
-    // 2. フォルダツリーから任意のフォルダを取得
-    const folderItems = page.locator('.folder-item, [data-folder-item]');
-    const folderCount = await folderItems.count();
+    // 1. プロジェクトフォルダをクリック
+    console.log('Clicking プロジェクト folder...');
+    const projectFolder = page.locator('text="プロジェクト"').first();
+    await projectFolder.waitFor({ state: 'visible', timeout: 10000 });
+    await projectFolder.click();
+    await page.waitForTimeout(2000);
 
-    if (folderCount > 1) {
-      // 3. 1つ目のフォルダをクリック
-      await folderItems.first().click();
-      await page.waitForTimeout(1000);
+    const projectNotes = await getNoteListItems(page);
+    const projectCount = projectNotes.length;
+    console.log(`Project folder notes count: ${projectCount}`);
+    console.log(`Project notes:`, projectNotes);
 
-      const firstFolderNotes = await getNoteListItems(page);
-      console.log('First folder notes:', firstFolderNotes);
+    // プロジェクトフォルダには8つのノートがあるはず
+    expect(projectCount).toBe(8);
 
-      // 4. 2つ目のフォルダをクリック
-      await folderItems.nth(1).click();
-      await page.waitForTimeout(1000);
+    // 2. OneNoteフォルダに切り替え
+    console.log('Switching to OneNote folder...');
+    const oneNoteFolder = page.locator('text="OneNote"').first();
+    await oneNoteFolder.click();
+    await page.waitForTimeout(2000);
 
-      const secondFolderNotes = await getNoteListItems(page);
-      console.log('Second folder notes:', secondFolderNotes);
+    const oneNoteNotes = await getNoteListItems(page);
+    const oneNoteCount = oneNoteNotes.length;
+    console.log(`OneNote folder notes count: ${oneNoteCount}`);
+    console.log(`OneNote notes:`, oneNoteNotes);
 
-      // 5. ノート一覧が変化することを確認（同じでない場合）
-      // 同じフォルダ内容の場合もあるため、変化のチェックは緩く
-      expect(Array.isArray(firstFolderNotes)).toBe(true);
-      expect(Array.isArray(secondFolderNotes)).toBe(true);
-    } else {
-      console.log('Not enough folders to test switching');
-    }
+    // OneNoteフォルダには1つのノートしかないはず
+    expect(oneNoteCount).toBe(1);
+
+    // 3. ノート一覧が異なることを確認
+    expect(projectCount).not.toBe(oneNoteCount);
   });
 
   test('シナリオ5: 空フォルダクリックで空のノート一覧表示', async ({ page }) => {

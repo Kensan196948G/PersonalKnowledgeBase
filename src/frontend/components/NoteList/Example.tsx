@@ -115,22 +115,17 @@ export function FetchDetailExample() {
 }
 
 /**
- * 例4: カスタムAPIベースURL
- * 本番環境など異なるAPIエンドポイントを使用する例
+ * 例4: 基本的な使用例（旧: カスタムAPIベースURL）
+ * NoteListはnoteStoreを通じてAPIと自動的に連携します
  */
 export function CustomApiExample() {
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
-
-  // 環境変数からAPIベースURLを取得
-  const apiBaseUrl =
-    import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
   return (
     <div className="h-screen">
       <NoteList
         selectedNoteId={selectedNoteId}
         onNoteSelect={setSelectedNoteId}
-        apiBaseUrl={apiBaseUrl}
       />
     </div>
   );

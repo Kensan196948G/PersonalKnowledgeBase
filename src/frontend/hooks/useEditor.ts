@@ -98,7 +98,13 @@ export function useEditor({
 
   // contentプロパティが変更されたときにエディタの内容を更新
   useEffect(() => {
+    console.log("[useEditor] ========== Content useEffect triggered ==========");
+    console.log("[useEditor] editor exists:", !!editor);
+    console.log("[useEditor] content length:", content.length);
+    console.log("[useEditor] content preview:", content.substring(0, 100));
+
     if (!editor) {
+      console.log("[useEditor] No editor instance, skipping update");
       return;
     }
 
@@ -116,6 +122,16 @@ export function useEditor({
     const normalizedContent = normalizeContent(content);
     const normalizedCurrent = normalizeContent(currentContent);
 
+    console.log(
+      "[useEditor] normalizedContent length:",
+      normalizedContent.length,
+    );
+    console.log(
+      "[useEditor] normalizedCurrent length:",
+      normalizedCurrent.length,
+    );
+    console.log("[useEditor] Content different:", normalizedContent !== normalizedCurrent);
+
     // contentが変更されていて、かつ現在のエディタ内容と異なる場合のみ更新
     // これにより、ユーザーが編集中に外部からの更新で上書きされるのを防ぐ
     if (normalizedContent !== normalizedCurrent) {
@@ -132,7 +148,11 @@ export function useEditor({
 
       // エディタの内容を更新（履歴を追加せず、選択位置も保持しない）
       editor.commands.setContent(content, false);
+      console.log("[useEditor] Editor content updated successfully");
+    } else {
+      console.log("[useEditor] Content unchanged, skipping update");
     }
+    console.log("[useEditor] ========================================");
   }, [editor, content]);
 
   // ツールバーボタンのアクティブ状態を取得
