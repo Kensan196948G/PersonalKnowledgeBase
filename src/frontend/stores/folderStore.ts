@@ -317,7 +317,40 @@ export const useFolderStore = create<FolderStore>()(
         // フォルダ選択
         selectFolder: (folderId: string | null) => {
           console.log("[FolderStore] Selecting folder:", folderId);
-          set({ selectedFolderId: folderId });
+
+          // フォルダ選択時に、選択したフォルダとその親のパスのみを展開
+          // 他のフォルダは折りたたむ（UIスペース節約）
+          if (folderId) {
+            const { folders } = get();
+            const newExpandedFolders = new Set<string>();
+
+            // 選択したフォルダから親までのパスを取得
+            const getParentPath = (currentId: string): string[] => {
+              const folder = folders.find((f) => f.id === currentId);
+              if (!folder) return [];
+
+              const path = [currentId];
+              if (folder.parentId) {
+                path.push(...getParentPath(folder.parentId));
+              }
+              return path;
+            };
+
+            const pathToSelected = getParentPath(folderId);
+            console.log("[FolderStore] Expanding path:", pathToSelected);
+
+            // パス上のフォルダのみを展開
+            pathToSelected.forEach((id) => newExpandedFolders.add(id));
+
+            set({
+              selectedFolderId: folderId,
+              expandedFolders: newExpandedFolders,
+            });
+          } else {
+            // フォルダ選択解除時は、デフォルトの展開状態に戻す
+            set({ selectedFolderId: folderId });
+            get().autoExpandInitialFolders();
+          }
         },
 
         // フォルダ展開/折りたたみトグル
