@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import type { NoteListItem } from "../../types/note";
 import { SearchBar } from "./SearchBar";
 import { NoteCard } from "./NoteCard";
+import { useNoteStore } from "../../stores/noteStore";
 
 export interface NoteListProps {
   /** ノート選択時のコールバック */
