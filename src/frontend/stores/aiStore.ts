@@ -68,7 +68,11 @@ interface AiStore {
   ) => void;
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
+// Jest環境ではimport.meta.envが未定義のため、安全なアクセス
+const API_BASE_URL =
+  (typeof import.meta !== "undefined" && import.meta.env
+    ? import.meta.env.VITE_API_BASE_URL
+    : null) || "/api";
 
 export const useAiStore = create<AiStore>()(
   devtools(
