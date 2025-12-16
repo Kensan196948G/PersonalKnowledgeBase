@@ -26,6 +26,8 @@ export function NoteCard({
   onDelete,
   onTagClick,
 }: NoteCardProps) {
+  console.log("[NoteCard] Rendering:", note.id, note.title);
+
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 

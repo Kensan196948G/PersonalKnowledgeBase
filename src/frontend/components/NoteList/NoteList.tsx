@@ -58,12 +58,14 @@ export function NoteList({
 
   // デバッグ: ノート数をログ出力
   useEffect(() => {
+    console.log("[NoteList] ========== Notes updated ==========");
     console.log("[NoteList] Notes count:", notes.length);
     console.log("[NoteList] Filtered notes count:", filteredNotes.length);
-    console.log(
-      "[NoteList] Note titles:",
-      filteredNotes.map((n) => n.title),
+    console.log("[NoteList] First 3 notes:",
+      filteredNotes.slice(0, 3).map((n) => ({ id: n.id, title: n.title }))
     );
+    console.log("[NoteList] filteredNotes is array:", Array.isArray(filteredNotes));
+    console.log("[NoteList] ========================================");
   }, [notes, filteredNotes]);
 
   /**
@@ -241,16 +243,22 @@ export function NoteList({
           </div>
         ) : (
           <div className="divide-y divide-gray-200">
-            {filteredNotes.map((note) => (
-              <NoteCard
-                key={note.id}
-                note={note}
-                isSelected={note.id === selectedNoteId}
-                onClick={onNoteSelect}
-                onDelete={handleDeleteNote}
-                onTagClick={onTagClick}
-              />
-            ))}
+            {filteredNotes.map((note, index) => {
+              if (index === 0) {
+                console.log("[NoteList] Rendering", filteredNotes.length, "NoteCards");
+              }
+              console.log(`[NoteList] Mapping note ${index}:`, note.title);
+              return (
+                <NoteCard
+                  key={note.id}
+                  note={note}
+                  isSelected={note.id === selectedNoteId}
+                  onClick={onNoteSelect}
+                  onDelete={handleDeleteNote}
+                  onTagClick={onTagClick}
+                />
+              );
+            })}
           </div>
         )}
       </div>
