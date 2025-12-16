@@ -111,7 +111,7 @@ export function NoteCard({
       onClick={handleCardClick}
       className={`
         relative p-4 cursor-pointer transition-all duration-200
-        border-l-4
+        border-l-4 min-h-[80px] border border-red-500
         ${
           isSelected
             ? "bg-blue-50 border-blue-500 shadow-sm"

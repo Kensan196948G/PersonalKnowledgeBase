@@ -242,7 +242,7 @@ export function NoteList({
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-gray-200">
+          <div className="divide-y divide-gray-200 bg-white">
             {filteredNotes.map((note, index) => {
               if (index === 0) {
                 console.log("[NoteList] Rendering", filteredNotes.length, "NoteCards");
