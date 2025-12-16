@@ -61,10 +61,14 @@ export function NoteList({
     console.log("[NoteList] ========== Notes updated ==========");
     console.log("[NoteList] Notes count:", notes.length);
     console.log("[NoteList] Filtered notes count:", filteredNotes.length);
-    console.log("[NoteList] First 3 notes:",
-      filteredNotes.slice(0, 3).map((n) => ({ id: n.id, title: n.title }))
+    console.log(
+      "[NoteList] First 3 notes:",
+      filteredNotes.slice(0, 3).map((n) => ({ id: n.id, title: n.title })),
     );
-    console.log("[NoteList] filteredNotes is array:", Array.isArray(filteredNotes));
+    console.log(
+      "[NoteList] filteredNotes is array:",
+      Array.isArray(filteredNotes),
+    );
     console.log("[NoteList] ========================================");
   }, [notes, filteredNotes]);
 
@@ -245,7 +249,11 @@ export function NoteList({
           <div className="divide-y divide-gray-200 bg-white">
             {filteredNotes.map((note, index) => {
               if (index === 0) {
-                console.log("[NoteList] Rendering", filteredNotes.length, "NoteCards");
+                console.log(
+                  "[NoteList] Rendering",
+                  filteredNotes.length,
+                  "NoteCards",
+                );
               }
               console.log(`[NoteList] Mapping note ${index}:`, note.title);
               return (

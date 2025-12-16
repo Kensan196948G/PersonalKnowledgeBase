@@ -441,9 +441,7 @@ export const useFolderStore = create<FolderStore>()(
           const { folders } = get();
 
           // 再帰的にフォルダを検索
-          const findFolderRecursive = (
-            folderList: Folder[],
-          ): Folder | null => {
+          const findFolderRecursive = (folderList: Folder[]): Folder | null => {
             for (const folder of folderList) {
               if (folder.id === id) {
                 return folder;

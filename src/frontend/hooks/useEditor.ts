@@ -98,7 +98,9 @@ export function useEditor({
 
   // contentプロパティが変更されたときにエディタの内容を更新
   useEffect(() => {
-    console.log("[useEditor] ========== Content useEffect triggered ==========");
+    console.log(
+      "[useEditor] ========== Content useEffect triggered ==========",
+    );
     console.log("[useEditor] editor exists:", !!editor);
     console.log("[useEditor] content length:", content.length);
     console.log("[useEditor] content preview:", content.substring(0, 100));
@@ -130,7 +132,10 @@ export function useEditor({
       "[useEditor] normalizedCurrent length:",
       normalizedCurrent.length,
     );
-    console.log("[useEditor] Content different:", normalizedContent !== normalizedCurrent);
+    console.log(
+      "[useEditor] Content different:",
+      normalizedContent !== normalizedCurrent,
+    );
 
     // contentが変更されていて、かつ現在のエディタ内容と異なる場合のみ更新
     // これにより、ユーザーが編集中に外部からの更新で上書きされるのを防ぐ

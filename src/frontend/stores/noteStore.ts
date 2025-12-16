@@ -112,7 +112,10 @@ export const useNoteStore = create<NoteStore>()(
 
             if (searchFolderId) {
               params.append("folderId", searchFolderId);
-              console.log("[NoteStore] Added folderId to params:", searchFolderId);
+              console.log(
+                "[NoteStore] Added folderId to params:",
+                searchFolderId,
+              );
             } else {
               console.log("[NoteStore] No folderId filter (showing all notes)");
             }
@@ -151,7 +154,9 @@ export const useNoteStore = create<NoteStore>()(
               "[NoteStore] Note titles:",
               result.data?.map((n: { title: string }) => n.title),
             );
-            console.log("[NoteStore] ===========================================");
+            console.log(
+              "[NoteStore] ===========================================",
+            );
 
             set({
               notes: result.data || [],

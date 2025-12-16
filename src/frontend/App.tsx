@@ -67,9 +67,7 @@ function App() {
 
   // selectedNoteが変更されたときにエディタを更新
   useEffect(() => {
-    console.log(
-      "[App] ========== selectedNote useEffect triggered ==========",
-    );
+    console.log("[App] ========== selectedNote useEffect triggered ==========");
     console.log(
       "[App] selectedNote changed:",
       selectedNote?.id,
@@ -94,7 +92,10 @@ function App() {
         console.log("[App] Converted HTML length:", htmlContent.length);
         console.log("[App] HTML preview:", htmlContent.substring(0, 200));
         setEditorContent(htmlContent);
-        console.log("[App] editorContent state updated to:", htmlContent.length);
+        console.log(
+          "[App] editorContent state updated to:",
+          htmlContent.length,
+        );
       } catch (error) {
         console.error("[App] Failed to convert TipTap JSON to HTML:", error);
         console.error("[App] Content was:", selectedNote.content);
