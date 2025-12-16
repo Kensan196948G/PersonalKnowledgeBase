@@ -30,7 +30,7 @@ export function OutgoingLinksPanel({
   const [outgoingLinks, setOutgoingLinks] = useState<OutgoingLink[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true); // デフォルトで折りたたみ
 
   useEffect(() => {
     const fetchOutgoingLinks = async () => {
@@ -120,7 +120,7 @@ export function OutgoingLinksPanel({
 
       {/* コンテンツ */}
       {!isCollapsed && (
-        <div className="px-4 pb-4">
+        <div className="px-4 pb-4 max-h-[200px] overflow-y-auto">
           {/* ローディング状態 */}
           {loading && (
             <div className="flex items-center justify-center py-8">

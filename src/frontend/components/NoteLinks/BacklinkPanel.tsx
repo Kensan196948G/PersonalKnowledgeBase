@@ -121,7 +121,7 @@ export const BacklinkPanel = memo(function BacklinkPanel({
 
       {/* コンテンツ */}
       {!isCollapsed && (
-        <div className="px-4 pb-4">
+        <div className="px-4 pb-4 max-h-[200px] overflow-y-auto">
           {/* ローディング状態 */}
           {loading && (
             <div className="flex items-center justify-center py-8">
