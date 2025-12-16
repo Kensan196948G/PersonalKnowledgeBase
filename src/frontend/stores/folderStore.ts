@@ -436,10 +436,28 @@ export const useFolderStore = create<FolderStore>()(
           set({ error: null });
         },
 
-        // セレクター: IDでフォルダ取得
+        // セレクター: IDでフォルダ取得（再帰的に子フォルダも検索）
         getFolderById: (id: string) => {
           const { folders } = get();
-          return folders.find((folder) => folder.id === id) || null;
+
+          // 再帰的にフォルダを検索
+          const findFolderRecursive = (
+            folderList: Folder[],
+          ): Folder | null => {
+            for (const folder of folderList) {
+              if (folder.id === id) {
+                return folder;
+              }
+              // 子フォルダがあれば再帰的に検索
+              if (folder.children && folder.children.length > 0) {
+                const found = findFolderRecursive(folder.children);
+                if (found) return found;
+              }
+            }
+            return null;
+          };
+
+          return findFolderRecursive(folders);
         },
 
         // セレクター: フォルダツリー取得（階層構造）
